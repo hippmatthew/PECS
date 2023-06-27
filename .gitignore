@@ -1,0 +1,8 @@
+# Directories
+.vscode
+obj
+
+# Files
+.DS_STORE
+.env
+makefile

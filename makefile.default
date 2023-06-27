@@ -1,0 +1,77 @@
+include .env
+
+# Vulkan OS Settings ** MAKE SURE TO SET THE CORRECT DIRECTORIES IN .env FILE **
+VULKAN_INCLUDE_DIR := #$(<OS>_VULKAN_INCLUDE_DIR)
+VULKAN_LIB_DIR := #$(<OS>_VULKAN_LIB_DIR)
+VULKAN_LIB := #$(<OS>_VULKAN_LIB)
+
+# OS External Include Directory
+EXT_INCLUDE_DIR := #$(<OS>_INCLUDE_DIR)
+
+# Compiler Configuration
+CC := g++
+CFLAGS_DEFAULT = -O2 -std=c++17
+INCLUDE := -I$(VULKAN_INCLUDE_DIR) -I$(EXT_INCLUDE_DIR) -I$(LOCAL_SRC)/include
+LDFLAGS = -L$(VULKAN_LIB_DIR) $(VULKAN_LIB)
+
+# Windows Specific
+# LDFLAGS += -L$(WIN_LIB_DIR) -lglfw3 -lopengl32 -lgdi32
+
+# MacOS Specific
+# CFLAGS_DEFAULT += `pkg-config --cflags  glfw3`
+# LDFLAGS += `pkg-config --static --libs glfw3`
+
+# Shader Compiler 
+SC := glslc
+
+# Files
+SRCS := $(wildcard $(LOCAL_SRC)/*.cpp)
+OBJS := $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_OBJ)/%.o, $(SRCS))
+BINS := $(LOCAL_BIN)/engine
+LIBS := $(LOCAL_LIB)/libgeps.a
+
+VERTS := $(wildcard $(LOCAL_SHDRS)/vert/*.vert)
+FRAGS := $(wildcard $(LOCAL_SHDRS)/frag/*.frag)
+SPVS := $(patsubst $(LOCAL_SHDRS)/vert/%.vert, $(LOCAL_SHDRS)/%.vert.spv, $(VERTS)) $(patsubst $(LOCAL_SHDRS)/frag/%.frag, $(LOCAL_SHDRS)/%.frag.spv, $(FRAGS))
+
+# Functions
+debug: CFLAGS = $(CFLAGS_DEFAULT)
+debug: $(SPVS) $(BINS)
+
+release: CFLAGS = $(CFLAGS_DEFAULT) -DNDEBUG
+release: $(SPVS) $(BINS)
+
+static_library: CFLAGS = $(CFLAGS_DEFAULT) -DNDEBUG
+static_library: $(LIBS)
+
+shaders: $(SPVS)
+
+$(LOCAL_LIB)/libgeps.a: $(OBJS)
+	ar -rcs $@ $(OBJS)
+
+$(LOCAL_BIN)/engine: $(OBJS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDE) $(OBJS) $(LDFLAGS)
+
+$(LOCAL_OBJ)/%.o: $(LOCAL_SRC)/%.cpp
+	$(CC) -o $@ $(CFLAGS) $(INCLUDE) -c $<
+
+$(LOCAL_SHDR)/%.vert.spv: $(LOCAL_SHDR)/vert/%.vert
+	$(SC) -o $@ $<
+
+$(LOCAL_SHDR)/%.frag.spv: $(LOCAL_SHDR)/frag/%.frag
+	$(SC) -o $@ $<
+
+# Cleaning Functions. Uncomment Accordingly
+clean:
+#	Windows clean command
+#	del /q $(LOCAL_BIN)\* $(LOCAL_SHDR)\*.spv
+
+#	MacOS clean command
+#	rm $(LOCAL_BIN)/* $(LOCAL_SHDR)/*.spv
+
+clean_shaders:
+#	Windows clean command
+#	del /q $(LOCAL_SHDR)\*.spv
+
+#	MacOS clean command
+#	rm $(LOCAL_SHDR)/*.spv

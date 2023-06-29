@@ -17,7 +17,7 @@ SC = glslc
 
 # Files
 SRCS = $(wildcard $(LOCAL_SRC)/*.cpp)
-OBJS = $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_OBJ)/%.o, $(SRCS))
+BINS = $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_BIN)/%.o, $(SRCS))
 LIB = $(LOCAL_LIB)/libgeps.a
 
 VERTS = $(wildcard $(LOCAL_SHDRS)/vert/*.vert)
@@ -35,11 +35,8 @@ shaders: $(SPVS)
 $(LOCAL_LIB)/libgeps.a: $(OBJS)
 	ar -rcs $@ $(OBJS)
 
-$(LOCAL_BIN)/engine: $(OBJS)
-	$(CC) -o $@ $(CFLAGS) $(INCLUDE) $(OBJS) $(LDFLAGS)
-
-$(LOCAL_OBJ)/%.o: $(LOCAL_SRC)/%.cpp
-	$(CC) -o $@ $(CFLAGS) $(INCLUDE) -c $<
+$(LOCAL_BIN)/%.o: $(LOCAL_SRC)/%.cpp
+	$(CC) -o $@ $(CPPFLAGS) $(INCLUDE) -c $<
 
 $(LOCAL_SHDR)/%.vert.spv: $(LOCAL_SHDR)/vert/%.vert
 	$(SC) -o $@ $<
@@ -53,7 +50,7 @@ clean:
 #	del /q $(LOCAL_BIN)\* $(LOCAL_SHDR)\*.spv
 
 #	MacOS clean command
-#	rm $(LOCAL_BIN)/* $(LOCAL_OBJ)/* $(LOCAL_SHDR)/*.spv
+#	rm $(LOCAL_BIN)/*  $(LOCAL_SHDR)/*.spv
 
 clean_spvs:
 #	Windows clean command

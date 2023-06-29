@@ -26,10 +26,10 @@ Window::~Window()
     glfwTerminate();
 }
 
-bool Window::ShouldClose() const
+bool Window::shouldClose() const
 { return glfwWindowShouldClose(window); }
 
-void Window::PollEvents() const
+void Window::pollEvents() const
 { glfwPollEvents(); }
 
 }

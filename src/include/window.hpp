@@ -25,8 +25,8 @@ class Window
 
         Window& operator=(const Window&) = delete;
         
-        bool ShouldClose() const;
-        void PollEvents() const;
+        bool shouldClose() const;
+        void pollEvents() const;
 
     private:
         GLFWwindow * window;

@@ -8,6 +8,12 @@
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
 
+#include <vector>
+#include <stdexcept>
+#include <cstring>
+#include <iostream>
+
+#define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
 
 #include "window.hpp"
@@ -39,16 +45,21 @@ class Engine
 
         Engine& operator=(const Engine&) = delete;
 
-        bool IsActive() const;
-        Window* GetWindow() const;
+        bool isActive() const;
+        Window* getWindow() const;
 
-        void Initialize(const InitializationInfo* initInfo);
+        void initialize(const InitializationInfo* initInfo);
 
     private:
         const EngineInfo engineInfo{ .name = "PECS",
                                      .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
         
         Window * window;
+        vk::Instance instance;
+
+        void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
+
+        bool enumerateInstanceExtensions() const;
 };
 
 }

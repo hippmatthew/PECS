@@ -1,6 +1,6 @@
 # P E C S
 
-**P**hysics **E**ngine _for_ **C**omputation _and_ **S**imulations, _By Matthew Hipp_
+**P**hysics **E**ngine _for_ **C**omputation _and_ **S**imulation, _By Matthew Hipp_
 
 PECGS is a physics engine designed for gpu accelerated physics computation and simulation using VulkanSDK.
 THe idea is to have a separate compuational and graphical components which accesss the GPU's compute or graphics queue family respectively. The engine itself will contain the window, vulkan instance, physical device, and logical deice as well as access to the graphical and computational components if one wishes to use them.

@@ -20,7 +20,7 @@ _Unfinished material is located in the W.I.P branch_
 
 1. Engine Object
 
-   - [ ] Vulkan Instance
+   - [x] Vulkan Instance
    - [ ] Validation Layers
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
@@ -99,16 +99,18 @@ _Features I would like to add after finishing the main functionality of the engi
 4. Use `python3 install_vulkan.py`
 5. Install Homebrew (https://brew.sh)
 6. Open terminal
-7. Use `brew install glfw` to install GLFW
-8. Use `brew install glm` to install GLM
-9. Use `brew install pkg-config` to install pkg-config
-10. Clone the repository and store it in an accessible location on the system
-11. Remove .default from the .env file and open it
-12. Delete all Windows specific variables
-13. Remove .default from the makefile and open it
-14. Uncomment the MacOS specific variables
-15. Delete all Windows specific variables
-16. Uncomment the MacOS clean functions at the bottom of the makefile and delete the Windows clean functions
+7. Use `echo "export CPATH=/opt/homebrew/include" >> ~/.zprofile` to show the compiler where to look for homebrew headers
+8. User `echo "export LIBRARY_PATH=/opt/homebrew/lib" >>~/.zprofile` tp show the compiler where to look for homebrew libraries
+9. Use `brew install glfw` to install GLFW
+10. Use `brew install glm` to install GLM
+11. Use `brew install pkg-config` to install pkg-config
+12. Clone the repository and store it in an accessible location on the system
+13. Remove .default from the .env file and open it
+14. Delete all Windows specific variables
+15. Remove .default from the makefile and open it
+16. Uncomment the MacOS specific variables
+17. Delete all Windows specific variables
+18. Uncomment the MacOS clean functions at the bottom of the makefile and delete the Windows clean functions
 
 ## Using the Library
 
@@ -136,24 +138,37 @@ $(OUTPUT_BINARY): $(CPP_FILES)
    $(CPP) -o $(OUTPUT_BINARY) $(CPPFLAGS) $(CPP_FILES) $(LDFLAGS)
 ```
 
-In the cpp file, first create an engine object: `pecs::Engine engine;`. Next, create an `InitializationInfo` variable and set the applcation name, application version, window width, window height, and window title variables like so:
+Refer to the project's makefile to see how the sample project is compiled. The sample program can be found in the sample_program folder from the project's root directory. Refer to `main.cpp` to get an example of how to use the engine in a project. The basic steps are outlined below:
+
+First, include the PECS header, `pecs.hpp`. Then specify the initialization info for your engine by creating a `pecs::InitializationInfo` object like so:
 
 ```
-pecs::InitializationInfo initInfo{ .applicationName      = "App Name",
+pecs::InitializationInfo initInfo{ .applicationName      = "PECS Application",
                                    .applicationVersion   = VK_MAKE_API_VERSION(0, 1, 0, 0),
-                                   .windowWidth          = desired_width,
-                                   .windowHeight         = desired_height,
-                                   .windowTitle          = "Window Title"}
+                                   .windowWidth          = 600,
+                                   .windowHeight         = 600,
+                                   .windowTitle          = "PECS Application };
 ```
 
-Pass the initialization info into the Initialization function with `engine.Initialize(&initInfo)`. To create the update loop, create a while loop that looks for if the engine is active. Inside, poll the engine's window for events:
+The values listed are the default values. If desired, one could initialize the struct this way: `pecs::InitializationInfo initInfo;` and each field would contain the default value.
+
+Next, create the engine object and initialize the engine:
 
 ```
-while (engine.IsActive())
+pecs::Engine engine;
+engine.Initialize(&initInfo);
+```
+
+The main loop of the program is written as so:
+
+```
+while(engine.IsActive())
 {
-   engine.GetWindow()->PollEvents();
+   engine.GetWindow()->PolLEvents();
 }
 ```
+
+`engine.IsActive()` checks to make sure that the engine is still active by seeing if the window needs to close. `engine.GetWindow()->PollEvents()` checks for any events that happen whil ethe window is active.
 
 ## Makefile Commands
 
@@ -162,6 +177,7 @@ while (engine.IsActive())
 | `make`, `make debug` | compiles the library in debug mode                         |
 |    `make release`    | compiles a release version of the library                  |
 |    `make shaders`    | compiles the vertex and fragment shaders into SPIR-V files |
+|    `make sample`     | compiles the sample program                                |
 |     `make clean`     | removes all object files and SPIR-V files                  |
 |   `make clean_lib`   | removes all libraries                                      |
 |  `make clean_spvs`   | removes all SPIR-V files                                   |

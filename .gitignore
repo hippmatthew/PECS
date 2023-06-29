@@ -1,6 +1,7 @@
 # Directories
 .vscode
 obj
+test
 
 # Files
 .DS_STORE

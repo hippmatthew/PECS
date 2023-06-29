@@ -30,8 +30,8 @@ _Unfinished material is located in the W.I.P branch_
 
 2. Window Object
 
-   - [ ] GLFW Window
-   - [ ] Window Surface
+   - [x] GLFW Window
+   - [x] Window Surface
 
 3. Device Object
 
@@ -74,55 +74,48 @@ _Features I would like to add after finishing the main functionality of the engi
 
 **MAKE SURE TO INSTALL MINGW64 AND VULKANSDK**
 
-1. Open the MSYS2 MINGW64 shell
-2. Use `pacman -S mingw-w64-x86_64-glfw3` to install GLFW
-3. Use `pacman -S mingw-w64-x86_64-glm` to install GLM
-4. Clone the repository and store it in an accessible location on the system
-5. Remove .default from the .env file and open it
-6. Update `VULKAN_SDK_DIR` with the directory of the desired VulkanSDK version
-7. Update `MINGW_DIR` with the directory of the mingw64 folder
-8. Comment out all MacOS related variables
-9. Notice that the Windows paths have forward slashes. This is on purpose, due to the want of having a uniform shell output. Feel free to change them to backward slahses.
-10. Remove .default from the makefile and open it
-11. Set `VULKAN_INCLUDE_DIR` equal to `WIN_VULKAN_INCLUDE_DIR`
-12. Set `VULKAN_LIB_DIR` equal to `WIN_VULKAN_LIB_DIR`
-13. Set `VULKAN_LIB` equal to `WIN_VULKAN_LIB`
-14. Set `EXT_INCLUDE_DIR` equal to `WIN_INCLUDE_DIR`
-15. Uncomment the `LDFLAGS` statement on line 18 under "Windows GLFW Library Linker"
-16. Uncomment the Windows clean functions at the bottom of the makefile
-17. Add a "obj" and "bin" directory to the project folder. These will house the object files and binaries respectively
-18. (optional) Remove all MacOS related variables and comments
+1. Install Vulkan (https://vulkan.lunarg.com)
+2. Install MinGW-w64 (https://www.mingw-w64.org)
+3. Open the MSYS2 MINGW64 shell
+4. Use `pacman -S mingw-w64-x86_64-glfw3` to install GLFW
+5. Use `pacman -S mingw-w64-x86_64-glm` to install GLM
+6. Clone the repository and store it in an accessible location on the system
+7. Remove .default from the .env file and open it
+8. Update `VULKAN_SDK_DIR` with the directory of the desired VulkanSDK version
+9. Update `MINGW_DIR` with the directory of the mingw64 folder
+10. Notice that the Windows paths have forward slashes. This is on purpose, due to the want of having a uniform shell output. Feel free to change them to backward slashes. It does not matter.
+11. Remove .default from the makefile and open it
+12. Uncomment the windows specific variables
+13. Delete all MacOS specific variables
+14. Uncomment the Windows clean functions at the bottom of the makefile and remove the MacOs clean functions
 
 ## MacOS Setup
 
 **MAKE SURE TO INSTALL HOMEBREW AND VULKANSDK**
 
-1. Open terminal
-2. Use `brew install glfw` to install GLFW
-3. Use `brew install glm` to install GLM
-4. Use `brew install pkg-config` to install pkg-config
-5. Clone the repository and store it in an accessible location on the system
-6. Remove .default from the .env file and open it
-7. Update `VULKAN_SDK_DIR` with the directory of the desired VulkanSDK version
-8. Update `BREW_DIR` with the directory of the homebrew installation. The suggested directory is for Apple Silicon users only
-9. Comment out all Windows related variables
-10. Remove .default from the makefile and open it
-11. Set `VULKAN_INCLUDE_DIR` equal to `MACOS_VULKAN_INCLUDE_DIR`
-12. Set `VULKAN_LIB_DIR` equal to `MACOS_VULKAN_LIB_DIR`
-13. Set `VULKAN_LIB` equal to `MACOS_VULKAN_LIB`
-14. Set `EXT_INCLUDE_DIR` equal to `MACOS_INCLUDE_DIR`
-15. Uncomment the `CFLAGS_DEFAULT` and `LDFLAGS` statements on lines 21 and 22 under "MacOS GLFW Library Linker"
-16. Uncomment the MacOS clean functions at the bottom of the makefile
-17. Create a directory named "obj" in the project folder. This will house the object files
-18. (optional) Remove all Windows related variables and comments
+1. Install Vulkan (https://vulkan.lunarg.com)
+2. Open terminal
+3. Use `cd ~/VulkanSDK/v.w.xx.0` (v.w.xx.0 is the vulkan version number. Change according to vulkan version and respective installation directory)
+4. Use `python3 install_vulkan.py`
+5. Install Homebrew (https://brew.sh)
+6. Open terminal
+7. Use `brew install glfw` to install GLFW
+8. Use `brew install glm` to install GLM
+9. Use `brew install pkg-config` to install pkg-config
+10. Clone the repository and store it in an accessible location on the system
+11. Remove .default from the .env file and open it
+12. Delete all Windows specific variables
+13. Remove .default from the makefile and open it
+14. Uncomment the MacOS specific variables
+15. Delete all Windows specific variables
+16. Uncomment the MacOS clean functions at the bottom of the makefile and delete the Windows clean functions
 
 ## Makefile Commands
 
-|         Code          | Functionality                                                       |
-| :-------------------: | :------------------------------------------------------------------ |
-| `make`, `make debug`  | compiles the object files in debug mode                             |
-|    `make release`     | compiles the object files without debug mode                        |
-| `make static_library` | archives the object files                                           |
-|    `make shaders`     | manually compiles the vertex and fragment shaders into SPIR-V files |
-|     `make clean`      | removes all binaries, object files, and SPIR-V files                |
-| `make clean_shaders`  | removes all SPIR-V files                                            |
+|         Code         | Functionality                                                                                                                                        |
+| :------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make`, `make debug` | compiles the library in debug mode                                                                                                                   |
+|    `make release`    | compiles a release version of the library                                                                                                            |
+|    `make shaders`    | compiles the vertex and fragment shaders into SPIR-V files.Make sure to do this whenever shader files are updated and before you compile the library |
+|     `make clean`     | removes all object files and SPIR-V files                                                                                                            |
+|  `make clean_spvs`   | removes all SPIR-V files                                                                                                                             |

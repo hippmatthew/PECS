@@ -14,7 +14,6 @@ Engine::Engine() {}
 
 Engine::~Engine()
 {
-    
     instance.destroy();
     delete window;
 }
@@ -29,11 +28,16 @@ void Engine::initialize(const InitializationInfo* initInfo)
 {
     window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
 
+    debugManager->setupDebugMessenger();
+
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
 }
 
 void Engine::createVulkanInstance(std::string applicationName, unsigned int applicationVersion)
 {
+    if (debugManager->isEnabled() && !debugManager->checkValidationLayerSupport())
+        throw std::runtime_error("not all validation layers are supported\n");
+
     vk::ApplicationInfo applicationInfo{ .pApplicationName      = applicationName.c_str(),
                                          .applicationVersion    = applicationVersion,
                                          .pEngineName           = engineInfo.name.c_str(),
@@ -42,38 +46,35 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
 
     vk::InstanceCreateInfo instanceCreateInfo{ .pApplicationInfo = &applicationInfo };
 
-    bool hasPortabilityExtension = enumerateInstanceExtensions();
+    auto requiredExtensions = getRequiredExtensions();
 
-    unsigned int glfwExtensionCount = 0;
-    const char ** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-    std::vector<const char *> requiredExtensions;
-
-    for (unsigned int i = 0; i < glfwExtensionCount; ++i)
-        requiredExtensions.emplace_back(glfwExtensions[i]);
-
-    if (hasPortabilityExtension)
+    if (enumerateInstanceExtensions())
     {
         requiredExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         requiredExtensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
         instanceCreateInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
 
-        std::cout << "portability enumeration bit enabled\n";
+        if (debugManager->isEnabled()) std::cout << "enabled portability enumeration bit\n";
     }
-
+    
     instanceCreateInfo.enabledExtensionCount = static_cast<unsigned int>(requiredExtensions.size());
     instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data();
-    instanceCreateInfo.enabledLayerCount = 0;
+    
+    if (debugManager->isEnabled())
+    {
+        instanceCreateInfo.enabledLayerCount = static_cast<unsigned int>(debugManager->getValidationLayers().size());
+        instanceCreateInfo.ppEnabledLayerNames = debugManager->getValidationLayers().data();
+    }
+    else
+        instanceCreateInfo.enabledLayerCount = 0;
     
     if (vk::createInstance(&instanceCreateInfo, nullptr, &instance) != vk::Result::eSuccess)
         throw std::runtime_error("failed to create instance");
-
-    std::cout << "instance created\n";
 }
 
 bool Engine::enumerateInstanceExtensions() const
-{
+{   
     unsigned int extensionCount = 0;
     vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 
@@ -84,11 +85,11 @@ bool Engine::enumerateInstanceExtensions() const
         case vk::Result::eIncomplete:
             break;
         case vk::Result::eErrorOutOfDeviceMemory:
-            throw std::runtime_error("out of device memory");
+            throw std::runtime_error("error: out of device memory\n");
         case vk::Result::eErrorOutOfHostMemory:
-            throw std::runtime_error("out of host memory");
+            throw std::runtime_error("error: out of host memory\n");
         default:
-            throw std::runtime_error("failed to gather instance extensions");
+            throw std::runtime_error("error: layer not present\n");
     }
 
     for (const auto& extension : extensions)
@@ -97,6 +98,19 @@ bool Engine::enumerateInstanceExtensions() const
 
     return false;
 
+}
+
+std::vector<const char *> Engine::getRequiredExtensions() const
+{
+    unsigned int glfwExtensionCount = 0;
+    const char ** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+    std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+    if (debugManager->isEnabled())
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+    return extensions;
 }
 
 }

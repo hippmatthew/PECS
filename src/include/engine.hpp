@@ -8,14 +8,6 @@
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
 
-#include <vector>
-#include <stdexcept>
-#include <cstring>
-#include <iostream>
-
-#define VULKAN_HPP_NO_CONSTRUCTORS
-#include <vulkan/vulkan.hpp>
-
 #include "window.hpp"
 
 namespace pecs
@@ -39,7 +31,7 @@ struct EngineInfo
 class Engine
 {
     public:
-        Engine();
+        Engine() {}
         Engine(const Engine&) = delete;
         ~Engine();
 
@@ -54,12 +46,14 @@ class Engine
         const EngineInfo engineInfo{ .name = "PECS",
                                      .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
         
+        DebugManager * debugManager = DebugManager::getInstance();
         Window * window;
         vk::Instance instance;
 
         void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
 
         bool enumerateInstanceExtensions() const;
+        std::vector<const char *> getRequiredExtensions() const;
 };
 
 }

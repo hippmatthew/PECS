@@ -13,6 +13,8 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include "debug.hpp"
+
 namespace pecs
 {
 
@@ -29,6 +31,8 @@ class Window
         void pollEvents() const;
 
     private:
+        DebugManager * debugManager = DebugManager::getInstance();
+        
         GLFWwindow * window;
 };
 

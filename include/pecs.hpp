@@ -19,11 +19,11 @@ namespace pecs
 
 struct InitializationInfo
 {
-    std::string applicationName;
-    unsigned int applicationVersion;
+    std::string applicationName = "PECS Application";
+    unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 
-    std::string windowTitle;
-    unsigned int windowWidth, windowHeight;
+    std::string windowTitle = "PECS Application";
+    unsigned int windowWidth = 600, windowHeight = 600;
 };
 
 struct EngineInfo

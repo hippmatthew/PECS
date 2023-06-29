@@ -110,12 +110,39 @@ _Features I would like to add after finishing the main functionality of the engi
 15. Delete all Windows specific variables
 16. Uncomment the MacOS clean functions at the bottom of the makefile and delete the Windows clean functions
 
+## Using the Library
+
+Create a new c++ project. When compiling your project make sure that the Vulkan, GLFW, and PECS include folders are listed in the `CPPFLAGS` environment variable. In the `LDFLAGS` environment variable, include all Vulkan dependencies, GLFW dependencies, and `-L$(PECS_DIRECTORY)/lib -lpecs`.
+
+For MacOS users, the makefile would look something like:
+
+```
+CPP = g++
+CPPFLAGS = `pkg-config --cflags glfw3 vulkan` -I$(PECS_DIRECTORY)/include
+LDFLAGS = `pkg-config --libs vulkan` `pkg-config --static --libs glfw3` -L$(PECS_DIRECTORY)/lib -lpecs
+
+$(OUTPUT_BINARY): $(CPP_FILES)
+   $(CPP) -o $(OUTPUT_BINARY) $(CPPFLAGS) $(CPP_FILES) $(LDFLAGS)
+```
+
+For Windows users, the makefile would look something like:
+
+```
+CPP = g++
+CPPFLAGS = -I$(VULKAN_SDK_DIRECTORY)/include -I$(MINGW_DIRECTORY)/include -I$(PECS_DIRECTORY)/include
+LDFLAGS = -L$(VULKAN_SDK_DIRECTORY)/lib -lvulkan-1 -L$(MINGW_DIRECTORY)/lib -lglfw3 -lopengl32 -lgdi32 -L$(PECS_DIRECTORY)/lib -lpecs
+
+$(OUTPUT_BINARY): $(CPP_FILES)
+   $(CPP) -o $(OUTPUT_BINARY) $(CPPFLAGS) $(CPP_FILES) $(LDFLAGS)
+```
+
 ## Makefile Commands
 
-|         Code         | Functionality                                                                                                                                        |
-| :------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make`, `make debug` | compiles the library in debug mode                                                                                                                   |
-|    `make release`    | compiles a release version of the library                                                                                                            |
-|    `make shaders`    | compiles the vertex and fragment shaders into SPIR-V files.Make sure to do this whenever shader files are updated and before you compile the library |
-|     `make clean`     | removes all object files and SPIR-V files                                                                                                            |
-|  `make clean_spvs`   | removes all SPIR-V files                                                                                                                             |
+|         Code         | Functionality                                              |
+| :------------------: | :--------------------------------------------------------- |
+| `make`, `make debug` | compiles the library in debug mode                         |
+|    `make release`    | compiles a release version of the library                  |
+|    `make shaders`    | compiles the vertex and fragment shaders into SPIR-V files |
+|     `make clean`     | removes all object files and SPIR-V files                  |
+|   `make clean_lib`   | removes all libraries                                      |
+|  `make clean_spvs`   | removes all SPIR-V files                                   |

@@ -1,59 +1,41 @@
 include .env
 
-# Vulkan OS Settings ** MAKE SURE TO SET THE CORRECT DIRECTORIES IN .env FILE **
-VULKAN_INCLUDE_DIR := #$(<OS>_VULKAN_INCLUDE_DIR)
-VULKAN_LIB_DIR := #$(<OS>_VULKAN_LIB_DIR)
-VULKAN_LIB := #$(<OS>_VULKAN_LIB)
+# C++ and Shader Compiler
+CPP = g++
+SC = glslc
 
-# OS External Include Directory
-EXT_INCLUDE_DIR := #$(<OS>_INCLUDE_DIR)
+# Windows Configuration. Delete if on MacOS
+# CPPFLAGS = -O2 -std=c++20 -I%VULKAN%/include -I$%MINGW%/include -I$(LOCAL_SRC)/include
 
-# Compiler Configuration
-CC := g++
-CFLAGS_DEFAULT = -O2 -std=c++17
-INCLUDE := -I$(VULKAN_INCLUDE_DIR) -I$(EXT_INCLUDE_DIR) -I$(LOCAL_SRC)/include
-LDFLAGS = -L$(VULKAN_LIB_DIR) $(VULKAN_LIB)
-
-# Windows Specific
-# LDFLAGS += -L$(WIN_LIB_DIR) -lglfw3 -lopengl32 -lgdi32
-
-# MacOS Specific
-# CFLAGS_DEFAULT += `pkg-config --cflags  glfw3`
-# LDFLAGS += `pkg-config --static --libs glfw3`
-
-# Shader Compiler 
-SC := glslc
+# MacOS Configuration. Delete if on Windows
+# CPPFLAGS = -O2 -std=c++20 `pkg-config --libs vulkan` `pkg-config --static --libs glfw` -I$(LOCAL_SRC)/include
 
 # Files
-SRCS := $(wildcard $(LOCAL_SRC)/*.cpp)
-OBJS := $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_OBJ)/%.o, $(SRCS))
-BINS := $(LOCAL_BIN)/engine
-LIBS := $(LOCAL_LIB)/libgeps.a
+SRCS = $(wildcard $(LOCAL_SRC)/*.cpp)
+BINS = $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_BIN)/%.o, $(SRCS))
+LIB_DEBUG = $(LOCAL_LIB)/libpecs.debug.a
+LIB = $(LOCAL_LIB)/libpecs.a
 
-VERTS := $(wildcard $(LOCAL_SHDRS)/vert/*.vert)
-FRAGS := $(wildcard $(LOCAL_SHDRS)/frag/*.frag)
-SPVS := $(patsubst $(LOCAL_SHDRS)/vert/%.vert, $(LOCAL_SHDRS)/%.vert.spv, $(VERTS)) $(patsubst $(LOCAL_SHDRS)/frag/%.frag, $(LOCAL_SHDRS)/%.frag.spv, $(FRAGS))
+VERTS = $(wildcard $(LOCAL_SHDRS)/vert/*.vert)
+FRAGS = $(wildcard $(LOCAL_SHDRS)/frag/*.frag)
+SPVS = $(patsubst $(LOCAL_SHDRS)/vert/%.vert, $(LOCAL_SHDRS)/%.vert.spv, $(VERTS)) $(patsubst $(LOCAL_SHDRS)/frag/%.frag, $(LOCAL_SHDRS)/%.frag.spv, $(FRAGS))
 
 # Functions
-debug: CFLAGS = $(CFLAGS_DEFAULT)
-debug: $(SPVS) $(BINS)
+debug: $(LIB)
 
-release: CFLAGS = $(CFLAGS_DEFAULT) -DNDEBUG
-release: $(SPVS) $(BINS)
-
-static_library: CFLAGS = $(CFLAGS_DEFAULT) -DNDEBUG
-static_library: $(LIBS)
+release: CPPFLAGS += -DNDEBUG
+release: $(LIB_DEBUG)
 
 shaders: $(SPVS)
 
-$(LOCAL_LIB)/libgeps.a: $(OBJS)
-	ar -rcs $@ $(OBJS)
+$(LOCAL_LIB)/libpecs.debug.a: $(BINS)
+	ar -rcs $@ $^
 
-$(LOCAL_BIN)/engine: $(OBJS)
-	$(CC) -o $@ $(CFLAGS) $(INCLUDE) $(OBJS) $(LDFLAGS)
+$(LOCAL_LIB)/libpecs.a: $(BINS)
+	ar -rcs $@ $^
 
-$(LOCAL_OBJ)/%.o: $(LOCAL_SRC)/%.cpp
-	$(CC) -o $@ $(CFLAGS) $(INCLUDE) -c $<
+$(LOCAL_BIN)/%.o: $(LOCAL_SRC)/%.cpp
+	$(CPP) -o $@ $(CPPFLAGS) -c $< $(LD_FLAGS)
 
 $(LOCAL_SHDR)/%.vert.spv: $(LOCAL_SHDR)/vert/%.vert
 	$(SC) -o $@ $<
@@ -67,9 +49,16 @@ clean:
 #	del /q $(LOCAL_BIN)\* $(LOCAL_SHDR)\*.spv
 
 #	MacOS clean command
-#	rm $(LOCAL_BIN)/* $(LOCAL_SHDR)/*.spv
+#	rm $(LOCAL_BIN)/*  $(LOCAL_SHDR)/*.spv
 
-clean_shaders:
+clean_lib:
+# 	Windows clean command
+#	del /q $(LOCAL_LIB)\*
+
+#	MacOS clean command
+#	rm $(LOCAL_LIB)/*
+
+clean_spvs:
 #	Windows clean command
 #	del /q $(LOCAL_SHDR)\*.spv
 

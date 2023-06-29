@@ -13,6 +13,7 @@ SC = glslc
 # Files
 SRCS = $(wildcard $(LOCAL_SRC)/*.cpp)
 BINS = $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_BIN)/%.o, $(SRCS))
+LIB_DEBUG = $(LOCAL_LIB)/libpecs.debug.a
 LIB = $(LOCAL_LIB)/libpecs.a
 
 VERTS = $(wildcard $(LOCAL_SHDRS)/vert/*.vert)
@@ -23,12 +24,15 @@ SPVS = $(patsubst $(LOCAL_SHDRS)/vert/%.vert, $(LOCAL_SHDRS)/%.vert.spv, $(VERTS
 debug: $(LIB)
 
 release: CPPFLAGS += -DNDEBUG
-release: $(LIB)
+release: $(LIB_DEBUG)
 
 shaders: $(SPVS)
 
+$(LOCAL_LIB)/libpecs.debug.a: $(BINS)
+	ar -rcs $@ $^
+
 $(LOCAL_LIB)/libpecs.a: $(BINS)
-	ar -rcs $@ $(BINS)
+	ar -rcs $@ $^
 
 $(LOCAL_BIN)/%.o: $(LOCAL_SRC)/%.cpp
 	$(CPP) -o $@ $(CPPFLAGS) -c $< $(LD_FLAGS)

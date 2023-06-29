@@ -5,6 +5,9 @@
 *   Updated:    6/27/23
 */
 
+#ifndef pecs_engine_hpp
+#define pecs_engine_hpp
+
 #include <vulkan/vulkan.hpp>
 
 #include "window.hpp"
@@ -12,29 +15,34 @@
 namespace pecs
 {
 
-struct ApplicationInfo
+struct InitializationInfo
 {
-    const char * applicationName;
-    uint32_t applicationVersion;
+    std::string applicationName;
+    unsigned int applicationVersion;
 
+    std::string windowTitle;
     unsigned int windowWidth, windowHeight;
-    const char * windowTitle;
 };
 
 struct EngineInfo
 {
-    const char * name;
-    uint32_t version;
+    std::string name;
+    unsigned int version;
 };
 
 class Engine
 {
     public:
-        Engine(const ApplicationInfo* appInfo);
+        Engine();
         Engine(const Engine&) = delete;
         ~Engine();
 
         Engine& operator=(const Engine&) = delete;
+
+        bool IsActive() const;
+        Window* GetWindow() const;
+
+        void Initialize(const InitializationInfo* initInfo);
 
     private:
         const EngineInfo engineInfo{ .name = "PECS",
@@ -45,3 +53,4 @@ class Engine
 
 }
 
+#endif /* pecs_engine_hpp */

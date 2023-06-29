@@ -31,7 +31,7 @@ _Unfinished material is located in the W.I.P branch_
 2. Window Object
 
    - [x] GLFW Window
-   - [x] Window Surface
+   - [ ] Window Surface
 
 3. Device Object
 
@@ -134,6 +134,25 @@ LDFLAGS = -L$(VULKAN_SDK_DIRECTORY)/lib -lvulkan-1 -L$(MINGW_DIRECTORY)/lib -lgl
 
 $(OUTPUT_BINARY): $(CPP_FILES)
    $(CPP) -o $(OUTPUT_BINARY) $(CPPFLAGS) $(CPP_FILES) $(LDFLAGS)
+```
+
+In the cpp file, first create an engine object: `pecs::Engine engine;`. Next, create an `InitializationInfo` variable and set the applcation name, application version, window width, window height, and window title variables like so:
+
+```
+pecs::InitializationInfo initInfo{ .applicationName      = "App Name",
+                                   .applicationVersion   = VK_MAKE_API_VERSION(0, 1, 0, 0),
+                                   .windowWidth          = desired_width,
+                                   .windowHeight         = desired_height,
+                                   .windowTitle          = "Window Title"}
+```
+
+Pass the initialization info into the Initialization function with `engine.Initialize(&initInfo)`. To create the update loop, create a while loop that looks for if the engine is active. Inside, poll the engine's window for events:
+
+```
+while (engine.IsActive())
+{
+   engine.GetWindow()->PollEvents();
+}
 ```
 
 ## Makefile Commands

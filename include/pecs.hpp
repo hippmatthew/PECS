@@ -5,6 +5,11 @@
 *   Updated:    6/29/23
 */
 
+#ifndef pecs_hpp
+#define pecs_hpp
+
+#include <string>
+
 #include <vulkan/vulkan.hpp>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -12,31 +17,32 @@
 namespace pecs
 {
 
-struct ApplicationInfo
+struct InitializationInfo
 {
-    const char * applicationName;
-    uint32_t applicationVersion;
+    std::string applicationName;
+    unsigned int applicationVersion;
 
+    std::string windowTitle;
     unsigned int windowWidth, windowHeight;
-    const char * windowTitle;
 };
 
 struct EngineInfo
 {
-    const char * name;
-    uint32_t version;
+    std::string name;
+    unsigned int version;
 };
 
 class Window
 {
     public:
-        Window(unsigned int width, unsigned int height, const char * title);
+        Window(unsigned int width, unsigned int height, std::string title);
         Window(const Window&) = delete;
         ~Window();
 
         Window& operator=(const Window&) = delete;
 
-        GLFWwindow* GetWindow() const;
+        bool ShouldClose() const;
+        void PollEvents() const;
 
     private:
         GLFWwindow * window;
@@ -45,11 +51,16 @@ class Window
 class Engine
 {
     public:
-        Engine(const ApplicationInfo* appInfo);
+        Engine();
         Engine(const Engine&) = delete;
         ~Engine();
 
         Engine& operator=(const Engine&) = delete;
+
+        bool IsActive() const;
+        Window* GetWindow() const;
+
+        void Initialize(const InitializationInfo* initInfo);
 
     private:
         const EngineInfo engineInfo{ .name = "PECS",
@@ -58,6 +69,6 @@ class Engine
         Window * window;
 };
 
-
-
 }
+
+#endif /* pecs_hpp */

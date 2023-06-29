@@ -6,23 +6,26 @@
 */
 
 #include "include/engine.hpp"
-#include <iostream>
 
 namespace pecs
 {
 
-Engine::Engine(const ApplicationInfo* appInfo)
-{
-    // window = new Window(appInfo->windowWidth,
-    //                     appInfo->windowHeight,
-    //                     appInfo->windowTitle);
-
-    std::cout << "Hello World";
-}
+Engine::Engine() {}
 
 Engine::~Engine()
 {
-    // delete window;
+    delete window;
+}
+
+bool Engine::IsActive() const
+{ return !window->ShouldClose(); }
+
+Window* Engine::GetWindow() const
+{ return window; }
+
+void Engine::Initialize(const InitializationInfo* initInfo)
+{
+    window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
 }
 
 }

@@ -1,9 +1,9 @@
 /*
-*   PECS - window.cpp
-*   Author:     Matthew Hipp
-*   Created:    6/27/23
-*   Updated:    6/29/23
-*/
+ *  PECS - window.cpp
+ *  Author:     Matthew Hipp
+ *  Created:    6/27/23
+ *  Updated:    6/29/23
+ */
 
 #include "include/window.hpp"
 

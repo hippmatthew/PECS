@@ -10,8 +10,6 @@
 namespace pecs
 {
 
-Engine::Engine() {}
-
 Engine::~Engine()
 {
     instance.destroy();
@@ -27,10 +25,10 @@ Window* Engine::getWindow() const
 void Engine::initialize(const InitializationInfo* initInfo)
 {
     window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
-
-    debugManager->setupDebugMessenger();
-
+    
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
+    
+    if (debugManager->isEnabled()) debugManager->setupDebugMessenger(instance);
 }
 
 void Engine::createVulkanInstance(std::string applicationName, unsigned int applicationVersion)
@@ -76,7 +74,7 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
 bool Engine::enumerateInstanceExtensions() const
 {   
     unsigned int extensionCount = 0;
-    vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    static_cast<void>(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
 
     std::vector<vk::ExtensionProperties> extensions(extensionCount);
     switch(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data()))
@@ -97,7 +95,6 @@ bool Engine::enumerateInstanceExtensions() const
             return true;
 
     return false;
-
 }
 
 std::vector<const char *> Engine::getRequiredExtensions() const

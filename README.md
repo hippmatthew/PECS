@@ -164,7 +164,7 @@ The main loop of the program is written as so:
 ```
 while(engine.IsActive())
 {
-   engine.GetWindow()->PolLEvents();
+   engine.GetWindow()->PollEvents();
 }
 ```
 

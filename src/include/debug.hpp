@@ -1,9 +1,9 @@
 /*
-*   PECS - debug.hpp
-*   Author:     Matthew Hipp
-*   Created:    6/29/23
-*   Updated:    6/29/23
-*/
+ *  PECS - debug.hpp
+ *  Author:     Matthew Hipp
+ *  Created:    6/29/23
+ *  Updated:    7/18/23
+ */
 
 #ifndef pecs_debug_hpp
 #define pecs_debug_hpp
@@ -22,7 +22,6 @@ namespace pecs
 class DebugManager
 {
     public:
-        
         DebugManager(const DebugManager&) = delete;
         ~DebugManager();
 
@@ -31,14 +30,10 @@ class DebugManager
         bool isEnabled() const;
         std::vector<const char *> getValidationLayers() const;
         
-        void setupDebugMessenger() const;
+        void setupDebugMessenger(const vk::Instance& instance) const;
         bool checkValidationLayerSupport() const;
 
         static DebugManager* getInstance();
-        static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                              vk::DebugUtilsMessageTypeFlagsEXT messageType,
-                                                              const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                                              void * pUserData);
 
     private:
         DebugManager();
@@ -53,6 +48,11 @@ class DebugManager
         #endif
 
         std::vector<const char *> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+
+        static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                              VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                              const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                              void * pUserData);
 };
 
 }

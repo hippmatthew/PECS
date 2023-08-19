@@ -12,9 +12,6 @@ namespace pecs
 
 Engine::~Engine()
 {
-    if (DebugManager::isEnabled())
-        debugManager->deallocate(instance);
-
     instance.destroy();
    
     delete debugManager;

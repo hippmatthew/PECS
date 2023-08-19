@@ -32,18 +32,14 @@ class DebugManager
         void setupDebugMessenger(const vk::Instance& instance) const;
         bool checkValidationLayerSupport() const;
         
-        void deallocate(const vk::Instance& instance) const;
-        
         static bool isEnabled();
         static void initialize();
         static DebugManager* getInstance();
         static void populateMessengerStruct(vk::DebugUtilsMessengerCreateInfoEXT& info);
         
     private:
-        DebugManager();
+        DebugManager() = default;
         static DebugManager * sInstance;
-
-        vk::DebugUtilsMessengerEXT debugMessenger;
         
         #ifdef NDEBUG
             static const bool debugMode = false;

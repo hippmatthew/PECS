@@ -9,8 +9,7 @@
 
 namespace pecs
 {  
-   DebugManager::DebugManager()
-   { sInstance = nullptr; }
+   DebugManager * DebugManager::sInstance = nullptr;
    
    DebugManager::~DebugManager()
    {
@@ -24,13 +23,14 @@ namespace pecs
     { return sInstance; }
 
     void DebugManager::initialize()
-    { sInstance = new DebugManager; }
+    { 
+        if (sInstance != nullptr) return;
+
+        sInstance = new DebugManager;
+    }
     
     std::vector<const char *> DebugManager::getValidationLayers() const
     { return validationLayers; }
-
-    void DebugManager::deallocate(const vk::Instance& instance) const
-    { vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr); }
 
     void DebugManager::setupDebugMessenger(const vk::Instance& instance) const
     {
@@ -39,8 +39,7 @@ namespace pecs
         vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
         populateMessengerStruct(debugMessengerCreateInfo);
 
-        auto dldi = vk::DispatchLoaderDynamic(instance, vkGetInstanceProcAddr);
-
+        auto dldi = vk::DispatchLoaderDynamic(instance, nullptr);
         auto messenger = instance.createDebugUtilsMessengerEXT(debugMessengerCreateInfo, nullptr, dldi);
     }
     

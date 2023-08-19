@@ -36,6 +36,46 @@ struct EngineInfo
     unsigned int version;
 };
 
+class DebugManager
+{
+    public:
+        DebugManager(const DebugManager&) = delete;
+        ~DebugManager();
+
+        DebugManager& operator=(const DebugManager&) = delete;
+        
+        std::vector<const char *> getValidationLayers() const;
+        
+        void setupDebugMessenger(const vk::Instance& instance) const;
+        bool checkValidationLayerSupport() const;
+        
+        void deallocate(const vk::Instance& instance) const;
+        
+        static bool isEnabled();
+        static void initialize();
+        static DebugManager* getInstance();
+        static void populateMessengerStruct(vk::DebugUtilsMessengerCreateInfoEXT& info);
+        
+    private:
+        DebugManager();
+        static DebugManager * sInstance;
+
+        vk::DebugUtilsMessengerEXT debugMessenger;
+        
+        #ifdef NDEBUG
+            static const bool debugMode = false;
+        #else
+            static const bool debugMode = true;
+        #endif
+
+        std::vector<const char *> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+
+        static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                              VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                              const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                              void * pUserData);
+};
+
 class Window
 {
     public:
@@ -46,7 +86,6 @@ class Window
         Window& operator=(const Window&) = delete;
 
         bool shouldClose() const;
-        void pollEvents() const;
 
     private:
         GLFWwindow * window;
@@ -55,7 +94,7 @@ class Window
 class Engine
 {
     public:
-        Engine();
+        Engine() = default;
         Engine(const Engine&) = delete;
         ~Engine();
 
@@ -63,6 +102,7 @@ class Engine
 
         bool isActive() const;
         Window* getWindow() const;
+        void getEvents() const;
 
         void initialize(const InitializationInfo* initInfo);
 
@@ -70,13 +110,15 @@ class Engine
         const EngineInfo engineInfo{ .name = "PECS",
                                      .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
         
+        DebugManager * debugManager;
         Window * window;
         vk::Instance instance;
 
         void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
-        
+
         bool enumerateInstanceExtensions() const;
-    };
+        std::vector<const char *> getRequiredExtensions() const;
+};
 
 }
 

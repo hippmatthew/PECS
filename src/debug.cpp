@@ -8,35 +8,36 @@
 #include "include/debug.hpp"
 
 namespace pecs
-{
-
-    DebugManager DebugManager::sInstance;
-
-    DebugManager::DebugManager() {}
-    DebugManager::~DebugManager() {}
-
-    bool DebugManager::isEnabled() const
+{  
+   DebugManager::DebugManager()
+   { sInstance = nullptr; }
+   
+   DebugManager::~DebugManager()
+   {
+        delete sInstance;
+   }
+   
+   bool DebugManager::isEnabled()
     { return debugMode; }
     
-    DebugManager* DebugManager::getInstance()
-    { return &sInstance; }
+    DebugManager * DebugManager::getInstance()
+    { return sInstance; }
 
+    void DebugManager::initialize()
+    { sInstance = new DebugManager; }
+    
     std::vector<const char *> DebugManager::getValidationLayers() const
     { return validationLayers; }
+
+    void DebugManager::deallocate(const vk::Instance& instance) const
+    { vkDestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr); }
 
     void DebugManager::setupDebugMessenger(const vk::Instance& instance) const
     {
         if (!debugMode) return;
 
-        vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{ .messageSeverity     = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose    |
-                                                                                              vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo       |
-                                                                                              vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning    |
-                                                                                              vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
-                                                                        .messageType        = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral        |
-                                                                                              vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance    |
-                                                                                              vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
-                                                                        .pfnUserCallback    = debugCallback,
-                                                                        .pUserData          = nullptr };
+        vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
+        populateMessengerStruct(debugMessengerCreateInfo);
 
         auto dldi = vk::DispatchLoaderDynamic(instance, vkGetInstanceProcAddr);
 
@@ -61,6 +62,19 @@ namespace pecs
         }
 
         return false;
+    }
+
+    void DebugManager::populateMessengerStruct(vk::DebugUtilsMessengerCreateInfoEXT& info)
+    {
+        info.messageSeverity    = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose    |
+                                  vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo       |
+                                  vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning    |
+                                  vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+        info.messageType        = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral        |
+                                  vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance    |
+                                  vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation;
+        info.pfnUserCallback    = debugCallback;
+        info.pUserData          = nullptr;
     }
 
     VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugManager::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

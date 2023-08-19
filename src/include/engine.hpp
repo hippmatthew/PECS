@@ -31,7 +31,7 @@ struct EngineInfo
 class Engine
 {
     public:
-        Engine() {}
+        Engine() = default;
         Engine(const Engine&) = delete;
         ~Engine();
 
@@ -39,6 +39,7 @@ class Engine
 
         bool isActive() const;
         Window* getWindow() const;
+        void getEvents() const;
 
         void initialize(const InitializationInfo* initInfo);
 
@@ -46,7 +47,7 @@ class Engine
         const EngineInfo engineInfo{ .name = "PECS",
                                      .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
         
-        DebugManager * debugManager = DebugManager::getInstance();
+        DebugManager * debugManager;
         Window * window;
         vk::Instance instance;
 

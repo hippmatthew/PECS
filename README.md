@@ -2,10 +2,10 @@
 
 **P**hysics **E**ngine _for_ **C**omputation _and_ **S**imulation, _By Matthew Hipp_
 
-PECGS is a physics engine designed for gpu accelerated physics computation and simulation using VulkanSDK.
+PECS is a physics engine designed for gpu accelerated physics computation and simulation using VulkanSDK.
 THe idea is to have a separate compuational and graphical components which accesss the GPU's compute or graphics queue family respectively. The engine itself will contain the window, vulkan instance, physical device, and logical deice as well as access to the graphical and computational components if one wishes to use them.
 
-Current Supported Vulkan Version: **_1.3.250.0_**
+Current Supported Vulkan Version: **_1.3.250.1_**
 
 ## Features Currently Being Worked On
 
@@ -13,20 +13,20 @@ _Unfinished material is located in the W.I.P branch_
 
 0. Initial Setup
 
-   - [x] local directories for archive output, binaries, object files, src files, and shaders
-   - [x] default environment file for external library and local directories
-   - [x] default makefile setup
-   - [x] solution to setup the engine for Windows or MacOS
+   - [x] Local directories for archive output, binaries, object files, src files, and shaders
+   - [x] Default environment file for external library and local directories
+   - [x] Default makefile setup
+   - [x] Solution to setup the engine for Windows or MacOS
 
 1. Engine Object
 
    - [x] Vulkan Instance
-   - [ ] Validation Layers
+   - [x] Validation Layers
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
    - [ ] Frame Drawing
    - [ ] Main Engine Loop
-   - [ ] CONTAINS: device, window, and pipeline object
+   - [ ] CONTAINS: device, window, pipeline, and debugManager objects
 
 2. Window Object
 
@@ -37,7 +37,8 @@ _Unfinished material is located in the W.I.P branch_
 
    - [ ] Physical Device
    - [ ] Logical Device
-   - [ ] Device Queue Families
+   - [ ] Graphics Queue Family
+   - [ ] Compute Queue Family
 
 4. Graphics Pipeline Object
 
@@ -48,10 +49,20 @@ _Unfinished material is located in the W.I.P branch_
    - [ ] Framebuffers
    - [ ] Pipeline
 
-5. Debug Utils Object
+5. Debug Manager Object
 
-   - [ ] toggle based on -DDEBUG macro
-   - [ ] Mediates all shell output
+   - [x] toggle based on -DDEBUG macro
+   - [x] Vulkan Debug Utils
+
+6. ImGui
+
+   - [ ] Context Implementation
+   - [ ] Debugging CLI
+   - [ ] Additional debugging commands?
+
+7. Sample Program
+
+   - [ ] Render a triangle!
 
 ## Future Features to be Developed
 
@@ -68,7 +79,7 @@ _Features I would like to add after finishing the main functionality of the engi
 9. Object importing
 10. Mass Density Maps (like a texture map but for mass density. Useful for creating more complex rigidbodies)
 11. Fluids
-12. GUI (if needed)
+12. Virtual Reality
 
 ## Windows Setup
 

@@ -28,7 +28,6 @@ class Window
         Window& operator=(const Window&) = delete;
         
         bool shouldClose() const;
-        void pollEvents() const;
 
     private:
         DebugManager * debugManager = DebugManager::getInstance();

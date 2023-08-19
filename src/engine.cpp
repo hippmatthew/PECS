@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    6/29/23
+*   Updated:    7/18/23
 */
 
 #include "include/engine.hpp"
@@ -12,7 +12,12 @@ namespace pecs
 
 Engine::~Engine()
 {
+    if (DebugManager::isEnabled())
+        debugManager->deallocate(instance);
+
     instance.destroy();
+   
+    delete debugManager;
     delete window;
 }
 
@@ -22,8 +27,17 @@ bool Engine::isActive() const
 Window* Engine::getWindow() const
 { return window; }
 
+void Engine::getEvents() const
+{ glfwPollEvents(); }
+
 void Engine::initialize(const InitializationInfo* initInfo)
-{
+{    
+    if (DebugManager::isEnabled())
+    {
+        DebugManager::initialize();
+        debugManager = DebugManager::getInstance();
+    }
+    
     window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
     
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
@@ -59,13 +73,21 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
     instanceCreateInfo.enabledExtensionCount = static_cast<unsigned int>(requiredExtensions.size());
     instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data();
     
-    if (debugManager->isEnabled())
+    if (DebugManager::isEnabled())
     {
+        vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
+        DebugManager::populateMessengerStruct(debugMessengerCreateInfo);
+        
         instanceCreateInfo.enabledLayerCount = static_cast<unsigned int>(debugManager->getValidationLayers().size());
         instanceCreateInfo.ppEnabledLayerNames = debugManager->getValidationLayers().data();
+        instanceCreateInfo.pNext = static_cast<vk::DebugUtilsMessengerCreateInfoEXT *>(&debugMessengerCreateInfo);
     }
     else
+    {
         instanceCreateInfo.enabledLayerCount = 0;
+        instanceCreateInfo.pNext = nullptr;
+    }
+        
     
     if (vk::createInstance(&instanceCreateInfo, nullptr, &instance) != vk::Result::eSuccess)
         throw std::runtime_error("failed to create instance");

@@ -26,25 +26,29 @@ class DebugManager
         ~DebugManager();
 
         DebugManager& operator=(const DebugManager&) = delete;
-
-        bool isEnabled() const;
+        
         std::vector<const char *> getValidationLayers() const;
         
         void setupDebugMessenger(const vk::Instance& instance) const;
         bool checkValidationLayerSupport() const;
-
+        
+        void deallocate(const vk::Instance& instance) const;
+        
+        static bool isEnabled();
+        static void initialize();
         static DebugManager* getInstance();
-
+        static void populateMessengerStruct(vk::DebugUtilsMessengerCreateInfoEXT& info);
+        
     private:
         DebugManager();
-        static DebugManager sInstance;
+        static DebugManager * sInstance;
 
         vk::DebugUtilsMessengerEXT debugMessenger;
         
         #ifdef NDEBUG
-            const bool debugMode = false;
+            static const bool debugMode = false;
         #else
-            const bool debugMode = true;
+            static const bool debugMode = true;
         #endif
 
         std::vector<const char *> validationLayers = { "VK_LAYER_KHRONOS_validation" };

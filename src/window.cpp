@@ -22,14 +22,13 @@ Window::Window(unsigned int width, unsigned int height, std::string title)
 
 Window::~Window()
 {
+    delete debugManager;
+    
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 bool Window::shouldClose() const
 { return glfwWindowShouldClose(window); }
-
-void Window::pollEvents() const
-{ glfwPollEvents(); }
 
 }

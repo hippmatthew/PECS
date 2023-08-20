@@ -84,6 +84,7 @@ _Features I would like to add after finishing the main functionality of the engi
 ## Windows Setup
 
 **MAKE SURE TO INSTALL MINGW64 AND VULKANSDK**
+_outdated. will update soon_
 
 1. Install Vulkan (https://vulkan.lunarg.com)
 2. Install MinGW-w64 (https://www.mingw-w64.org)

@@ -2,7 +2,7 @@
 *   PECS - window.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    6/27/23
+*   Updated:    7/20/23
 */
 
 #ifndef pecs_window_hpp
@@ -12,8 +12,6 @@
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
-#include "debug.hpp"
 
 namespace pecs
 {
@@ -30,8 +28,6 @@ class Window
         bool shouldClose() const;
 
     private:
-        DebugManager * debugManager = DebugManager::getInstance();
-        
         GLFWwindow * window;
 };
 

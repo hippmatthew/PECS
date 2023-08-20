@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/18/23
+*   Updated:    7/20/23
 */
 
 #include "include/engine.hpp"
@@ -13,8 +13,7 @@ namespace pecs
 Engine::~Engine()
 {
     instance.destroy();
-   
-    delete debugManager;
+
     delete window;
 }
 
@@ -29,24 +28,13 @@ void Engine::getEvents() const
 
 void Engine::initialize(const InitializationInfo* initInfo)
 {    
-    if (DebugManager::isEnabled())
-    {
-        DebugManager::initialize();
-        debugManager = DebugManager::getInstance();
-    }
-    
     window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
     
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
-    
-    if (debugManager->isEnabled()) debugManager->setupDebugMessenger(instance);
 }
 
 void Engine::createVulkanInstance(std::string applicationName, unsigned int applicationVersion)
 {
-    if (debugManager->isEnabled() && !debugManager->checkValidationLayerSupport())
-        throw std::runtime_error("not all validation layers are supported\n");
-
     vk::ApplicationInfo applicationInfo{ .pApplicationName      = applicationName.c_str(),
                                          .applicationVersion    = applicationVersion,
                                          .pEngineName           = engineInfo.name.c_str(),
@@ -63,28 +51,25 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
         requiredExtensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
         instanceCreateInfo.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
-
-        if (debugManager->isEnabled()) std::cout << "enabled portability enumeration bit\n";
     }
     
     instanceCreateInfo.enabledExtensionCount = static_cast<unsigned int>(requiredExtensions.size());
     instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data();
-    
-    if (DebugManager::isEnabled())
-    {
-        vk::DebugUtilsMessengerCreateInfoEXT debugMessengerCreateInfo{};
-        DebugManager::populateMessengerStruct(debugMessengerCreateInfo);
+    instanceCreateInfo.enabledLayerCount = 0;
         
-        instanceCreateInfo.enabledLayerCount = static_cast<unsigned int>(debugManager->getValidationLayers().size());
-        instanceCreateInfo.ppEnabledLayerNames = debugManager->getValidationLayers().data();
-        instanceCreateInfo.pNext = static_cast<vk::DebugUtilsMessengerCreateInfoEXT *>(&debugMessengerCreateInfo);
-    }
-    else
+    switch(vk::createInstance(&instanceCreateInfo, nullptr, &instance))
     {
-        instanceCreateInfo.enabledLayerCount = 0;
-        instanceCreateInfo.pNext = nullptr;
+        case vk::Result::eSuccess:
+            break;
+        case vk::Result::eErrorOutOfDeviceMemory:
+            throw std::runtime_error("error: instance creation failed. out of device memory");
+        case vk::Result::eErrorOutOfHostMemory:
+            throw std::runtime_error("error: instance creation failed. out of host memory");
+        case vk::Result::eErrorLayerNotPresent:
+            throw std::runtime_error("error: instance creation failed. layer not present");
+        default:
+            throw std::runtime_error("error: instance creation failed");
     }
-        
     
     if (vk::createInstance(&instanceCreateInfo, nullptr, &instance) != vk::Result::eSuccess)
         throw std::runtime_error("failed to create instance");
@@ -122,9 +107,6 @@ std::vector<const char *> Engine::getRequiredExtensions() const
     const char ** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
     std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
-    if (debugManager->isEnabled())
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
     return extensions;
 }

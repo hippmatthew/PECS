@@ -2,7 +2,7 @@
  *  PECS - window.cpp
  *  Author:     Matthew Hipp
  *  Created:    6/27/23
- *  Updated:    6/29/23
+ *  Updated:    7/20/23
  */
 
 #include "include/window.hpp"
@@ -21,9 +21,7 @@ Window::Window(unsigned int width, unsigned int height, std::string title)
 }
 
 Window::~Window()
-{
-    delete debugManager;
-    
+{    
     glfwDestroyWindow(window);
     glfwTerminate();
 }

@@ -2,7 +2,7 @@
 *   PECS - window.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    6/27/23
+*   Updated:    7/20/23
 */
 
 #ifndef pecs_window_hpp
@@ -26,7 +26,6 @@ class Window
         Window& operator=(const Window&) = delete;
         
         bool shouldClose() const;
-        void pollEvents() const;
 
     private:
         GLFWwindow * window;

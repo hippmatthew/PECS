@@ -2,16 +2,11 @@
 *   PECS - engine.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    6/27/23
+*   Updated:    7/20/23
 */
 
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
-
-#include <vector>
-#include <stdexcept>
-#include <cstring>
-#include <iostream>
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>
@@ -39,7 +34,7 @@ struct EngineInfo
 class Engine
 {
     public:
-        Engine();
+        Engine() = default;
         Engine(const Engine&) = delete;
         ~Engine();
 
@@ -47,6 +42,7 @@ class Engine
 
         bool isActive() const;
         Window* getWindow() const;
+        void getEvents() const;
 
         void initialize(const InitializationInfo* initInfo);
 
@@ -60,6 +56,7 @@ class Engine
         void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
 
         bool enumerateInstanceExtensions() const;
+        std::vector<const char *> getRequiredExtensions() const;
 };
 
 }

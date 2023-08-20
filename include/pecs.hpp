@@ -9,6 +9,10 @@
 #define pecs_hpp
 
 #include <string>
+#include <vector>
+#include <stdexcept>
+#include <iostream>
+#include <cstring>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -42,7 +46,6 @@ class Window
         Window& operator=(const Window&) = delete;
 
         bool shouldClose() const;
-        void pollEvents() const;
 
     private:
         GLFWwindow * window;
@@ -51,7 +54,7 @@ class Window
 class Engine
 {
     public:
-        Engine();
+        Engine() = default;
         Engine(const Engine&) = delete;
         ~Engine();
 
@@ -59,6 +62,7 @@ class Engine
 
         bool isActive() const;
         Window* getWindow() const;
+        void getEvents() const;
 
         void initialize(const InitializationInfo* initInfo);
 
@@ -70,9 +74,10 @@ class Engine
         vk::Instance instance;
 
         void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
-        
+
         bool enumerateInstanceExtensions() const;
-    };
+        std::vector<const char *> getRequiredExtensions() const;
+};
 
 }
 

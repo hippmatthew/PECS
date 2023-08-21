@@ -2,7 +2,7 @@
 *   PECS - window.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/20/23
+*   Updated:    7/21/23
 */
 
 #ifndef pecs_window_hpp
@@ -13,14 +13,19 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <memory>
+
+#include "debug.hpp"
+
 namespace pecs
 {
 
 class Window
 {
     public:
-        Window(unsigned int width, unsigned int height, std::string title);
+        Window(unsigned int width, unsigned int height, std::string title, DebugManager * dm);
         Window(const Window&) = delete;
+        
         ~Window();
 
         Window& operator=(const Window&) = delete;
@@ -28,7 +33,8 @@ class Window
         bool shouldClose() const;
 
     private:
-        GLFWwindow * window;
+        GLFWwindow * window = nullptr;
+        DebugManager * debugManager = nullptr;
 };
 
 }

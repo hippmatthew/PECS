@@ -2,14 +2,11 @@
 *   PECS - engine.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/20/23
+*   Updated:    7/21/23
 */
 
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
-
-#define VULKAN_HPP_NO_CONSTRUCTORS
-#include <vulkan/vulkan.hpp>
 
 #include "window.hpp"
 
@@ -23,6 +20,8 @@ struct InitializationInfo
 
     std::string windowTitle = "PECS Application";
     unsigned int windowWidth = 600, windowHeight = 600;
+
+    bool enableDebugManager = true;
 };
 
 struct EngineInfo
@@ -41,7 +40,6 @@ class Engine
         Engine& operator=(const Engine&) = delete;
 
         bool isActive() const;
-        Window* getWindow() const;
         void getEvents() const;
 
         void initialize(const InitializationInfo* initInfo);
@@ -50,7 +48,9 @@ class Engine
         const EngineInfo engineInfo{ .name = "PECS",
                                      .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
         
-        Window * window;
+        Window * window = nullptr;
+        DebugManager * debugManager = nullptr;
+        
         vk::Instance instance;
 
         void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);

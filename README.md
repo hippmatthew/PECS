@@ -21,7 +21,7 @@ _Unfinished material is located in the W.I.P branch_
 1. Engine Object
 
    - [x] Vulkan Instance
-   - [x] Validation Layers
+   - [ ] Validation Layers
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
    - [ ] Frame Drawing
@@ -51,8 +51,8 @@ _Unfinished material is located in the W.I.P branch_
 
 5. Debug Manager Object
 
-   - [x] toggle based on -DDEBUG macro
-   - [x] Vulkan Debug Utils
+   - [ ] toggle based on -DDEBUG macro
+   - [ ] Vulkan Debug Utils
 
 6. ImGui
 
@@ -174,22 +174,22 @@ engine.Initialize(&initInfo);
 The main loop of the program is written as so:
 
 ```
-while(engine.IsActive())
+while(engine.isActive())
 {
-   engine.GetWindow()->PollEvents();
+   engine.getEvents();
 }
 ```
 
-`engine.IsActive()` checks to make sure that the engine is still active by seeing if the window needs to close. `engine.GetWindow()->PollEvents()` checks for any events that happen whil ethe window is active.
+`engine.isActive()` checks to make sure that the engine is still active by seeing if the window needs to close. `engine.getEvents()` checks for any events that happen whil ethe window is active.
 
 ## Makefile Commands
 
-|         Code         | Functionality                                              |
-| :------------------: | :--------------------------------------------------------- |
-| `make`, `make debug` | compiles the library in debug mode                         |
-|    `make release`    | compiles a release version of the library                  |
-|    `make shaders`    | compiles the vertex and fragment shaders into SPIR-V files |
-|    `make sample`     | compiles the sample program                                |
-|     `make clean`     | removes all object files and SPIR-V files                  |
-|   `make clean_lib`   | removes all libraries                                      |
-|  `make clean_spvs`   | removes all SPIR-V files                                   |
+|          Code          | Functionality                                              |
+| :--------------------: | :--------------------------------------------------------- |
+| `make`, `make archive` | compiles the library                                       |
+|     `make shaders`     | compiles the vertex and fragment shaders into SPIR-V files |
+|     `make sample`      | compiles the sample program                                |
+|      `make clean`      | removes all object files and SPIR-V files                  |
+|    `make clean_lib`    | removes all libraries                                      |
+|  `make clean_sample`   | removes the sample program binary                          |
+|   `make clean_spvs`    | removes all SPIR-V files                                   |

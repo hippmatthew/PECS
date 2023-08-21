@@ -1,0 +1,44 @@
+/*
+ *  PECS - debug.hpp
+ *  Author:     Matthew Hipp
+ *  Created:    7/21/23
+ *  Updated:    7/21/23
+ */
+
+#ifndef pecs_debug_hpp
+#define pecs_debug_hpp
+
+#define VULKAN_HPP_NO_CONSTRUCTORS
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vk_enum_string_helper.h>
+
+#include <iostream>
+#include <string>
+
+namespace pecs
+{
+    
+    class DebugManager
+    {
+        public:            
+            DebugManager(bool enable = true) : enabled(enable) {};
+            DebugManager(const DebugManager&) = delete;
+            
+            ~DebugManager() = default;
+
+            DebugManager operator=(const DebugManager&) = delete;
+
+            bool isEnabled() const;
+
+            void message(const std::string s, bool err = false) const;
+            void message(const vk::Result r) const;
+
+        private:
+            const bool enabled;
+
+            std::string vkResultToString(const vk::Result result) const;
+    };
+
+}
+
+#endif /* pecs_debug_hpp */

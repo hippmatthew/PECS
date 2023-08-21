@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/20/23
+*   Updated:    7/21/23
 */
 
 #include "include/engine.hpp"
@@ -12,24 +12,36 @@ namespace pecs
 
 Engine::~Engine()
 {
+    if (debugManager->isEnabled()) debugManager->message("destroying vulkan instance...");
     instance.destroy();
 
+    if (debugManager->isEnabled()) debugManager->message("destroying window...");
     delete window;
+
+    if (debugManager->isEnabled()) debugManager->message("disabling debug manager...");
+    delete debugManager;
 }
 
 bool Engine::isActive() const
 { return !window->shouldClose(); }
-
-Window* Engine::getWindow() const
-{ return window; }
 
 void Engine::getEvents() const
 { glfwPollEvents(); }
 
 void Engine::initialize(const InitializationInfo* initInfo)
 {    
-    window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
+    if (initInfo->enableDebugManager)
+    {
+        debugManager = new DebugManager;
+        debugManager->message("debug manager enabled");
+    }
+    else
+        debugManager = new DebugManager(false);
     
+    if (debugManager->isEnabled()) debugManager->message("creating window...");
+    window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle, debugManager);
+    
+    if (debugManager->isEnabled()) debugManager->message("creating vulkan instance...");
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
 }
 
@@ -43,10 +55,12 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
 
     vk::InstanceCreateInfo instanceCreateInfo{ .pApplicationInfo = &applicationInfo };
 
+    if (debugManager->isEnabled()) debugManager->message("\tcollecting required extensions...");
     auto requiredExtensions = getRequiredExtensions();
 
     if (enumerateInstanceExtensions())
     {
+        if (debugManager->isEnabled()) debugManager->message("\tenabling portability extensions...");
         requiredExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         requiredExtensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
@@ -57,22 +71,11 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
     instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data();
     instanceCreateInfo.enabledLayerCount = 0;
         
-    switch(vk::createInstance(&instanceCreateInfo, nullptr, &instance))
-    {
-        case vk::Result::eSuccess:
-            break;
-        case vk::Result::eErrorOutOfDeviceMemory:
-            throw std::runtime_error("error: instance creation failed. out of device memory");
-        case vk::Result::eErrorOutOfHostMemory:
-            throw std::runtime_error("error: instance creation failed. out of host memory");
-        case vk::Result::eErrorLayerNotPresent:
-            throw std::runtime_error("error: instance creation failed. layer not present");
-        default:
-            throw std::runtime_error("error: instance creation failed");
-    }
-    
-    if (vk::createInstance(&instanceCreateInfo, nullptr, &instance) != vk::Result::eSuccess)
-        throw std::runtime_error("failed to create instance");
+    vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &instance);
+
+    if (result != vk::Result::eSuccess) debugManager->message(result);
+    if (debugManager->isEnabled()) debugManager->message("\testablished vulkan instance");
+     
 }
 
 bool Engine::enumerateInstanceExtensions() const
@@ -81,24 +84,29 @@ bool Engine::enumerateInstanceExtensions() const
     static_cast<void>(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
 
     std::vector<vk::ExtensionProperties> extensions(extensionCount);
-    switch(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data()))
+    vk::Result result = vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+    
+    switch (result)
     {
         case vk::Result::eSuccess:
-        case vk::Result::eIncomplete:
+            if (debugManager->isEnabled()) debugManager->message("\tavailable extensions:");
             break;
-        case vk::Result::eErrorOutOfDeviceMemory:
-            throw std::runtime_error("error: out of device memory\n");
-        case vk::Result::eErrorOutOfHostMemory:
-            throw std::runtime_error("error: out of host memory\n");
+        case vk::Result::eIncomplete:
+            if (debugManager->isEnabled()) debugManager->message("\twarning: not all extensions were available\n\tavailable extensions:");
+            break;
         default:
-            throw std::runtime_error("error: layer not present\n");
+            debugManager->message(result);
     }
 
+    bool hasPortabilityBit = false;
     for (const auto& extension : extensions)
+    {
+        if (debugManager->isEnabled()) debugManager->message("\t\t" + static_cast<std::string>(extension.extensionName));
         if (strcmp(extension.extensionName, "VK_KHR_portability_enumeration") == 0)
-            return true;
+            hasPortabilityBit = true;
+    }
 
-    return false;
+    return hasPortabilityBit;
 }
 
 std::vector<const char *> Engine::getRequiredExtensions() const

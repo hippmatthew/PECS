@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/21/23
+*   Updated:    7/22/23
 */
 
 #include "include/engine.hpp"
@@ -43,6 +43,8 @@ void Engine::initialize(const InitializationInfo* initInfo)
     
     if (debugManager->isEnabled()) debugManager->message("creating vulkan instance...");
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
+
+    device = new Device(instance, debugManager);
 }
 
 void Engine::createVulkanInstance(std::string applicationName, unsigned int applicationVersion)

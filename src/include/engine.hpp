@@ -2,13 +2,14 @@
 *   PECS - engine.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/21/23
+*   Updated:    7/22/23
 */
 
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
 
 #include "window.hpp"
+#include "device.hpp"
 
 namespace pecs
 {
@@ -50,6 +51,7 @@ class Engine
         
         Window * window = nullptr;
         DebugManager * debugManager = nullptr;
+        Device * device = nullptr;
         
         vk::Instance instance;
 

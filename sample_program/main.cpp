@@ -14,7 +14,8 @@ int main()
                                        .applicationVersion  = VK_MAKE_API_VERSION(0, 1, 0, 0),
                                        .windowTitle         = "PECS Test",
                                        .windowWidth         = 600,
-                                       .windowHeight        = 600 };
+                                       .windowHeight        = 600,
+                                       .enableDebugManager  = true };
     
     // Create the engine object and initalize it
     pecs::Engine engine;

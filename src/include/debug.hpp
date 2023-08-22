@@ -2,7 +2,7 @@
  *  PECS - debug.hpp
  *  Author:     Matthew Hipp
  *  Created:    7/21/23
- *  Updated:    7/21/23
+ *  Updated:    7/22/23
  */
 
 #ifndef pecs_debug_hpp
@@ -18,26 +18,26 @@
 namespace pecs
 {
     
-    class DebugManager
-    {
-        public:            
-            DebugManager(bool enable = true) : enabled(enable) {};
-            DebugManager(const DebugManager&) = delete;
+class DebugManager
+{
+    public:            
+        DebugManager(bool enable = true) : enabled(enable) {};
+        DebugManager(const DebugManager&) = delete;
             
-            ~DebugManager() = default;
+        ~DebugManager() = default;
 
-            DebugManager operator=(const DebugManager&) = delete;
+        DebugManager operator=(const DebugManager&) = delete;
 
-            bool isEnabled() const;
+        bool isEnabled() const;
 
-            void message(const std::string s, bool err = false) const;
-            void message(const vk::Result r) const;
+        void message(const std::string s, bool err = false) const;
+        void message(const vk::Result r) const;
 
-        private:
-            const bool enabled;
+    private:
+        const bool enabled;
 
-            std::string vkResultToString(const vk::Result result) const;
-    };
+        std::string vkResultToString(const vk::Result result) const;
+};
 
 }
 

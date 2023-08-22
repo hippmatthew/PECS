@@ -21,7 +21,7 @@ _Unfinished material is located in the W.I.P branch_
 1. Engine Object
 
    - [x] Vulkan Instance
-   - [ ] Validation Layers
+   - ~~[ ] Validation Layers~~
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
    - [ ] Frame Drawing
@@ -35,10 +35,10 @@ _Unfinished material is located in the W.I.P branch_
 
 3. Device Object
 
-   - [ ] Physical Device
+   - [x] Physical Device
    - [ ] Logical Device
-   - [ ] Graphics Queue Family
-   - [ ] Compute Queue Family
+   - [x] Graphics Queue Family
+   - [x] Compute Queue Family
 
 4. Graphics Pipeline Object
 
@@ -51,8 +51,9 @@ _Unfinished material is located in the W.I.P branch_
 
 5. Debug Manager Object
 
-   - [ ] toggle based on -DDEBUG macro
-   - [ ] Vulkan Debug Utils
+   - [x] formatted output
+   - [x] interface for all console output
+   - [x] handles based on vulkan results and custom messages
 
 6. ImGui
 
@@ -85,7 +86,7 @@ _Features I would like to add after finishing the main functionality of the engi
 
 **MAKE SURE TO INSTALL MINGW64 AND VULKANSDK**
 
-_outdated. will update soon_
+_currently not supported_
 
 1. Install Vulkan (https://vulkan.lunarg.com)
 2. Install MinGW-w64 (https://www.mingw-w64.org)
@@ -108,12 +109,12 @@ _outdated. will update soon_
 
 1. Install Vulkan (https://vulkan.lunarg.com)
 2. Open terminal
-3. Use `cd ~/VulkanSDK/v.w.xx.0` (v.w.xx.0 is the vulkan version number. Change according to vulkan version and respective installation directory)
+3. Use `cd ~/VulkanSDK/v.w.xx.p` (v.w.xx.p is the vulkan version number. Change according to vulkan version and respective installation directory)
 4. Use `python3 install_vulkan.py`
 5. Install Homebrew (https://brew.sh)
 6. Open terminal
-7. Use `echo "export CPATH=/opt/homebrew/include" >> ~/.zprofile` to show the compiler where to look for homebrew headers
-8. User `echo "export LIBRARY_PATH=/opt/homebrew/lib" >>~/.zprofile` tp show the compiler where to look for homebrew libraries
+7. Use `echo "export CPATH=/opt/homebrew/include:/usr/local/include" >> ~/.zprofile` to set the includes environment variable
+8. User `echo "export LIBRARY_PATH=/opt/homebrew/lib:/usr/local/lib" >>~/.zprofile` to set the library environment variable
 9. Use `brew install glfw` to install GLFW
 10. Use `brew install glm` to install GLM
 11. Use `brew install pkg-config` to install pkg-config

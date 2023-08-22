@@ -2,7 +2,7 @@
  *  PECS - device.hpp
  *  Author:     Matthew Hipp
  *  Created:    7/21/23
- *  Updated:    7/21/23
+ *  Updated:    7/22/23
  */
 
 #ifndef pecs_device_hpp
@@ -34,9 +34,11 @@ class Device
         Device(const vk::Instance& instance, const DebugManager * dm);
         Device(const Device&) = delete;
 
-        ~Device();
+        ~Device() = default;
 
         Device& operator=(const Device&) = delete;
+
+        vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
 
     private:
         const DebugManager * debugManager;
@@ -45,9 +47,10 @@ class Device
         vk::Device logicalDevice = VK_NULL_HANDLE;
 
         void choosePhysicalDevice(const vk::Instance& instance);
-        
-        std::multimap<vk::PhysicalDeviceType, vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices) const;
+        std::vector<vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices) const;
         QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const  std::vector<vk::QueueFamilyProperties>& queueFamilies) const;
+        unsigned int evaluate(vk::PhysicalDeviceType type) const;
+        std::string vkPhysicalDeviceTypeToString(const vk::PhysicalDeviceType type) const;
 };
 
 }

@@ -23,7 +23,7 @@ namespace pecs
 class Window
 {
     public:
-        Window(unsigned int width, unsigned int height, std::string title, DebugManager * dm);
+        Window(unsigned int width, unsigned int height, std::string title, const DebugManager * dm);
         Window(const Window&) = delete;
         
         ~Window();
@@ -34,7 +34,7 @@ class Window
 
     private:
         GLFWwindow * window = nullptr;
-        DebugManager * debugManager = nullptr;
+        const DebugManager * debugManager;
 };
 
 }

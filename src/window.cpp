@@ -10,10 +10,8 @@
 namespace pecs
 {
 
-Window::Window(unsigned int width, unsigned int height, std::string title, DebugManager * dm)
-{
-    debugManager = dm;
-    
+Window::Window(unsigned int width, unsigned int height, std::string title, const DebugManager * dm) : debugManager(dm)
+{   
     if (debugManager->isEnabled()) debugManager->message("\tinitalizing glfw...");
     glfwInit();
 

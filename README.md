@@ -21,7 +21,7 @@ _Unfinished material is located in the W.I.P branch_
 1. Engine Object
 
    - [x] Vulkan Instance
-   - ~~[ ] Validation Layers~~
+   - [ ] ~~Validation Layers~~
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
    - [ ] Frame Drawing

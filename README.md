@@ -31,7 +31,7 @@ _Unfinished material is located in a separate branch_
 2. Window Object
 
    - [x] GLFW Window
-   - [ ] Window Surface
+   - [x] Window Surface
 
 3. Device Object
 
@@ -39,6 +39,7 @@ _Unfinished material is located in a separate branch_
    - [x] Logical Device
    - [x] Graphics Queue Family
    - [x] Compute Queue Family
+   - [x] Present Queue Family 
 
 4. Graphics Pipeline Object
 

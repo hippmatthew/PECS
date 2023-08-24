@@ -2,18 +2,23 @@
 *   PECS - window.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/21/23
+*   Updated:    7/23/23
 */
 
 #ifndef pecs_window_hpp
 #define pecs_window_hpp
 
-#include <string>
+#ifndef VULKAN_HPP_NO_CONSTRUCTORS
+    #define VULKAN_HPP_NO_CONSTRUCTORS
+#endif /* VULKAN_HPP_NO_CONSTRUCTORS */
 
-#define GLFW_INCLUDE_NONE
+#include <vulkan/vulkan.hpp>
+
+#ifndef GLFW_INCLUDE_NONE
+    #define GLFW_INCLUDE_NONE
+#endif /* GLFW_INCLUDE_NONE */
+
 #include <GLFW/glfw3.h>
-
-#include <memory>
 
 #include "debug.hpp"
 
@@ -31,10 +36,16 @@ class Window
         Window& operator=(const Window&) = delete;
         
         bool shouldClose() const;
+        const vk::SurfaceKHR& getSurface() const;
+
+        void createSurface(const vk::Instance& instance);
+        void destroySurface(const vk::Instance& instance);
 
     private:
-        GLFWwindow * window = nullptr;
         const DebugManager * debugManager;
+        
+        GLFWwindow * window = nullptr;
+        vk::SurfaceKHR surface;
 };
 
 }

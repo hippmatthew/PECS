@@ -11,9 +11,12 @@ namespace pecs
 {
 
 Engine::~Engine()
-{
+{   
     if (debugManager->isEnabled()) debugManager->message("destroying device...");
     delete device;
+    
+    if (debugManager->isEnabled()) debugManager->message("destroying window surface...");
+    window->destroySurface(instance);
     
     if (debugManager->isEnabled()) debugManager->message("destroying vulkan instance...");
     instance.destroy();
@@ -47,8 +50,11 @@ void Engine::initialize(const InitializationInfo* initInfo)
     if (debugManager->isEnabled()) debugManager->message("creating vulkan instance...");
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
 
+    if (debugManager->isEnabled()) debugManager->message("creating window surface...");
+    window->createSurface(instance);
+
     if (debugManager->isEnabled()) debugManager->message("creating device...");
-    device = new Device(instance, debugManager);
+    device = new Device(instance, window->getSurface(), debugManager);
 }
 
 void Engine::createVulkanInstance(std::string applicationName, unsigned int applicationVersion)

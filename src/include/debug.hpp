@@ -8,9 +8,12 @@
 #ifndef pecs_debug_hpp
 #define pecs_debug_hpp
 
-#define VULKAN_HPP_NO_CONSTRUCTORS
+#ifndef VULKAN_HPP_NO_CONSTRUCTORS
+    #define VULKAN_HPP_NO_CONSTRUCTORS
+#endif
+
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vk_enum_string_helper.h>
+#include <vulkan/vulkan_to_string.hpp>
 
 #include <iostream>
 #include <string>
@@ -35,8 +38,6 @@ class DebugManager
 
     private:
         const bool enabled;
-
-        std::string vkResultToString(const vk::Result result) const;
 };
 
 }

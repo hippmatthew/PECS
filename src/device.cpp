@@ -10,13 +10,13 @@
 namespace pecs
 {
 
-Device::Device(const vk::Instance& instance, const DebugManager * dm) : debugManager(dm)
+Device::Device(const vk::Instance& instance, const vk::SurfaceKHR& surface, const DebugManager * dm) : debugManager(dm)
 {
     if (debugManager->isEnabled()) debugManager->message("\tpicking physical device...");
-    choosePhysicalDevice(instance);
+    choosePhysicalDevice(instance, surface);
 
     if (debugManager->isEnabled()) debugManager->message("\tcreating logical device...");
-    createLogicalDevice();
+    createLogicalDevice(surface);
 }
 
 Device::~Device()
@@ -28,7 +28,20 @@ Device::~Device()
 vk::PhysicalDeviceProperties Device::getPhysicalDeviceProperties() const
 { return physicalDevice.getProperties(); }
 
-void Device::choosePhysicalDevice(const vk::Instance& instance)
+const vk::Queue& Device::getQueue(QueueType type) const
+{
+    switch (type)
+    {
+        case Graphics:
+            return graphicsQueue;
+        case Present:
+            return presentQueue;
+        case Compute:
+            return computeQueue;
+    }
+}
+
+void Device::choosePhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface)
 {
     unsigned int deviceCount;
     static_cast<void>(instance.enumeratePhysicalDevices(&deviceCount, nullptr));
@@ -50,7 +63,7 @@ void Device::choosePhysicalDevice(const vk::Instance& instance)
             debugManager->message(result);
     }
 
-    auto suitableDevices = getSuitablePhysicalDevices(devices);
+    auto suitableDevices = getSuitablePhysicalDevices(devices, surface);
     if (suitableDevices.size() == 0) debugManager->message("no suitable physical devices found", true);
 
     if (debugManager->isEnabled())
@@ -58,7 +71,7 @@ void Device::choosePhysicalDevice(const vk::Instance& instance)
         for (const auto& device : suitableDevices)
         {
             auto properties = device.getProperties();
-            debugManager->message("\t\t\t" + static_cast<std::string>(properties.deviceName) + " : " + vkPhysicalDeviceTypeToString(properties.deviceType));
+            debugManager->message("\t\t\tname: " + static_cast<std::string>(properties.deviceName) + "\ttype: " + vk::to_string(properties.deviceType));
         }
     }
     
@@ -71,26 +84,31 @@ void Device::choosePhysicalDevice(const vk::Instance& instance)
     }
 }
 
-void Device::createLogicalDevice()
+void Device::createLogicalDevice(const vk::SurfaceKHR& surface)
 {
     auto queueFamiles = physicalDevice.getQueueFamilyProperties();
-    QueueFamilyIndices indices = findPhysicalDeviceQueueFamilyIndicies(physicalDevice, queueFamiles);
+    QueueFamilyIndices indices = findPhysicalDeviceQueueFamilyIndicies(physicalDevice, queueFamiles, surface);
 
     float graphicsQueuePriority = 1.0f;
     vk::DeviceQueueCreateInfo graphicsQueueCreateInfo{ .queueFamilyIndex    = indices.graphics.value(),
                                                        .queueCount          = 1,
                                                        .pQueuePriorities    = &graphicsQueuePriority };
 
+    float presentQueuePriority = 1.0f;
+    vk::DeviceQueueCreateInfo presentQueueCreateInfo{ .queueFamilyIndex = indices.present.value(),
+                                                      .queueCount       = 1,
+                                                      .pQueuePriorities = &presentQueuePriority };
+
     float computeQueuePriority = 1.0f;
     vk::DeviceQueueCreateInfo computeQueueCreateInfo{ .queueFamilyIndex = indices.compute.value(),
                                                       .queueCount       = 1,
                                                       .pQueuePriorities = &computeQueuePriority };
 
-    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos = { graphicsQueueCreateInfo, computeQueueCreateInfo };
+    std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos = { graphicsQueueCreateInfo, presentQueueCreateInfo, computeQueueCreateInfo };
 
     vk::PhysicalDeviceFeatures physicalDeviceFeatures{};
 
-    vk::DeviceCreateInfo deviceCreateInfo{ .queueCreateInfoCount     = 2,
+    vk::DeviceCreateInfo deviceCreateInfo{ .queueCreateInfoCount     = static_cast<unsigned int>(queueCreateInfos.size()),
                                            .pQueueCreateInfos        = queueCreateInfos.data(),
                                            .enabledLayerCount        = 0,
                                            .enabledExtensionCount    = 0,
@@ -106,16 +124,18 @@ void Device::createLogicalDevice()
         default:
             debugManager->message(result);
     }
-
     
     logicalDevice.getQueue(indices.graphics.value(), 0, &graphicsQueue);
     if (debugManager->isEnabled()) debugManager->message("\t\testablished graphics queue");
+
+    logicalDevice.getQueue(indices.present.value(), 0, &presentQueue);
+    if (debugManager->isEnabled()) debugManager->message("\t\testablished present queue");
 
     logicalDevice.getQueue(indices.compute.value(), 0, &computeQueue);
     if (debugManager->isEnabled()) debugManager->message("\t\testablished compute queue");
 }
 
-std::vector<vk::PhysicalDevice> Device::getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices) const
+std::vector<vk::PhysicalDevice> Device::getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const
 {
     std::vector<vk::PhysicalDevice> discreteGpus, integratedGpus, virtualGpus, sortedGpus;
 
@@ -124,7 +144,7 @@ std::vector<vk::PhysicalDevice> Device::getSuitablePhysicalDevices(const std::ve
         auto properties = device.getProperties();
         auto queueFamilies = device.getQueueFamilyProperties();
 
-        QueueFamilyIndices indices = findPhysicalDeviceQueueFamilyIndicies(device, queueFamilies);
+        QueueFamilyIndices indices = findPhysicalDeviceQueueFamilyIndicies(device, queueFamilies, surface);
         if (!indices.isComplete()) continue;
 
         switch (evaluate(properties.deviceType))
@@ -155,7 +175,7 @@ std::vector<vk::PhysicalDevice> Device::getSuitablePhysicalDevices(const std::ve
     return sortedGpus;
 }
 
-QueueFamilyIndices Device::findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const std::vector<vk::QueueFamilyProperties>& queueFamilies) const
+QueueFamilyIndices Device::findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const std::vector<vk::QueueFamilyProperties>& queueFamilies, const vk::SurfaceKHR& surface) const
 {
     QueueFamilyIndices indices;
     
@@ -171,13 +191,20 @@ QueueFamilyIndices Device::findPhysicalDeviceQueueFamilyIndicies(const vk::Physi
         if (indices.isComplete())
             break;
 
+        vk::Bool32 presentQueueSupport = false;
+        vk::Result result = device.getSurfaceSupportKHR(i, surface, &presentQueueSupport);
+        if (result != vk::Result::eSuccess) debugManager->message(result);
+
+        if (presentQueueSupport)
+            indices.present = i;
+
         ++i;
     }
 
     return indices;
 }
 
-unsigned int Device::evaluate(vk::PhysicalDeviceType type) const
+unsigned int Device::evaluate(const vk::PhysicalDeviceType type) const
 {
     switch (type)
     {
@@ -190,12 +217,6 @@ unsigned int Device::evaluate(vk::PhysicalDeviceType type) const
         default:
             return 0;
     }
-}
-
-std::string Device::vkPhysicalDeviceTypeToString(const vk::PhysicalDeviceType type) const
-{
-    const char * cString = string_VkPhysicalDeviceType(static_cast<VkPhysicalDeviceType>(type));
-    return static_cast<std::string>(cString);
 }
 
 }

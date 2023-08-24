@@ -2,7 +2,7 @@
  *  PECS - debug.cpp
  *  Author:     Matthew Hipp
  *  Created:    7/21/23
- *  Updated:    7/21/23
+ *  Updated:    7/23/23
  */
 
 #include "include/debug.hpp"
@@ -23,18 +23,12 @@ namespace pecs
 
     void DebugManager::message(const vk::Result r) const
     { 
-        std::string s = vkResultToString(r);
-
+        std::string s = vk::to_string(r);
+        
         if (s.find("ERROR") != std::string::npos)
-            throw std::runtime_error("error: " + vkResultToString(r) + '\n');
+            throw std::runtime_error("error: " + s + '\n');
                 
-        std::cout << vkResultToString(r) << '\n';
-    }
-
-    std::string DebugManager::vkResultToString(const vk::Result result) const
-    {
-        const char * cString = string_VkResult(static_cast<VkResult>(result));
-        return static_cast<std::string>(cString);
+        std::cout << s << '\n';
     }
 
 }

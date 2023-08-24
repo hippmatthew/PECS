@@ -9,7 +9,7 @@ Current Supported Vulkan Version: **_1.3.261.0_**
 
 ## Features Currently Being Worked On
 
-_Unfinished material is located in the W.I.P branch_
+_Unfinished material is located in a separate branch_
 
 0. Initial Setup
 

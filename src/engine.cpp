@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/22/23
+*   Updated:    7/23/23
 */
 
 #include "include/engine.hpp"
@@ -12,6 +12,9 @@ namespace pecs
 
 Engine::~Engine()
 {
+    if (debugManager->isEnabled()) debugManager->message("destroying device...");
+    delete device;
+    
     if (debugManager->isEnabled()) debugManager->message("destroying vulkan instance...");
     instance.destroy();
 
@@ -44,6 +47,7 @@ void Engine::initialize(const InitializationInfo* initInfo)
     if (debugManager->isEnabled()) debugManager->message("creating vulkan instance...");
     createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
 
+    if (debugManager->isEnabled()) debugManager->message("creating device...");
     device = new Device(instance, debugManager);
 }
 

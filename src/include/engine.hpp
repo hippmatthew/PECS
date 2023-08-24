@@ -8,8 +8,8 @@
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
 
-#include "window.hpp"
 #include "device.hpp"
+#include "window.hpp"
 
 namespace pecs
 {

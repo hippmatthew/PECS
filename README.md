@@ -25,7 +25,7 @@ _Unfinished material is located in a separate branch_
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
    - [ ] Frame Drawing
-   - [ ] Main Engine Loop
+   - [x] Main Engine Loop
    - [ ] CONTAINS: device, window, pipeline, and debugManager objects
 
 2. Window Object
@@ -36,7 +36,7 @@ _Unfinished material is located in a separate branch_
 3. Device Object
 
    - [x] Physical Device
-   - [ ] Logical Device
+   - [x] Logical Device
    - [x] Graphics Queue Family
    - [x] Compute Queue Family
 

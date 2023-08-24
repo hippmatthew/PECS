@@ -2,7 +2,7 @@
  *  PECS - window.cpp
  *  Author:     Matthew Hipp
  *  Created:    6/27/23
- *  Updated:    7/21/23
+ *  Updated:    7/23/23
  */
 
 #include "include/window.hpp"
@@ -34,7 +34,26 @@ Window::~Window()
     glfwTerminate();
 }
 
-bool Window::shouldClose() const
+bool Window::shouldClose() const 
 { return glfwWindowShouldClose(window); }
+
+const vk::SurfaceKHR& Window::getSurface() const
+{ return surface; }
+
+void Window::createSurface(const vk::Instance& instance)
+{
+    vk::Result result = static_cast<vk::Result>(glfwCreateWindowSurface(instance, window, nullptr, reinterpret_cast<VkSurfaceKHR *>(&surface)));
+    switch (result)
+    {
+        case vk::Result::eSuccess:
+            if (debugManager->isEnabled()) debugManager->message("\tglfw window surface created");
+            break;
+        default:
+            debugManager->message(result);
+    }
+}
+
+void Window::destroySurface(const vk::Instance& instance)
+{ instance.destroySurfaceKHR(surface); }
 
 }

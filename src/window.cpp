@@ -34,11 +34,14 @@ Window::~Window()
     glfwTerminate();
 }
 
-bool Window::shouldClose() const 
-{ return glfwWindowShouldClose(window); }
+const GLFWwindow * Window::getGLFWwindow() const
+{ return window; }
 
 const vk::SurfaceKHR& Window::getSurface() const
 { return surface; }
+
+bool Window::shouldClose() const 
+{ return glfwWindowShouldClose(window); }
 
 void Window::createSurface(const vk::Instance& instance)
 {

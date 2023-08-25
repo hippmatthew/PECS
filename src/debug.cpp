@@ -18,7 +18,7 @@ namespace pecs
         if (err)
             throw std::runtime_error("error: " + s + '\n');
 
-        std::cout << s << '\n'; 
+        std::cout << s << '\n';
     }
 
     void DebugManager::message(const vk::Result r) const

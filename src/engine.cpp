@@ -10,6 +10,11 @@
 namespace pecs
 {
 
+Engine::Engine(const InitializationInfo * initInfo)
+{
+    initialize(initInfo);
+}
+
 Engine::~Engine()
 {   
     if (debugManager->isEnabled()) debugManager->message("destroying device...");
@@ -48,21 +53,21 @@ void Engine::initialize(const InitializationInfo* initInfo)
     window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle, debugManager);
     
     if (debugManager->isEnabled()) debugManager->message("creating vulkan instance...");
-    createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
+    createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion, initInfo->engineName, initInfo->engineVersion);
 
     if (debugManager->isEnabled()) debugManager->message("creating window surface...");
     window->createSurface(instance);
 
     if (debugManager->isEnabled()) debugManager->message("creating device...");
-    device = new Device(instance, window->getSurface(), debugManager);
+    device = new Device(instance, window, debugManager);
 }
 
-void Engine::createVulkanInstance(std::string applicationName, unsigned int applicationVersion)
+void Engine::createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion, const std::string& engineName, const unsigned int& engineVersion)
 {
     vk::ApplicationInfo applicationInfo{ .pApplicationName      = applicationName.c_str(),
                                          .applicationVersion    = applicationVersion,
-                                         .pEngineName           = engineInfo.name.c_str(),
-                                         .engineVersion         = engineInfo.version,
+                                         .pEngineName           = engineName.c_str(),
+                                         .engineVersion         = engineVersion,
                                          .apiVersion            = VK_API_VERSION_1_3 };
 
     vk::InstanceCreateInfo instanceCreateInfo{ .pApplicationInfo = &applicationInfo };
@@ -83,38 +88,22 @@ void Engine::createVulkanInstance(std::string applicationName, unsigned int appl
     instanceCreateInfo.ppEnabledExtensionNames = requiredExtensions.data();
     instanceCreateInfo.enabledLayerCount = 0;
         
-    vk::Result result = vk::createInstance(&instanceCreateInfo, nullptr, &instance);
-
-    if (result != vk::Result::eSuccess) debugManager->message(result);
+    instance = vk::createInstance(instanceCreateInfo);
     if (debugManager->isEnabled()) debugManager->message("\testablished vulkan instance");
      
 }
 
 bool Engine::enumerateInstanceExtensions() const
 {   
-    unsigned int extensionCount = 0;
-    static_cast<void>(vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr));
+    auto extensionProperties = vk::enumerateInstanceExtensionProperties();
 
-    std::vector<vk::ExtensionProperties> extensions(extensionCount);
-    vk::Result result = vk::enumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-    
-    switch (result)
-    {
-        case vk::Result::eSuccess:
-            if (debugManager->isEnabled()) debugManager->message("\tavailable extensions:");
-            break;
-        case vk::Result::eIncomplete:
-            if (debugManager->isEnabled()) debugManager->message("\twarning: not all extensions were available\n\tavailable extensions:");
-            break;
-        default:
-            debugManager->message(result);
-    }
+    if (debugManager->isEnabled()) debugManager->message("\tavailable extensions:");
 
     bool hasPortabilityBit = false;
-    for (const auto& extension : extensions)
+    for (const auto& property : extensionProperties)
     {
-        if (debugManager->isEnabled()) debugManager->message("\t\t" + static_cast<std::string>(extension.extensionName));
-        if (strcmp(extension.extensionName, "VK_KHR_portability_enumeration") == 0)
+        if (debugManager->isEnabled()) debugManager->message("\t\t" + static_cast<std::string>(property.extensionName));
+        if (strcmp(property.extensionName, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) == 0)
             hasPortabilityBit = true;
     }
 

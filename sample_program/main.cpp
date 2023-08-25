@@ -10,7 +10,9 @@
 int main()
 {
     // Write out the initialization info
-    pecs::InitializationInfo initInfo{ .applicationName     = "PECS Sample Program",
+    pecs::InitializationInfo initInfo{ .engineName          = "PECS",
+                                       .engineVersion       = VK_MAKE_API_VERSION(0, 1, 0, 0),
+                                       .applicationName     = "PECS Sample Program",
                                        .applicationVersion  = VK_MAKE_API_VERSION(0, 1, 0, 0),
                                        .windowTitle         = "PECS Test",
                                        .windowWidth         = 600,

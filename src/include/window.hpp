@@ -35,8 +35,10 @@ class Window
 
         Window& operator=(const Window&) = delete;
         
-        bool shouldClose() const;
+        const GLFWwindow * getGLFWwindow() const;
         const vk::SurfaceKHR& getSurface() const;
+        
+        bool shouldClose() const;
 
         void createSurface(const vk::Instance& instance);
         void destroySurface(const vk::Instance& instance);

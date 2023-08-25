@@ -2,7 +2,7 @@
 *   PECS - engine.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/22/23
+*   Updated:    7/23/23
 */
 
 #ifndef pecs_engine_hpp
@@ -16,6 +16,9 @@ namespace pecs
 
 struct InitializationInfo
 {
+    std::string engineName = "PECS";
+    unsigned int engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+    
     std::string applicationName = "PECS Application";
     unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 
@@ -25,17 +28,13 @@ struct InitializationInfo
     bool enableDebugManager = true;
 };
 
-struct EngineInfo
-{
-    std::string name;
-    unsigned int version;
-};
-
 class Engine
 {
     public:
         Engine() = default;
+        Engine(const InitializationInfo * initInfo);
         Engine(const Engine&) = delete;
+        
         ~Engine();
 
         Engine& operator=(const Engine&) = delete;
@@ -43,19 +42,16 @@ class Engine
         bool isActive() const;
         void getEvents() const;
 
-        void initialize(const InitializationInfo* initInfo);
+        void initialize(const InitializationInfo * initInfo);
 
     private:
-        const EngineInfo engineInfo{ .name = "PECS",
-                                     .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
-        
         Window * window = nullptr;
         DebugManager * debugManager = nullptr;
         Device * device = nullptr;
         
         vk::Instance instance;
 
-        void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
+        void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion, const std::string& engineName, const unsigned int& engineVersion);
 
         bool enumerateInstanceExtensions() const;
         std::vector<const char *> getRequiredExtensions() const;

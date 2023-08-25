@@ -2,7 +2,7 @@
 *   PECS - pecs.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/29/23
-*   Updated:    7/23/23
+*   Updated:    7/24/23
 */
 
 #ifndef pecs_hpp
@@ -13,15 +13,16 @@
 #include <stdexcept>
 #include <iostream>
 #include <cstring>
+#include <optional>
+#include <algorithm>
+#include <limits>
 
-#ifndef PECS_NO_INCLUDES
-    #define VULKAN_HPP_NO_CONSTRUCTORS
-    #include <vulkan/vulkan.hpp>
-    #include <vulkan/vulkan_to_string.hpp>
+#define VULKAN_HPP_NO_CONSTRUCTORS
+#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_to_string.hpp>
     
-    #define GLFW_INCLUDE_NONE
-    #include <GLFW/glfw3.h>
-#endif
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
 
 namespace pecs
 {
@@ -35,6 +36,9 @@ enum QueueType
 
 struct InitializationInfo
 {
+    std::string engineName = "PECS";
+    unsigned int engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
+    
     std::string applicationName = "PECS Application";
     unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 
@@ -44,18 +48,21 @@ struct InitializationInfo
     bool enableDebugManager = true;
 };
 
-struct EngineInfo
-{
-    std::string name;
-    unsigned int version;
-};
-
 struct QueueFamilyIndices
 {
     std::optional<unsigned int> graphics;
+    std::optional<unsigned int> present;
     std::optional<unsigned int> compute;
 
-    bool isComplete() { return graphics.has_value() && compute.has_value(); }
+    bool isComplete() const
+    { return graphics.has_value() && present.has_value() && compute.has_value(); }
+};
+
+struct SwapchainSupportDetails
+{
+    vk::SurfaceCapabilitiesKHR surfaceCapabilities;
+    std::vector<vk::SurfaceFormatKHR> formats;
+    std::vector<vk::PresentModeKHR> presentModes;
 };
 
 class DebugManager
@@ -77,37 +84,6 @@ class DebugManager
         const bool enabled;
 };
 
-class Device
-{
-    public:
-        Device(const vk::Instance& instance, const vk::SurfaceKHR& surface, const DebugManager * dm);
-        Device(const Device&) = delete;
-
-        ~Device();
-
-        Device& operator=(const Device&) = delete;
-
-        vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
-        const vk::Queue& getQueue(QueueType type) const;
-
-    private:
-        const DebugManager * debugManager;
-        
-        vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
-        vk::Device logicalDevice = VK_NULL_HANDLE;
-
-        vk::Queue graphicsQueue = VK_NULL_HANDLE;
-        vk::Queue presentQueue = VK_NULL_HANDLE;
-        vk::Queue computeQueue = VK_NULL_HANDLE;
-
-        void choosePhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface);
-        void createLogicalDevice(const vk::SurfaceKHR& surface);
-        
-        std::vector<vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const;
-        QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const  std::vector<vk::QueueFamilyProperties>& queueFamilies, const vk::SurfaceKHR& surface) const;
-        unsigned int evaluate(const vk::PhysicalDeviceType type) const;
-};
-
 class Window
 {
     public:
@@ -118,8 +94,10 @@ class Window
 
         Window& operator=(const Window&) = delete;
         
-        bool shouldClose() const;
+        const GLFWwindow * getGLFWwindow() const;
         const vk::SurfaceKHR& getSurface() const;
+        
+        bool shouldClose() const;
 
         void createSurface(const vk::Instance& instance);
         void destroySurface(const vk::Instance& instance);
@@ -129,6 +107,47 @@ class Window
         
         GLFWwindow * window = nullptr;
         vk::SurfaceKHR surface;
+};
+
+class Device
+{
+    public:
+        Device(const vk::Instance& instance, const Window * window, const DebugManager * dm);
+        Device(const Device&) = delete;
+
+        ~Device();
+
+        Device& operator=(const Device&) = delete;
+
+        const vk::PhysicalDevice& getPhysicalDevice() const;
+        vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
+        const vk::Queue& getQueue(QueueType type) const;
+
+    private:
+        const DebugManager * debugManager;
+        const std::vector<const char *> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        
+        vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
+        vk::Device logicalDevice = VK_NULL_HANDLE;
+        vk::SwapchainKHR swapchain = VK_NULL_HANDLE;
+
+        vk::Queue graphicsQueue = VK_NULL_HANDLE;
+        vk::Queue presentQueue = VK_NULL_HANDLE;
+        vk::Queue computeQueue = VK_NULL_HANDLE;
+
+        void choosePhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface);
+        void createLogicalDevice(const vk::SurfaceKHR& surface);
+        void createSwapchain(const Window * window);
+        
+        std::vector<vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const;
+        QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
+        unsigned int evaluate(const vk::PhysicalDeviceType type) const;
+        bool checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& device) const;
+        
+        SwapchainSupportDetails querySwapchainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
+        vk::SurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) const;
+        vk::PresentModeKHR chooseSwapchainPresentMode(const std::vector<vk::PresentModeKHR>& availableModes) const;
+        vk::Extent2D chooseSwapchainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const GLFWwindow * window) const;
 };
 
 class Engine
@@ -146,16 +165,13 @@ class Engine
         void initialize(const InitializationInfo* initInfo);
 
     private:
-        const EngineInfo engineInfo{ .name = "PECS",
-                                     .version = VK_MAKE_API_VERSION(0, 1, 0, 0) };
-        
         Window * window = nullptr;
         DebugManager * debugManager = nullptr;
         Device * device = nullptr;
         
         vk::Instance instance;
 
-        void createVulkanInstance(std::string applicationName, unsigned int applicationVersion);
+        void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion, const std::string& engineName, const unsigned int& engineVersion);
 
         bool enumerateInstanceExtensions() const;
         std::vector<const char *> getRequiredExtensions() const;

@@ -24,6 +24,7 @@ _Unfinished material is located in a separate branch_
    - [ ] ~~Validation Layers~~
    - [ ] Command Pool / Command Buffers
    - [ ] Sync Objects
+   - [ ] Framebuffers
    - [ ] Frame Drawing
    - [x] Main Engine Loop
    - [ ] CONTAINS: device, window, pipeline, and debugManager objects
@@ -39,15 +40,20 @@ _Unfinished material is located in a separate branch_
    - [x] Logical Device
    - [x] Graphics Queue Family
    - [x] Compute Queue Family
-   - [x] Present Queue Family 
-
-4. Graphics Pipeline Object
-
-   - [ ] Swapchain
+   - [x] Present Queue Family
+   - [x] Swapchain
    - [ ] Swapchain Image Views
    - [ ] Swapchain Images
+   
+4. Graphics Pipeline Object
+
+   - [ ] Shaders
    - [ ] Render Pass
-   - [ ] Framebuffers
+   - [ ] Dynamic States
+   - [ ] Input Assumbly
+   - [ ] Rasterizer
+   - [ ] Color Blending
+   - [ ] Multisampling
    - [ ] Pipeline
 
 5. Debug Manager Object

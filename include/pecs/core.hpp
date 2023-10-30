@@ -81,9 +81,6 @@ class Engine
         Engine& operator=(const Engine&) = delete;
         Engine& operator=(Engine&&) = delete;
 
-        bool isActive() const;
-        void getEvents() const;
-
         void initialize(const InitializationInfo * initInfo);
         
         void run();
@@ -93,8 +90,16 @@ class Engine
         Window * window = nullptr;
         Device * device = nullptr;
         
-        vk::Instance instance;
+        std::vector<const char *> layers;
 
+        #ifdef NDEBUG
+            const bool enableValidationLayers = false;
+        #else
+            const bool enableValidationLayers = true;
+        #endif
+
+        vk::Instance instance;
+        
         void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion);
 
         bool enumerateInstanceExtensions() const;

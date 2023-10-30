@@ -1,6 +1,6 @@
 # Directories
 .vscode
-obj
+bin
 
 # Files
 .DS_STORE

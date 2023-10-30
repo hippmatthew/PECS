@@ -5,7 +5,7 @@
 *   Updated:    10/30/23
 */
 
-#include "include/engine.hpp"
+#include "./include/engine.hpp"
 
 namespace pecs
 {
@@ -83,6 +83,12 @@ void Engine::createVulkanInstance(const std::string& applicationName, const unsi
                                          .engineVersion         = VK_MAKE_API_VERSION(0, 1, 0, 0),
                                          .apiVersion            = VK_API_VERSION_1_3 };
 
+    if (enableValidationLayers)
+    {
+        std::cout << "\tusing validation layers\n";
+        layers.push_back("VK_LAYER_KHRONOS_validation");
+    }
+    
     vk::InstanceCreateInfo instanceCreateInfo{ .pApplicationInfo = &applicationInfo,
                                                .enabledLayerCount   = static_cast<unsigned int>(layers.size()),
                                                .ppEnabledLayerNames = layers.data() };

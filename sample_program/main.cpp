@@ -2,10 +2,10 @@
  *  PECS - sample program
  *  Author:     Matthew Hipp
  *  Created:    6/29/23
- *  Updated:    10/29/23
+ *  Updated:    10/30/23
  */
 
-#include "../include/pecs.hpp"
+#include "../include/pecs/core.hpp"
 
 class Loop : public pecs::Engine::Main
 {

@@ -1,57 +1,54 @@
 include .env
 
-CPP = clang++
-SC = glslc
-
-CPPFLAGS = -O2 -std=c++20 `pkg-config --cflags vulkan glfw3`
-LDFLAGS = `pkg-config --libs vulkan glfw3` -L$(LOCAL_LIB) -lpecs
-
-LDFLAGS += -rpath /usr/local/lib
+# Includes
+INCLUDES = -I$(M_INC_DIR) -I$(CORE_DIR)/include
 
 # Files
-SRCS = $(wildcard $(LOCAL_SRC)/*.cpp)
-BINS = $(patsubst $(LOCAL_SRC)/%.cpp, $(LOCAL_BIN)/%.o, $(SRCS))
-LIB = $(LOCAL_LIB)/libpecs.a
+CORE_SRCS = $(wildcard $(CORE_DIR)/*.cpp)
+CORE_BINS = $(patsubst $(CORE_DIR)/%.cpp, $(BIN_DIR)/%.core.o, $(CORE_SRCS))
 
-VERTS = $(wildcard $(LOCAL_SHDRS)/vert/*.vert)
-FRAGS = $(wildcard $(LOCAL_SHDRS)/frag/*.frag)
-SPVS = $(patsubst $(LOCAL_SHDRS)/vert/%.vert, $(LOCAL_SHDRS)/%.vert.spv, $(VERTS)) $(patsubst $(LOCAL_SHDRS)/frag/%.frag, $(LOCAL_SHDRS)/%.frag.spv, $(FRAGS))
+LIB = $(LIB_DIR)/libpecs.a
+BINS = $(CORE_BINS)
+
+VERTS = $(wildcard $(SHDR_DIR)/vert/*.vert)
+FRAGS = $(wildcard $(SHDR_DIR)/frag/*.frag)
+COMPS = $(wildcard $(SHDR_DIR)/comp/*.comp)
+SPVS = $(patsubst $(SHDR_DIR)/vert/%.vert, $(SHDR_DIR)/%.vert.spv, $(VERTS)) $(patsubst $(SHDR_DIR)/frag/%.frag, $(SHDR_DIR)/%.frag.spv, $(FRAGS)) $(patsubst $(SHDR_DIR)/comp/%.comp, $(SHDR_DIR)/%.comp.spv, $(COMPS))
 
 # Functions
-archive: CPPFLAGS += -I$(LOCAL_SRC)/include
-archive: $(LIB)
-
+lib: $(LIB)
 shaders: $(SPVS)
 
-sample: CPPFLAGS += -I$(LOCAL_MASTER_INCLUDE)
-sample: $(LOCAL_SMPL)/main
+core: $(CORE_BINS)
 
-$(LOCAL_LIB)/libpecs-debug.a: $(BINS)
+sample: $(SMPL_DIR)/main
+
+$(LIB_DIR)/libpecs.a: $(BINS)
 	ar -rcs $@ $^
 
-$(LOCAL_LIB)/libpecs.a: $(BINS)
-	ar -rcs $@ $^
+$(BIN_DIR)/%.core.o: $(CORE_DIR)/%.cpp
+	$(CPP) -o $@ $(CPPFLAGS) $(INCLUDES) -c $<
 
-$(LOCAL_BIN)/%.o: $(LOCAL_SRC)/%.cpp
-	$(CPP) -o $@ $(CPPFLAGS) -c $< $(LD_FLAGS)
-
-$(LOCAL_SHDR)/%.vert.spv: $(LOCAL_SHDR)/vert/%.vert
+$(SHDR_DIR)/%.vert.spv: $(SHDR_DIR)/vert/%.vert
 	$(SC) -o $@ $<
 
-$(LOCAL_SHDR)/%.frag.spv: $(LOCAL_SHDR)/frag/%.frag
+$(SHDR_DIR)/%.frag.spv: $(SHDR_DIR)/frag/%.frag
 	$(SC) -o $@ $<
 
-$(LOCAL_SMPL)/main: $(LOCAL_SMPL)/main.cpp
-	$(CPP) -o $@ $(CPPFLAGS) -I$(LOCAL_MASTER_INCLUDE) $^ $(LDFLAGS)
+$(SHDR_DIR)/%.comp.spv: $(SHDR_DIR)/comp/%.comp
+	$(SC) -o $@ $<
+
+$(SMPL_DIR)/main: $(SMPL_DIR)/main.cpp
+	$(CPP) -o $@ $(CPPFLAGS) $(INCLUDES) $^ $(LDFLAGS)
 
 clean:
-	rm -f $(LOCAL_BIN)/*  $(LOCAL_SHDR)/*.spv rm $(LOCAL_LIB)/* rm $(LOCAL_SMPL)/main
+	rm -f $(BIN_DIR)/*  $(SHDR_DIR)/*.spv rm $(LIB_DIR)/* rm $(SMPL_DIR)/main
 
 clean_lib:
-	rm -f $(LOCAL_LIB)/*
-
-clean_sample:
-	rm -f $(LOCAL_SMPL)/main
+	rm -f $(LIB_DIR)/*
 
 clean_spvs:
-	rm -f $(LOCAL_SHDR)/*.spv
+	rm -f $(SHDR_DIR)/*.spv
+
+clean_sample:
+	rm -f $(SMPL_DIR)/main

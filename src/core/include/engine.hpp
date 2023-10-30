@@ -50,12 +50,18 @@ class Engine
         Window * window = nullptr;
         Device * device = nullptr;
         
-        const std::vector<const char *> layers = { "VK_LAYER_KHRONOS_validation" };
+        std::vector<const char *> layers;
 
-        vk::Instance instance;
+        #ifdef NDEBUG
+            const bool enableValidationLayers = false;
+        #else
+            const bool enableValidationLayers = true;
+        #endif
+
+        vk::Instance instance = VK_NULL_HANDLE;
 
         void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion);
-
+        
         bool enumerateInstanceExtensions() const;
         std::vector<const char *> getRequiredExtensions() const;
 };

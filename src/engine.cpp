@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    7/25/23
+*   Updated:    10/30/23
 */
 
 #include "include/engine.hpp"
@@ -17,67 +17,82 @@ Engine::Engine(const InitializationInfo * initInfo)
 
 Engine::~Engine()
 {   
-    if (debugManager->isEnabled()) debugManager->message("destroying device...");
+    std::cout << "\n\n---cleaning engine---\n\n"; 
+    
+    std::cout << "destroying device...\n";
     delete device;
     
-    if (debugManager->isEnabled()) debugManager->message("destroying window surface...");
+    std::cout << "destroying window surface...\n";
     window->destroySurface(instance);
     
-    if (debugManager->isEnabled()) debugManager->message("destroying vulkan instance...");
+    std::cout << "destroying vulkan instance...\n";
     instance.destroy();
 
-    if (debugManager->isEnabled()) debugManager->message("destroying window...");
+    std::cout << "destroying window...\n";
     delete window;
-
-    if (debugManager->isEnabled()) debugManager->message("disabling debug manager...");
-    delete debugManager;
 }
-
-bool Engine::isActive() const
-{ return !window->shouldClose(); }
-
-void Engine::getEvents() const
-{ glfwPollEvents(); }
 
 void Engine::initialize(const InitializationInfo* initInfo)
 {    
-    if (initInfo->enableDebugManager)
-    {
-        debugManager = new DebugManager;
-        debugManager->message("debug manager enabled");
-    }
-    else
-        debugManager = new DebugManager(false);
+    std::cout << "\n---initializing PECS engine---\n\n";
     
-    if (debugManager->isEnabled()) debugManager->message("creating window...");
-    window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle, debugManager);
+    std::cout << "creating window...\n";
+    window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
     
-    if (debugManager->isEnabled()) debugManager->message("creating vulkan instance...");
-    createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion, initInfo->engineName, initInfo->engineVersion);
+    std::cout << "creating vulkan instance...\n";
+    createVulkanInstance(initInfo->applicationName, initInfo->applicationVersion);
 
-    if (debugManager->isEnabled()) debugManager->message("creating window surface...");
+    std::cout << "creating window surface...\n";
     window->createSurface(instance);
 
-    if (debugManager->isEnabled()) debugManager->message("creating device...");
-    device = new Device(instance, window, debugManager);
+    std::cout << "creating device...\n";
+    device = new Device(instance, window);
 }
 
-void Engine::createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion, const std::string& engineName, const unsigned int& engineVersion)
+void Engine::run()
+{
+    std::cout << "\n---running main loop---\n\n";
+    while (!window->shouldClose())
+    {
+        glfwPollEvents();
+
+        // run compute stage
+        // run graphics stage
+    }
+}
+
+void Engine::run(Main& mainLoop)
+{
+    std::cout << "\n---running main loop---\n\n";
+    while (!window->shouldClose())
+    {
+        glfwPollEvents();
+
+        // run compute stage
+        // run graphics stage
+
+        mainLoop();
+    }
+}
+
+void Engine::createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion)
 {
     vk::ApplicationInfo applicationInfo{ .pApplicationName      = applicationName.c_str(),
                                          .applicationVersion    = applicationVersion,
-                                         .pEngineName           = engineName.c_str(),
-                                         .engineVersion         = engineVersion,
+                                         .pEngineName           = "PECS",
+                                         .engineVersion         = VK_MAKE_API_VERSION(0, 1, 0, 0),
                                          .apiVersion            = VK_API_VERSION_1_3 };
 
-    vk::InstanceCreateInfo instanceCreateInfo{ .pApplicationInfo = &applicationInfo };
+    vk::InstanceCreateInfo instanceCreateInfo{ .pApplicationInfo = &applicationInfo,
+                                               .enabledLayerCount   = static_cast<unsigned int>(layers.size()),
+                                               .ppEnabledLayerNames = layers.data() };
 
-    if (debugManager->isEnabled()) debugManager->message("\tcollecting required extensions...");
+    std::cout << "\tcollecting required extensions...\n";
     auto requiredExtensions = getRequiredExtensions();
 
     if (enumerateInstanceExtensions())
     {
-        if (debugManager->isEnabled()) debugManager->message("\tenabling portability extensions...");
+        std::cout << "\tenabling portability extensions...\n";
         requiredExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         requiredExtensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
@@ -89,7 +104,7 @@ void Engine::createVulkanInstance(const std::string& applicationName, const unsi
     instanceCreateInfo.enabledLayerCount = 0;
         
     instance = vk::createInstance(instanceCreateInfo);
-    if (debugManager->isEnabled()) debugManager->message("\testablished vulkan instance");
+    std::cout << "\testablished vulkan instance\n";
      
 }
 
@@ -97,12 +112,12 @@ bool Engine::enumerateInstanceExtensions() const
 {   
     auto extensionProperties = vk::enumerateInstanceExtensionProperties();
 
-    if (debugManager->isEnabled()) debugManager->message("\tavailable extensions:");
+    std::cout << "\tavailable extensions:\n";
 
     bool hasPortabilityBit = false;
     for (const auto& property : extensionProperties)
     {
-        if (debugManager->isEnabled()) debugManager->message("\t\t" + static_cast<std::string>(property.extensionName));
+        std::cout << "\t\t" << static_cast<std::string>(property.extensionName) << '\n';
         if (strcmp(property.extensionName, VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME) == 0)
             hasPortabilityBit = true;
     }

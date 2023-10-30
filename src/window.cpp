@@ -2,7 +2,7 @@
  *  PECS - window.cpp
  *  Author:     Matthew Hipp
  *  Created:    6/27/23
- *  Updated:    7/25/23
+ *  Updated:    10/29/23
  */
 
 #include "include/window.hpp"
@@ -10,27 +10,27 @@
 namespace pecs
 {
 
-Window::Window(unsigned int width, unsigned int height, std::string title, const DebugManager * dm) : debugManager(dm)
+Window::Window(unsigned int width, unsigned int height, std::string title)
 {   
-    if (debugManager->isEnabled()) debugManager->message("\tinitalizing glfw...");
+    std::cout << "\tinitalizing glfw...\n";
     glfwInit();
 
-    if (debugManager->isEnabled()) debugManager->message("\tsetting window hints...");
+    std::cout << "\tsetting window hints...\n";
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    if (debugManager->isEnabled()) debugManager->message("\tcreating glfw window...");
+    std::cout << "\tcreating glfw window...\n";
     window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 
-    if (debugManager->isEnabled()) debugManager->message("\twindow created");
+    std::cout << "\twindow created\n";
 }
 
 Window::~Window()
 {    
-    if (debugManager->isEnabled()) debugManager->message("\tdestroying glfw window...");
+    std::cout << "\tdestroying glfw window...\n";
     glfwDestroyWindow(window);
 
-    if (debugManager->isEnabled()) debugManager->message("\tterminating glfw...");
+    std::cout << "\tterminating glfw...\n";
     glfwTerminate();
 }
 
@@ -49,10 +49,10 @@ void Window::createSurface(const vk::Instance& instance)
     switch (result)
     {
         case vk::Result::eSuccess:
-            if (debugManager->isEnabled()) debugManager->message("\tglfw window surface created");
+            std::cout << "\tglfw window surface created\n";
             break;
         default:
-            debugManager->message(result);
+            throw std::runtime_error(vk::to_string(result));
     }
 }
 

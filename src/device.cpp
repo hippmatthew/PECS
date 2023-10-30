@@ -2,7 +2,7 @@
  *  PECS - device.cpp
  *  Author:     Matthew Hipp
  *  Created:    7/21/23
- *  Updated:    7/25/23
+ *  Updated:    10/29/23
  */
 
 #include "include/device.hpp"
@@ -10,25 +10,25 @@
 namespace pecs
 {
 
-Device::Device(const vk::Instance& instance, const Window * window, const DebugManager * dm) : debugManager(dm)
+Device::Device(const vk::Instance& instance, const Window * window)
 {
-    if (debugManager->isEnabled()) debugManager->message("\tpicking physical device...");
+    std::cout << "\tpicking physical device...\n";
     choosePhysicalDevice(instance, window->getSurface());
 
-    if (debugManager->isEnabled()) debugManager->message("\tcreating logical device...");
+    std::cout << "\tcreating logical device...\n";
     createLogicalDevice(window->getSurface());
 
-    if (debugManager->isEnabled()) debugManager->message("\tcreating swapchain...");
+    std::cout << "\tcreating swapchain...\n";
     createSwapchain(window);
 
 }
 
 Device::~Device()
 {
-    if (debugManager->isEnabled()) debugManager->message("\tdestroying swapchain...");
+    std::cout << "\tdestroying swapchain...\n";
     logicalDevice.destroySwapchainKHR(swapchain);
 
-    if (debugManager->isEnabled()) debugManager->message("\tdestroying logical device...");
+    std::cout << "\tdestroying logical device...\n";
     logicalDevice.destroy();
 }
 
@@ -56,35 +56,35 @@ void Device::choosePhysicalDevice(const vk::Instance& instance, const vk::Surfac
     auto devices = instance.enumeratePhysicalDevices();
 
     auto suitableDevices = getSuitablePhysicalDevices(devices, surface);
-    if (suitableDevices.size() == 0) debugManager->message("no suitable physical devices found", true);
+    if (suitableDevices.size() == 0) throw std::runtime_error("no suitable deviced found\n");
 
-    if (debugManager->isEnabled())
+    for (const auto& device : suitableDevices)
     {
-        for (const auto& device : suitableDevices)
-        {
-            auto properties = device.getProperties();
-            debugManager->message("\t\t\tname: " + static_cast<std::string>(properties.deviceName) + "\ttype: " + vk::to_string(properties.deviceType));
-        }
+        auto properties = device.getProperties();
+        std::cout << "\t\t\tname: " << static_cast<std::string>(properties.deviceName)  << "\ttype: "  << vk::to_string(properties.deviceType) << '\n';
     }
     
     physicalDevice = suitableDevices[0];
-    
-    if (debugManager->isEnabled())
+
+    auto properties = physicalDevice.getProperties();
+    std::cout << "\t\tchosen physical device: " << static_cast<std::string>(properties.deviceName) << '\n';
+    std::cout << "\t\tavailable physical device extensions:\n";
+
+    auto extensionProperties = physicalDevice.enumerateDeviceExtensionProperties();
+    for (const auto& property : extensionProperties)
     {
-        auto properties = physicalDevice.getProperties();
-        debugManager->message("\t\tchosen physical device: " + static_cast<std::string>(properties.deviceName) + "\n\t\tavailable physical device extensions:");
-
-        auto extensionProperties = physicalDevice.enumerateDeviceExtensionProperties();
-        for (const auto& property : extensionProperties)
-        {
-            std::string output = "\t\t\t" + static_cast<std::string>(property.extensionName);
+        std::cout << "\t\t\t" << static_cast<std::string>(property.extensionName);
             
-            for (const auto& extension : deviceExtensions)
-                if (strcmp(extension, property.extensionName) == 0)
-                    output += " (required)";
-
-            debugManager->message(output);
+        for (const auto& extension : deviceExtensions)
+        {
+            if (strcmp(extension, property.extensionName) == 0)
+            {
+                std::cout << " (required)";
+                break;
+            }
         }
+
+        std::cout << '\n';  
     }
 }
 
@@ -119,29 +119,29 @@ void Device::createLogicalDevice(const vk::SurfaceKHR& surface)
                                            .pEnabledFeatures        = &physicalDeviceFeatures };
 
     logicalDevice = physicalDevice.createDevice(deviceCreateInfo);
-    if (debugManager->isEnabled()) debugManager->message("\t\tcreated logical device");
+    std::cout << "\t\tcreated logical device\n";
     
     logicalDevice.getQueue(indices.graphics.value(), 0, &graphicsQueue);
-    if (debugManager->isEnabled()) debugManager->message("\t\testablished graphics queue");
+    std::cout << "\t\testablished graphics queue\n";
 
     logicalDevice.getQueue(indices.present.value(), 0, &presentQueue);
-    if (debugManager->isEnabled()) debugManager->message("\t\testablished present queue");
+    std::cout << "\t\testablished present queue\n";
 
     logicalDevice.getQueue(indices.compute.value(), 0, &computeQueue);
-    if (debugManager->isEnabled()) debugManager->message("\t\testablished compute queue");
+    std::cout << "\t\testablished compute queue\n";
 }
 
 void Device::createSwapchain(const Window * window)
 {
     SwapchainSupportDetails details = querySwapchainSupport(physicalDevice, window->getSurface());
 
-    if (debugManager->isEnabled()) debugManager->message("\t\tgetting surface format...");
+    std::cout << "\t\tgetting surface format...\n";
     vk::SurfaceFormatKHR surfaceFormat = chooseSwapchainSurfaceFormat(details.formats);
 
-    if (debugManager->isEnabled()) debugManager->message("\t\tchoosing presentation mode...");
+    std::cout << "\t\tchoosing presentation mode...\n";
     vk::PresentModeKHR presentMode = chooseSwapchainPresentMode(details.presentModes);
 
-    if (debugManager->isEnabled()) debugManager->message("\t\tsetting swap extent...");
+    std::cout << "\t\tsetting swap extent...\n";
     vk::Extent2D extent = chooseSwapchainExtent(details.surfaceCapabilities, window->getGLFWwindow());
 
     unsigned int imageCount = details.surfaceCapabilities.minImageCount + 1;
@@ -179,7 +179,7 @@ void Device::createSwapchain(const Window * window)
     }
 
     swapchain = logicalDevice.createSwapchainKHR(swapchainCreateInfo);
-    if (debugManager->isEnabled()) debugManager->message("\tswapchain created");
+    std::cout << "\tswapchain created\n";
 }
 
 std::vector<vk::PhysicalDevice> Device::getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const
@@ -248,7 +248,7 @@ QueueFamilyIndices Device::findPhysicalDeviceQueueFamilyIndicies(const vk::Physi
 
         vk::Bool32 presentQueueSupport = false;
         vk::Result result = device.getSurfaceSupportKHR(i, surface, &presentQueueSupport);
-        if (result != vk::Result::eSuccess) debugManager->message(result);
+        if (result != vk::Result::eSuccess) throw std::runtime_error(vk::to_string(result));
 
         if (presentQueueSupport)
             indices.present = i;
@@ -300,13 +300,13 @@ SwapchainSupportDetails Device::querySwapchainSupport(const vk::PhysicalDevice& 
 {
     SwapchainSupportDetails details;
     
-    if (debugManager->isEnabled()) debugManager->message("\tgetting surface capabilities...");
+    std::cout << "\tgetting surface capabilities...\n";
     details.surfaceCapabilities = device.getSurfaceCapabilitiesKHR(surface);
 
-    if (debugManager->isEnabled()) debugManager->message("\tgetting surface formats...");
+    std::cout << "\tgetting surface formats...\n";
     details.formats = device.getSurfaceFormatsKHR(surface);
 
-    if (debugManager->isEnabled()) debugManager->message("\tgetting surface presentation modes...");
+    std::cout << "\tgetting surface presentation modes...\n";
     details.presentModes = device.getSurfacePresentModesKHR(surface);
 
     return details;

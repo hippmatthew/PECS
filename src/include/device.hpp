@@ -2,18 +2,17 @@
  *  PECS - device.hpp
  *  Author:     Matthew Hipp
  *  Created:    7/21/23
- *  Updated:    7/25/23
+ *  Updated:    10/29/23
  */
 
 #ifndef pecs_device_hpp
 #define pecs_device_hpp
 
-#include <vector>
-#include <optional>
 #include <algorithm>
 #include <limits>
+#include <optional>
+#include <vector>
 
-#include "debug.hpp"
 #include "window.hpp"
 
 namespace pecs
@@ -46,19 +45,20 @@ struct SwapchainSupportDetails
 class Device
 {
     public:
-        Device(const vk::Instance& instance, const Window * window, const DebugManager * dm);
+        Device(const vk::Instance& instance, const Window * window);
         Device(const Device&) = delete;
+        Device(Device&&) = delete;
 
         ~Device();
 
         Device& operator=(const Device&) = delete;
+        Device& operator=(Device&&) = delete;
 
         const vk::PhysicalDevice& getPhysicalDevice() const;
         vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
         const vk::Queue& getQueue(QueueType type) const;
 
     private:
-        const DebugManager * debugManager;
         const std::vector<const char *> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
         
         vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;

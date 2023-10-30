@@ -2,30 +2,31 @@
 *   PECS - pecs.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/29/23
-*   Updated:    7/25/23
+*   Updated:    10/29/23
 */
 
 #ifndef pecs_hpp
 #define pecs_hpp
 
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <iostream>
-#include <cstring>
-#include <optional>
-#include <algorithm>
-#include <limits>
-
 #define VULKAN_HPP_NO_CONSTRUCTORS
+#define GLFW_INCLUDE_NONE
+
+#include <algorithm>
+#include <iostream>
+#include <limits>
+#include <optional>
+#include <vector>
+
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_to_string.hpp>
-    
-#define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 namespace pecs
 {
+
+class Engine;
+class Window;
+class Device;
 
 enum QueueType
 {
@@ -35,17 +36,12 @@ enum QueueType
 };
 
 struct InitializationInfo
-{
-    std::string engineName = "PECS";
-    unsigned int engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-    
+{   
     std::string applicationName = "PECS Application";
     unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 
     std::string windowTitle = "PECS Application";
     unsigned int windowWidth = 600, windowHeight = 600;
-
-    bool enableDebugManager = true;
 };
 
 struct QueueFamilyIndices
@@ -65,29 +61,50 @@ struct SwapchainSupportDetails
     std::vector<vk::PresentModeKHR> presentModes;
 };
 
-class DebugManager
+class Engine
 {
-    public:            
-        DebugManager(bool enable = true) : enabled(enable) {};
-        DebugManager(const DebugManager&) = delete;
-            
-        ~DebugManager() = default;
+     public:
+        class Main
+        {
+            public:
+                virtual void operator()() = 0;
+        };
+    
+    public:
+        Engine() = default;
+        Engine(const InitializationInfo * initInfo);
+        Engine(const Engine&) = delete;
+        Engine(Engine&&) = delete;
+        
+        ~Engine();
 
-        DebugManager operator=(const DebugManager&) = delete;
+        Engine& operator=(const Engine&) = delete;
+        Engine& operator=(Engine&&) = delete;
 
-        bool isEnabled() const;
+        bool isActive() const;
+        void getEvents() const;
 
-        void message(const std::string s, bool err = false) const;
-        void message(const vk::Result r) const;
+        void initialize(const InitializationInfo * initInfo);
+        
+        void run();
+        void run(Main& mainLoop);
 
     private:
-        const bool enabled;
+        Window * window = nullptr;
+        Device * device = nullptr;
+        
+        vk::Instance instance;
+
+        void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion);
+
+        bool enumerateInstanceExtensions() const;
+        std::vector<const char *> getRequiredExtensions() const;
 };
 
 class Window
 {
     public:
-        Window(unsigned int width, unsigned int height, std::string title, const DebugManager * dm);
+        Window(unsigned int width, unsigned int height, std::string title);
         Window(const Window&) = delete;
         
         ~Window();
@@ -103,8 +120,6 @@ class Window
         void destroySurface(const vk::Instance& instance);
 
     private:
-        const DebugManager * debugManager;
-        
         GLFWwindow * window = nullptr;
         vk::SurfaceKHR surface;
 };
@@ -112,19 +127,20 @@ class Window
 class Device
 {
     public:
-        Device(const vk::Instance& instance, const Window * window, const DebugManager * dm);
+        Device(const vk::Instance& instance, const Window * window);
         Device(const Device&) = delete;
+        Device(Device&&) = delete;
 
         ~Device();
 
         Device& operator=(const Device&) = delete;
+        Device& operator=(Device&&) = delete;
 
         const vk::PhysicalDevice& getPhysicalDevice() const;
         vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
         const vk::Queue& getQueue(QueueType type) const;
 
     private:
-        const DebugManager * debugManager;
         const std::vector<const char *> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
         
         vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -148,33 +164,6 @@ class Device
         vk::SurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) const;
         vk::PresentModeKHR chooseSwapchainPresentMode(const std::vector<vk::PresentModeKHR>& availableModes) const;
         vk::Extent2D chooseSwapchainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const GLFWwindow * window) const;
-};
-
-class Engine
-{
-    public:
-        Engine() = default;
-        Engine(const Engine&) = delete;
-        ~Engine();
-
-        Engine& operator=(const Engine&) = delete;
-
-        bool isActive() const;
-        void getEvents() const;
-
-        void initialize(const InitializationInfo* initInfo);
-
-    private:
-        Window * window = nullptr;
-        DebugManager * debugManager = nullptr;
-        Device * device = nullptr;
-        
-        vk::Instance instance;
-
-        void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion, const std::string& engineName, const unsigned int& engineVersion);
-
-        bool enumerateInstanceExtensions() const;
-        std::vector<const char *> getRequiredExtensions() const;
 };
 
 }

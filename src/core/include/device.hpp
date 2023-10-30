@@ -56,14 +56,16 @@ class Device
 
         const vk::PhysicalDevice& getPhysicalDevice() const;
         vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
+        const vk::Device& getLogicalDevice() const;
         const vk::Queue& getQueue(QueueType type) const;
+        SwapchainSupportDetails querySwapchainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
+        QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
 
     private:
         const std::vector<const char *> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
         
         vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
         vk::Device logicalDevice = VK_NULL_HANDLE;
-        vk::SwapchainKHR swapchain = VK_NULL_HANDLE;
 
         vk::Queue graphicsQueue = VK_NULL_HANDLE;
         vk::Queue presentQueue = VK_NULL_HANDLE;
@@ -71,17 +73,10 @@ class Device
 
         void choosePhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface);
         void createLogicalDevice(const vk::SurfaceKHR& surface);
-        void createSwapchain(const Window * window);
         
         std::vector<vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const;
-        QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
         unsigned int evaluate(const vk::PhysicalDeviceType type) const;
-        bool checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& device) const;
-        
-        SwapchainSupportDetails querySwapchainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
-        vk::SurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) const;
-        vk::PresentModeKHR chooseSwapchainPresentMode(const std::vector<vk::PresentModeKHR>& availableModes) const;
-        vk::Extent2D chooseSwapchainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const GLFWwindow * window) const;
+        bool checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& device) const;  
 };
 
 }

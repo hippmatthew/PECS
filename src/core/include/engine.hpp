@@ -59,11 +59,17 @@ class Engine
         #endif
 
         vk::Instance instance = VK_NULL_HANDLE;
+        vk::SwapchainKHR swapchain = VK_NULL_HANDLE;
 
         void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion);
+        void createSwapchain();
         
         bool enumerateInstanceExtensions() const;
         std::vector<const char *> getRequiredExtensions() const;
+        vk::SurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats) const;
+        vk::PresentModeKHR chooseSwapchainPresentMode(const std::vector<vk::PresentModeKHR>& availableModes) const;
+        vk::Extent2D chooseSwapchainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const GLFWwindow * window) const;
+
 };
 
 }

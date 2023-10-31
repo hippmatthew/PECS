@@ -2,7 +2,7 @@
 *   PECS - engine.cpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    10/30/23
+*   Updated:    10/31/23
 */
 
 #include "./include/engine.hpp"
@@ -19,7 +19,11 @@ Engine::~Engine()
 {   
     std::cout << "\n\n---cleaning engine---\n\n"; 
     
-    std::cout << "\tdestroying swapchain...\n";
+    std::cout << "detroying swapchain image views...\n";
+    for (vk::ImageView imageView : swapchainImageViews)
+        device->getLogicalDevice().destroyImageView(imageView);
+    
+    std::cout << "destroying swapchain...\n";
     device->getLogicalDevice().destroySwapchainKHR(swapchain);
     
     std::cout << "destroying device...\n";
@@ -37,7 +41,7 @@ Engine::~Engine()
 
 void Engine::initialize(const InitializationInfo* initInfo)
 {    
-    std::cout << "\n---initializing PECS engine---\n\n";
+    std::cout << "\n---initializing engine---\n\n";
     
     std::cout << "creating window...\n";
     window = new Window(initInfo->windowWidth, initInfo->windowHeight, initInfo->windowTitle);
@@ -51,8 +55,11 @@ void Engine::initialize(const InitializationInfo* initInfo)
     std::cout << "creating device...\n";
     device = new Device(instance, window);
 
-    std::cout << "\tcreating swapchain...\n";
+    std::cout << "creating swapchain...\n";
     createSwapchain();
+
+    std::cout << "creating swapchain image views\n";
+    createImageViews();
 }
 
 void Engine::run()
@@ -123,13 +130,13 @@ void Engine::createSwapchain()
 {
     SwapchainSupportDetails details = device->querySwapchainSupport(device->getPhysicalDevice(), window->getSurface());
 
-    std::cout << "\t\tgetting surface format...\n";
+    std::cout << "\tgetting surface format...\n";
     vk::SurfaceFormatKHR surfaceFormat = chooseSwapchainSurfaceFormat(details.formats);
 
-    std::cout << "\t\tchoosing presentation mode...\n";
+    std::cout << "\tchoosing presentation mode...\n";
     vk::PresentModeKHR presentMode = chooseSwapchainPresentMode(details.presentModes);
 
-    std::cout << "\t\tsetting swap extent...\n";
+    std::cout << "\tsetting swap extent...\n";
     vk::Extent2D extent = chooseSwapchainExtent(details.surfaceCapabilities, window->getGLFWwindow());
 
     unsigned int imageCount = details.surfaceCapabilities.minImageCount + 1;
@@ -168,6 +175,41 @@ void Engine::createSwapchain()
 
     swapchain = device->getLogicalDevice().createSwapchainKHR(swapchainCreateInfo);
     std::cout << "\tswapchain created\n";
+
+    swapchainImageDetails.extent = extent;
+    swapchainImageDetails.format = surfaceFormat.format;
+    std::cout << "\tsaved swapchain extent and surface format\n";
+
+    swapchainImages = device->getLogicalDevice().getSwapchainImagesKHR(swapchain);
+    std::cout << "\tretrieved swapchain images\n";
+}
+
+void Engine::createImageViews()
+{
+    swapchainImageViews.resize(swapchainImages.size());
+    
+    vk::ComponentMapping components{ .r = vk::ComponentSwizzle::eIdentity,
+                                     .g = vk::ComponentSwizzle::eIdentity,
+                                     .b = vk::ComponentSwizzle::eIdentity,
+                                     .a = vk::ComponentSwizzle::eIdentity };
+
+    vk::ImageSubresourceRange subresourceRange{ .aspectMask     = vk::ImageAspectFlagBits::eColor,
+                                                .baseMipLevel   = 0,
+                                                .levelCount     = 1,
+                                                .baseArrayLayer = 0,
+                                                .layerCount     = 1 };
+    
+    unsigned int imageCount = 0;
+    for (vk::Image image : swapchainImages)
+    {
+        vk::ImageViewCreateInfo imageViewCreateInfo{ .image             = image,
+                                                     .viewType          = vk::ImageViewType::e2D,
+                                                     .format            = swapchainImageDetails.format,
+                                                     .components        = components,
+                                                     .subresourceRange  = subresourceRange };
+        
+        swapchainImageViews[imageCount++] = device->getLogicalDevice().createImageView(imageViewCreateInfo);
+    }
 }
 
 bool Engine::enumerateInstanceExtensions() const

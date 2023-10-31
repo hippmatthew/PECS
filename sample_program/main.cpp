@@ -2,19 +2,21 @@
  *  PECS - sample program
  *  Author:     Matthew Hipp
  *  Created:    6/29/23
- *  Updated:    10/30/23
+ *  Updated:    10/31/23
  */
 
 #include "../include/pecs/core.hpp"
 
-class Loop : public pecs::Engine::Main
+class Simulation : public pecs::Engine::Main
 {
-    public:
+    // any extra data / functions can be expressed here
+    
+    public:        
         void operator()()
         {
-            // looping code goes here
+            // required operator main loop
         }
-};
+};  
 
 int main()
 {
@@ -29,7 +31,7 @@ int main()
     pecs::Engine engine;
     engine.initialize(&initInfo);
 
-    Loop mainLoop;
+    Simulation simulation;
 
-    engine.run(mainLoop);
+    engine.run(simulation);
 }

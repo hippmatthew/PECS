@@ -61,6 +61,12 @@ struct SwapchainSupportDetails
     std::vector<vk::PresentModeKHR> presentModes;
 };
 
+struct SwapchainImageDetails
+{
+    vk::Extent2D extent;
+    vk::Format format;
+};
+
 class Engine
 {
     public:
@@ -90,7 +96,10 @@ class Engine
         Device * device = nullptr;
         
         std::vector<const char *> layers;
-
+        
+        SwapchainImageDetails swapchainImageDetails;
+        std::vector<vk::Image> swapchainImages;
+        
         #ifdef NDEBUG
             const bool enableValidationLayers = false;
         #else
@@ -99,16 +108,17 @@ class Engine
 
         vk::Instance instance = VK_NULL_HANDLE;
         vk::SwapchainKHR swapchain = VK_NULL_HANDLE;
+        std::vector<vk::ImageView> swapchainImageViews;
 
         void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion);
         void createSwapchain();
-        
+        void createImageViews();
+
         bool enumerateInstanceExtensions() const;
         std::vector<const char *> getRequiredExtensions() const;
         vk::SurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats) const;
         vk::PresentModeKHR chooseSwapchainPresentMode(const std::vector<vk::PresentModeKHR>& availableModes) const;
         vk::Extent2D chooseSwapchainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const GLFWwindow * window) const;
-
 };
 
 class Window

@@ -8,13 +8,8 @@
 #ifndef pecs_window_hpp
 #define pecs_window_hpp
 
-#ifndef VULKAN_HPP_NO_CONSTRUCTORS
-    #define VULKAN_HPP_NO_CONSTRUCTORS
-#endif /* VULKAN_HPP_NO_CONSTRUCTORS */
-
-#ifndef GLFW_INCLUDE_NONE
-    #define GLFW_INCLUDE_NONE
-#endif /* GLFW_INCLUDE_NONE */
+#define VULKAN_HPP_NO_CONSTRUCTORS
+#define GLFW_INCLUDE_NONE
 
 #include <iostream>
 

@@ -2,7 +2,7 @@
 *   PECS - engine.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    10/30/23
+*   Updated:    10/31/23
 */
 
 #ifndef pecs_engine_hpp
@@ -20,6 +20,12 @@ struct InitializationInfo
 
     std::string windowTitle = "PECS Application";
     unsigned int windowWidth = 600, windowHeight = 600;
+};
+
+struct SwapchainImageDetails
+{
+    vk::Extent2D extent;
+    vk::Format format;
 };
 
 class Engine
@@ -51,7 +57,10 @@ class Engine
         Device * device = nullptr;
         
         std::vector<const char *> layers;
-
+        
+        SwapchainImageDetails swapchainImageDetails;
+        std::vector<vk::Image> swapchainImages;
+        
         #ifdef NDEBUG
             const bool enableValidationLayers = false;
         #else
@@ -60,16 +69,17 @@ class Engine
 
         vk::Instance instance = VK_NULL_HANDLE;
         vk::SwapchainKHR swapchain = VK_NULL_HANDLE;
+        std::vector<vk::ImageView> swapchainImageViews;
 
         void createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion);
         void createSwapchain();
-        
+        void createImageViews();
+
         bool enumerateInstanceExtensions() const;
         std::vector<const char *> getRequiredExtensions() const;
         vk::SurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& formats) const;
         vk::PresentModeKHR chooseSwapchainPresentMode(const std::vector<vk::PresentModeKHR>& availableModes) const;
         vk::Extent2D chooseSwapchainExtent(const vk::SurfaceCapabilitiesKHR& capabilities, const GLFWwindow * window) const;
-
 };
 
 }

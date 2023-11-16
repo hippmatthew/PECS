@@ -62,7 +62,11 @@ class Device
         QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
 
     private:
-        const std::vector<const char *> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        // required device extensions
+        const std::vector<const char *> deviceExtensions = { 
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+        };
         
         vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
         vk::Device logicalDevice = VK_NULL_HANDLE;

@@ -5,7 +5,7 @@
 *   Updated:    10/31/23
 */
 
-#include "./include/engine.hpp"
+#include "include/engine.hpp"
 
 namespace pecs
 {
@@ -19,7 +19,7 @@ Engine::~Engine()
 {   
     std::cout << "\n\n---cleaning engine---\n\n"; 
     
-    std::cout << "detroying swapchain image views...\n";
+    std::cout << "destroying swapchain image views...\n";
     for (vk::ImageView imageView : swapchainImageViews)
         device->getLogicalDevice().destroyImageView(imageView);
     
@@ -62,30 +62,24 @@ void Engine::initialize(const InitializationInfo* initInfo)
     createImageViews();
 }
 
-void Engine::run()
-{
+void Engine::run(Main& mainLoop)
+{   
     std::cout << "\n---running main loop---\n\n";
     while (!window->shouldClose())
     {
+        // poll events
         glfwPollEvents();
 
-        // run compute stage
-        // run graphics stage
+        // update command buffers
+
+        // run main loop
+        mainLoop();
     }
 }
 
-void Engine::run(Main& mainLoop)
+const Device * Engine::getDevice() const
 {
-    std::cout << "\n---running main loop---\n\n";
-    while (!window->shouldClose())
-    {
-        glfwPollEvents();
-
-        // run compute stage
-        // run graphics stage
-
-        mainLoop();
-    }
+    return device;
 }
 
 void Engine::createVulkanInstance(const std::string& applicationName, const unsigned int& applicationVersion)

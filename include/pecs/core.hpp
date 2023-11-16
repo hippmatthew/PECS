@@ -1,12 +1,12 @@
 /*
-*   PECS - pecs.hpp
+*   PECS - core.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/29/23
-*   Updated:    10/29/23
+*   Updated:    11/15/23
 */
 
-#ifndef pecs_hpp
-#define pecs_hpp
+#ifndef pecs_core_hpp
+#define pecs_core_hpp
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #define GLFW_INCLUDE_NONE
@@ -21,51 +21,13 @@
 #include <vulkan/vulkan_to_string.hpp>
 #include <GLFW/glfw3.h>
 
+#include "declarations.hpp"
+#include "enums.hpp"
+#include "structs.hpp"
+#include "objects.hpp"
+
 namespace pecs
 {
-
-class Engine;
-class Window;
-class Device;
-
-enum QueueType
-{
-    Graphics,
-    Present,
-    Compute
-};
-
-struct InitializationInfo
-{   
-    std::string applicationName = "PECS Application";
-    unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
-
-    std::string windowTitle = "PECS Application";
-    unsigned int windowWidth = 600, windowHeight = 600;
-};
-
-struct QueueFamilyIndices
-{
-    std::optional<unsigned int> graphics;
-    std::optional<unsigned int> present;
-    std::optional<unsigned int> compute;
-
-    bool isComplete() const
-    { return graphics.has_value() && present.has_value() && compute.has_value(); }
-};
-
-struct SwapchainSupportDetails
-{
-    vk::SurfaceCapabilitiesKHR surfaceCapabilities;
-    std::vector<vk::SurfaceFormatKHR> formats;
-    std::vector<vk::PresentModeKHR> presentModes;
-};
-
-struct SwapchainImageDetails
-{
-    vk::Extent2D extent;
-    vk::Format format;
-};
 
 class Engine
 {
@@ -73,7 +35,16 @@ class Engine
         class Main
         {
             public:
+                virtual ~Main()
+                {
+                    for (Object& object : objects)
+                        object.destroyObject();
+                }
+                
                 virtual void operator()() = 0;
+
+            public:
+                std::vector<Object> objects;
         };
     
     public:
@@ -88,8 +59,12 @@ class Engine
         Engine& operator=(Engine&&) = delete;
 
         void initialize(const InitializationInfo * initInfo);
-        void run();
-        void run(Main& mainLoop);
+        void run(Main&);
+
+        const Device * getDevice() const;
+
+    public:
+        SwapchainImageDetails swapchainImageDetails;
 
     private:
         Window * window = nullptr;
@@ -97,7 +72,6 @@ class Engine
         
         std::vector<const char *> layers;
         
-        SwapchainImageDetails swapchainImageDetails;
         std::vector<vk::Image> swapchainImages;
         
         #ifdef NDEBUG
@@ -164,7 +138,11 @@ class Device
         QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
 
     private:
-        const std::vector<const char *> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+        // required device extensions
+        const std::vector<const char *> deviceExtensions = { 
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+        };
         
         vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
         vk::Device logicalDevice = VK_NULL_HANDLE;
@@ -183,4 +161,4 @@ class Device
 
 }
 
-#endif /* pecs_hpp */
+#endif /* pecs_core_hpp */

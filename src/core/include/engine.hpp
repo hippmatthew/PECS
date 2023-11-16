@@ -2,13 +2,23 @@
 *   PECS - engine.hpp
 *   Author:     Matthew Hipp
 *   Created:    6/27/23
-*   Updated:    10/31/23
+*   Updated:    11/15/23
 */
 
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
 
+namespace pecs
+{
+    struct InitializationInfo;
+    struct SwapchainImageDetails;
+    
+    class Engine;
+    class Object;
+}
+
 #include "device.hpp"
+#include "object.hpp"
 
 namespace pecs
 {
@@ -34,7 +44,26 @@ class Engine
         class Main
         {
             public:
+                Main(const Engine& e) : engine(&e) {}
+
+                virtual ~Main()
+                {
+                    for (Object& object : objects)
+                        object.destroyObject(*engine);
+                }
+
                 virtual void operator()() = 0;
+
+                void instantiateObject(Object& o)
+                {
+                    objects.push_back(std::move(o));
+                }
+
+            protected:
+                std::vector<Object> objects;
+
+            private:
+                const Engine * engine = nullptr;
         };
     
     public:
@@ -49,8 +78,12 @@ class Engine
         Engine& operator=(Engine&&) = delete;
 
         void initialize(const InitializationInfo * initInfo);
-        void run();
-        void run(Main& mainLoop);
+        void run(Main&);
+
+        const Device * getDevice() const;
+
+    public:
+        SwapchainImageDetails swapchainImageDetails;
 
     private:
         Window * window = nullptr;
@@ -58,7 +91,6 @@ class Engine
         
         std::vector<const char *> layers;
         
-        SwapchainImageDetails swapchainImageDetails;
         std::vector<vk::Image> swapchainImages;
         
         #ifdef NDEBUG

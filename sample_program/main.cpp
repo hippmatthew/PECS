@@ -5,13 +5,16 @@
  *  Updated:    10/31/23
  */
 
-#include "../include/pecs/core.hpp"
+#include "../include/pecs.hpp"
 
 class Simulation : public pecs::Engine::Main
 {
     // any extra data / functions can be expressed here
-    
+
     public:        
+        // links data to the passed in engine
+        Simulation(const pecs::Engine& e) : Main(e) {}
+        
         void operator()()
         {
             // required operator main loop
@@ -31,7 +34,7 @@ int main()
     pecs::Engine engine;
     engine.initialize(&initInfo);
 
-    Simulation simulation;
+    Simulation simulation(engine);
 
     engine.run(simulation);
 }

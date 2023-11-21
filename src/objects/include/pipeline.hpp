@@ -11,11 +11,18 @@
 #include <fstream>
 #include <iostream>
 
-#include "device.hpp"
-#include "engine.hpp"
+#include "../../core/include/device.hpp"
+#include "../../core/include/engine.hpp"
 
 namespace pecs
 {
+
+struct ShaderPaths
+{
+    std::string vertex = "";
+    std::string fragment = "";
+    std::string compute = "";
+};
 
 class Pipeline
 {
@@ -24,8 +31,8 @@ class Pipeline
 
         void destroyPipeline(const Device * device)
         {
-            device->getLogicalDevice().destroyPipeline(pipeline);
-            device->getLogicalDevice().destroyPipelineLayout(pipelineLayout); 
+            device->logicalDevice.destroyPipeline(pipeline);
+            device->logicalDevice.destroyPipelineLayout(pipelineLayout);
         }
 
     protected:
@@ -38,13 +45,7 @@ class Pipeline
 };
 
 class GraphicsPipeline : public Pipeline
-{
-    public:
-        struct ShaderPaths{
-            std::string vertex;
-            std::string fragment;
-        };
-        
+{  
     public:
         GraphicsPipeline(const Device * device, const SwapchainImageDetails& swapchainImageDetails, const ShaderPaths& shaderPaths);
         GraphicsPipeline(const GraphicsPipeline&) = delete;

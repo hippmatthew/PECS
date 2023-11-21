@@ -21,7 +21,6 @@
 #include <vulkan/vulkan_to_string.hpp>
 #include <GLFW/glfw3.h>
 
-#include "declarations.hpp"
 #include "enums.hpp"
 #include "structs.hpp"
 #include "objects.hpp"
@@ -29,22 +28,45 @@
 namespace pecs
 {
 
+class Engine;
+class Window;
+class Device;
+
 class Engine
 {
     public:
         class Main
         {
             public:
-                virtual ~Main()
-                {
-                    for (Object& object : objects)
-                        object.destroyObject();
-                }
+                Main(const Engine& engine) : device(engine.getDevice()), details(engine.swapchainImageDetails) {}
                 
+                ~Main()
+                {
+                    for (int i = 0; i < objects.size(); ++i)
+                        objects[i].destroy(device);
+                }
+
                 virtual void operator()() = 0;
+
+                void loadObjects()
+                {        
+                    for (int i = 0; i < objects.size(); ++i)
+                    {
+                        std::cout << "\tloading object " << i + 1 << "/" << objects.size() << "...\n";
+                        if (0x10 & objects[i].pipelineTypes)
+                            objects[i].graphicsPipeline = new GraphicsPipeline(device, details, objects[i].shaderPaths);
+
+                        if (objects[i].graphicsPipeline != nullptr)
+                            std::cout << "\t\tcreated graphics pipeline for object " << i << '\n';
+                    }            
+                }
 
             public:
                 std::vector<Object> objects;
+
+            private:
+                const Device * device;
+                const SwapchainImageDetails details;
         };
     
     public:
@@ -106,22 +128,23 @@ class Window
         Window& operator=(const Window&) = delete;
         
         const GLFWwindow * getGLFWwindow() const;
-        const vk::SurfaceKHR& getSurface() const;
         
         bool shouldClose() const;
 
         void createSurface(const vk::Instance& instance);
         void destroySurface(const vk::Instance& instance);
 
+    public:
+        vk::SurfaceKHR surface;
+    
     private:
         GLFWwindow * window = nullptr;
-        vk::SurfaceKHR surface;
 };
 
 class Device
 {
     public:
-        Device(const vk::Instance& instance, const Window * window);
+        Device(std::vector<vk::PhysicalDevice> devices, const vk::SurfaceKHR& surface);
         Device(const Device&) = delete;
         Device(Device&&) = delete;
 
@@ -130,33 +153,31 @@ class Device
         Device& operator=(const Device&) = delete;
         Device& operator=(Device&&) = delete;
 
-        const vk::PhysicalDevice& getPhysicalDevice() const;
-        vk::PhysicalDeviceProperties getPhysicalDeviceProperties() const;
-        const vk::Device& getLogicalDevice() const;
-        const vk::Queue& getQueue(QueueType type) const;
         SwapchainSupportDetails querySwapchainSupport(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
         QueueFamilyIndices findPhysicalDeviceQueueFamilyIndicies(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface) const;
 
     private:
-        // required device extensions
-        const std::vector<const char *> deviceExtensions = { 
-            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-        };
+        void choosePhysicalDevice(std::vector<vk::PhysicalDevice> devices, const vk::SurfaceKHR& surface);
+        void createLogicalDevice(const vk::SurfaceKHR& surface);
         
+        std::vector<vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const;
+        unsigned int evaluate(const vk::PhysicalDeviceType type) const;
+        bool checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& device) const;
+    
+    public:
         vk::PhysicalDevice physicalDevice = VK_NULL_HANDLE;
         vk::Device logicalDevice = VK_NULL_HANDLE;
 
         vk::Queue graphicsQueue = VK_NULL_HANDLE;
         vk::Queue presentQueue = VK_NULL_HANDLE;
         vk::Queue computeQueue = VK_NULL_HANDLE;
-
-        void choosePhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface);
-        void createLogicalDevice(const vk::SurfaceKHR& surface);
-        
-        std::vector<vk::PhysicalDevice> getSuitablePhysicalDevices(const std::vector<vk::PhysicalDevice>& devices, const vk::SurfaceKHR& surface) const;
-        unsigned int evaluate(const vk::PhysicalDeviceType type) const;
-        bool checkPhysicalDeviceExtensionSupport(const vk::PhysicalDevice& device) const;  
+    
+    private:
+         // required device extensions
+        const std::vector<const char *> deviceExtensions = { 
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+            VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+        };  
 };
 
 }

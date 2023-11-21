@@ -18,7 +18,7 @@ namespace pecs
 }
 
 #include "device.hpp"
-#include "object.hpp"
+#include "../../objects/include/object.hpp"
 
 namespace pecs
 {
@@ -44,26 +44,35 @@ class Engine
         class Main
         {
             public:
-                Main(const Engine& e) : engine(&e) {}
-
-                virtual ~Main()
+                Main(const Engine& engine) : device(engine.getDevice()), details(engine.swapchainImageDetails) {}
+                
+                ~Main()
                 {
-                    for (Object& object : objects)
-                        object.destroyObject(*engine);
+                    for (int i = 0; i < objects.size(); ++i)
+                        objects[i].destroy(device);
                 }
 
                 virtual void operator()() = 0;
 
-                void instantiateObject(Object& o)
-                {
-                    objects.push_back(std::move(o));
+                void loadObjects()
+                {        
+                    for (int i = 0; i < objects.size(); ++i)
+                    {
+                        std::cout << "\tloading object " << i + 1 << "/" << objects.size() << "...\n";
+                        if (0x10 & objects[i].pipelineTypes)
+                            objects[i].graphicsPipeline = new GraphicsPipeline(device, details, objects[i].shaderPaths);
+
+                        if (objects[i].graphicsPipeline != nullptr)
+                            std::cout << "\t\tcreated graphics pipeline for object " << i << '\n';
+                    }            
                 }
 
-            protected:
+            public:
                 std::vector<Object> objects;
 
             private:
-                const Engine * engine = nullptr;
+                const Device * device;
+                const SwapchainImageDetails details;
         };
     
     public:

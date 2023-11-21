@@ -31,16 +31,17 @@ class Window
         Window& operator=(const Window&) = delete;
         
         const GLFWwindow * getGLFWwindow() const;
-        const vk::SurfaceKHR& getSurface() const;
         
         bool shouldClose() const;
 
         void createSurface(const vk::Instance& instance);
         void destroySurface(const vk::Instance& instance);
 
+    public:
+        vk::SurfaceKHR surface;
+    
     private:
         GLFWwindow * window = nullptr;
-        vk::SurfaceKHR surface;
 };
 
 }

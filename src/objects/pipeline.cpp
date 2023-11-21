@@ -31,7 +31,7 @@ vk::ShaderModule Pipeline::createShaderModule(const Device * device, const std::
     vk::ShaderModuleCreateInfo shaderCreateInfo{ .codeSize  = shader.size(),
                                                  .pCode     = reinterpret_cast<const unsigned int *>(shader.data()) };
     
-    return device->getLogicalDevice().createShaderModule(shaderCreateInfo);
+    return device->logicalDevice.createShaderModule(shaderCreateInfo);
 }
 
 GraphicsPipeline::GraphicsPipeline(const Device * device, const SwapchainImageDetails& swapchainImageDetails, const ShaderPaths& shaderPaths)
@@ -58,7 +58,6 @@ GraphicsPipeline::GraphicsPipeline(const Device * device, const SwapchainImageDe
                                                                            .module    = shaderModules[1],
                                                                            .pName     = "main" });
     }
-        
         
     // Dynamic viewport state info
     std::vector<vk::DynamicState> dynamicStates = { vk::DynamicState::eViewport, vk::DynamicState::eScissor };
@@ -131,7 +130,7 @@ GraphicsPipeline::GraphicsPipeline(const Device * device, const SwapchainImageDe
                                                            .pushConstantRangeCount  = 0,
                                                            .pPushConstantRanges     = nullptr };
 
-    pipelineLayout = device->getLogicalDevice().createPipelineLayout(pipelineLayoutCreateInfo);
+    pipelineLayout = device->logicalDevice.createPipelineLayout(pipelineLayoutCreateInfo);
         
     vk::PipelineRenderingCreateInfo dynamicRenderingCreateInfo{ .colorAttachmentCount       = 1,
                                                                 .pColorAttachmentFormats    = &swapchainImageDetails.format };
@@ -151,7 +150,7 @@ GraphicsPipeline::GraphicsPipeline(const Device * device, const SwapchainImageDe
                                                                .pNext               = &dynamicRenderingCreateInfo };
 
     vk::Result result;
-    std::tie(result, pipeline) = device->getLogicalDevice().createGraphicsPipeline(nullptr, graphicsPipelineCreateInfo);
+    std::tie(result, pipeline) = device->logicalDevice.createGraphicsPipeline(nullptr, graphicsPipelineCreateInfo);
     switch (result)
     {
         case vk::Result::eSuccess: break;
@@ -161,7 +160,7 @@ GraphicsPipeline::GraphicsPipeline(const Device * device, const SwapchainImageDe
     }
   
     for (auto shaderModule : shaderModules)
-        device->getLogicalDevice().destroyShaderModule(shaderModule);
+        device->logicalDevice.destroyShaderModule(shaderModule);
 }
 
 }

@@ -37,9 +37,6 @@ Window::~Window()
 const GLFWwindow * Window::getGLFWwindow() const
 { return window; }
 
-const vk::SurfaceKHR& Window::getSurface() const
-{ return surface; }
-
 bool Window::shouldClose() const 
 { return glfwWindowShouldClose(window); }
 

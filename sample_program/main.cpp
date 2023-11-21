@@ -5,16 +5,22 @@
  *  Updated:    10/31/23
  */
 
-#include "../include/pecs.hpp"
+#include "../include/pecs/core.hpp"
+#include "../include/pecs/objects.hpp"
 
 class Simulation : public pecs::Engine::Main
 {
     // any extra data / functions can be expressed here
 
-    public:        
-        // links data to the passed in engine
-        Simulation(const pecs::Engine& e) : Main(e) {}
-        
+    public:
+        Simulation(const pecs::Engine& engine) : Main(engine) 
+        {
+            pecs::ShaderPaths sp{ .vertex   = "../spv/triangle.vert.spv",
+                                  .fragment = "../spv/triangle.frag.spv" };
+            
+            objects.push_back(pecs::Triangle(sp));
+        }
+
         void operator()()
         {
             // required operator main loop
@@ -34,7 +40,7 @@ int main()
     pecs::Engine engine;
     engine.initialize(&initInfo);
 
-    Simulation simulation(engine);
+    Simulation sim(engine);
 
-    engine.run(simulation);
+    engine.run(sim);
 }

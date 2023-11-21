@@ -16,11 +16,20 @@ namespace pecs
 class Object
 {
     public:
-        void destroyObject(const Engine& engine);
+        Object(const ShaderPaths& sp) : shaderPaths(sp) {}
+        
+        virtual ~Object() = 0;
+        
+        virtual void destroy(const Device * device) = 0;
+    
+    public:
+        Pipeline * graphicsPipeline = nullptr;
+        Pipeline * computePipeline = nullptr;
+        int pipelineTypes = 0x10;
 
+        const ShaderPaths shaderPaths;
     protected:
         // each renderable object needs a pipline, descriptor set, and a buffer
-        Pipeline *  pipeline = nullptr;
         // vk::DescriptorSet descriptorSet = VK_NULL_HANDLE;
         // vk::Buffer buffer = VK_NULL_HANDLE;
 };
@@ -28,9 +37,11 @@ class Object
 class Triangle : public Object
 {
     public:
-        Triangle(const Engine& engine);
+        Triangle(const ShaderPaths& sp) : Object(sp) {}
+
+        ~Triangle() { delete graphicsPipeline; }
     
-        virtual void destroyObject(const Engine& engine);
+        virtual void destroy(const Device * device);
 };
 
 }

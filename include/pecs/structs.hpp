@@ -45,6 +45,13 @@ struct SwapchainImageDetails
     vk::Format format;
 };
 
+struct ShaderPaths
+{
+    std::string vertex = "";
+    std::string fragment = "";
+    std::string compute = "";
+};
+
 }
 
 #endif /* pecs_structs_hpp */

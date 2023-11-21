@@ -10,13 +10,13 @@
 namespace pecs
 {
 
-Device::Device(const vk::Instance& instance, const Window * window)
+Device::Device(std::vector<vk::PhysicalDevice> devices, const vk::SurfaceKHR& surface)
 {
     std::cout << "\tpicking physical device...\n";
-    choosePhysicalDevice(instance, window->getSurface());
+    choosePhysicalDevice(devices, surface);
 
     std::cout << "\tcreating logical device...\n";
-    createLogicalDevice(window->getSurface());
+    createLogicalDevice(surface);
 }
 
 Device::~Device()
@@ -25,34 +25,8 @@ Device::~Device()
     logicalDevice.destroy();
 }
 
-const vk::PhysicalDevice& Device::getPhysicalDevice() const
-{ return physicalDevice; }
-
-vk::PhysicalDeviceProperties Device::getPhysicalDeviceProperties() const
-{ return physicalDevice.getProperties(); }
-
-const vk::Device& Device::getLogicalDevice() const
+void Device::choosePhysicalDevice(std::vector<vk::PhysicalDevice> devices, const vk::SurfaceKHR& surface)
 {
-    return logicalDevice;
-}
-
-const vk::Queue& Device::getQueue(QueueType type) const
-{
-    switch (type)
-    {
-        case Graphics:
-            return graphicsQueue;
-        case Present:
-            return presentQueue;
-        case Compute:
-            return computeQueue;
-    }
-}
-
-void Device::choosePhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface)
-{
-    auto devices = instance.enumeratePhysicalDevices();
-
     auto suitableDevices = getSuitablePhysicalDevices(devices, surface);
     if (suitableDevices.size() == 0) throw std::runtime_error("no suitable deviced found\n");
 

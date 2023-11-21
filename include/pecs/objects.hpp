@@ -10,27 +10,32 @@
 
 #include "core.hpp"
 
-namespace std
-{
-    
-pecs::Object&& move(pecs::Object& object)
-{
-    return static_cast<pecs::Object&&>(object);
-}
-
-}
-
 namespace pecs
 {
+
+class Object;
+class Triangle;
+
+class Pipeline;
+class GraphicsPipeline;
 
 class Object
 {
     public:
-        void destroyObject(const Engine& engine);
+        Object(const ShaderPaths& sp) : shaderPaths(sp) {}
+        
+        virtual ~Object() = 0;
+        
+        virtual void destroy(const Device * device) = 0;
+    
+    public:
+        Pipeline * graphicsPipeline = nullptr;
+        Pipeline * computePipeline = nullptr;
+        int pipelineTypes = 0x10;
 
+        const ShaderPaths shaderPaths;
     protected:
         // each renderable object needs a pipline, descriptor set, and a buffer
-        Pipeline *  pipeline = nullptr;
         // vk::DescriptorSet descriptorSet = VK_NULL_HANDLE;
         // vk::Buffer buffer = VK_NULL_HANDLE;
 };
@@ -38,9 +43,11 @@ class Object
 class Triangle : public Object
 {
     public:
-        Triangle(const Engine& engine);
+        Triangle(const ShaderPaths& sp) : Object(sp) {}
+
+        ~Triangle() { delete graphicsPipeline; }
     
-        virtual void destroyObject(const Engine& engine);
+        virtual void destroy(const Device * device);
 };
 
 class Pipeline
@@ -50,8 +57,8 @@ class Pipeline
 
         void destroyPipeline(const Device * device)
         {
-            device->getLogicalDevice().destroyPipeline(pipeline);
-            device->getLogicalDevice().destroyPipelineLayout(pipelineLayout); 
+            device->logicalDevice.destroyPipeline(pipeline);
+            device->logicalDevice.destroyPipelineLayout(pipelineLayout);
         }
 
     protected:
@@ -64,13 +71,7 @@ class Pipeline
 };
 
 class GraphicsPipeline : public Pipeline
-{
-    public:
-        struct ShaderPaths{
-            std::string vertex;
-            std::string fragment;
-        };
-        
+{  
     public:
         GraphicsPipeline(const Device * device, const SwapchainImageDetails& swapchainImageDetails, const ShaderPaths& shaderPaths);
         GraphicsPipeline(const GraphicsPipeline&) = delete;

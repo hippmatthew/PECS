@@ -21,10 +21,10 @@ Engine::~Engine()
     
     std::cout << "destroying swapchain image views...\n";
     for (vk::ImageView imageView : swapchainImageViews)
-        device->getLogicalDevice().destroyImageView(imageView);
+        device->logicalDevice.destroyImageView(imageView);
     
     std::cout << "destroying swapchain...\n";
-    device->getLogicalDevice().destroySwapchainKHR(swapchain);
+    device->logicalDevice.destroySwapchainKHR(swapchain);
     
     std::cout << "destroying device...\n";
     delete device;
@@ -53,7 +53,7 @@ void Engine::initialize(const InitializationInfo* initInfo)
     window->createSurface(instance);
     
     std::cout << "creating device...\n";
-    device = new Device(instance, window);
+    device = new Device(instance.enumeratePhysicalDevices(), window->surface);
 
     std::cout << "creating swapchain...\n";
     createSwapchain();
@@ -64,6 +64,9 @@ void Engine::initialize(const InitializationInfo* initInfo)
 
 void Engine::run(Main& mainLoop)
 {   
+    std::cout << "\n---loading objects---\n\n";
+    mainLoop.loadObjects();
+    
     std::cout << "\n---running main loop---\n\n";
     while (!window->shouldClose())
     {
@@ -122,7 +125,7 @@ void Engine::createVulkanInstance(const std::string& applicationName, const unsi
 
 void Engine::createSwapchain()
 {
-    SwapchainSupportDetails details = device->querySwapchainSupport(device->getPhysicalDevice(), window->getSurface());
+    SwapchainSupportDetails details = device->querySwapchainSupport(device->physicalDevice, window->surface);
 
     std::cout << "\tgetting surface format...\n";
     vk::SurfaceFormatKHR surfaceFormat = chooseSwapchainSurfaceFormat(details.formats);
@@ -137,7 +140,7 @@ void Engine::createSwapchain()
     if (details.surfaceCapabilities.maxImageCount > 0 && imageCount > details.surfaceCapabilities.maxImageCount)
         imageCount = details.surfaceCapabilities.maxImageCount;
 
-    vk::SwapchainCreateInfoKHR swapchainCreateInfo{ .surface            = window->getSurface(),
+    vk::SwapchainCreateInfoKHR swapchainCreateInfo{ .surface            = window->surface,
                                                     .minImageCount      = imageCount,
                                                     .imageFormat        = surfaceFormat.format,
                                                     .imageColorSpace    = surfaceFormat.colorSpace,
@@ -150,7 +153,7 @@ void Engine::createSwapchain()
                                                     .clipped            = VK_TRUE,
                                                     .oldSwapchain       = VK_NULL_HANDLE};
 
-    QueueFamilyIndices indices = device->findPhysicalDeviceQueueFamilyIndicies(device->getPhysicalDevice(), window->getSurface());
+    QueueFamilyIndices indices = device->findPhysicalDeviceQueueFamilyIndicies(device->physicalDevice, window->surface);
     
     if (indices.graphics != indices.present)
     {
@@ -167,14 +170,14 @@ void Engine::createSwapchain()
         swapchainCreateInfo.pQueueFamilyIndices = nullptr;
     }
 
-    swapchain = device->getLogicalDevice().createSwapchainKHR(swapchainCreateInfo);
+    swapchain = device->logicalDevice.createSwapchainKHR(swapchainCreateInfo);
     std::cout << "\tswapchain created\n";
 
     swapchainImageDetails.extent = extent;
     swapchainImageDetails.format = surfaceFormat.format;
     std::cout << "\tsaved swapchain extent and surface format\n";
 
-    swapchainImages = device->getLogicalDevice().getSwapchainImagesKHR(swapchain);
+    swapchainImages = device->logicalDevice.getSwapchainImagesKHR(swapchain);
     std::cout << "\tretrieved swapchain images\n";
 }
 
@@ -202,7 +205,7 @@ void Engine::createImageViews()
                                                      .components        = components,
                                                      .subresourceRange  = subresourceRange };
         
-        swapchainImageViews[imageCount++] = device->getLogicalDevice().createImageView(imageViewCreateInfo);
+        swapchainImageViews[imageCount++] = device->logicalDevice.createImageView(imageViewCreateInfo);
     }
 }
 

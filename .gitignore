@@ -1,6 +1,10 @@
 # Directories
 .vscode
 bin
+obj
 
 # Files
 .DS_STORE
+Makefile
+**.sln
+**.vcxproj

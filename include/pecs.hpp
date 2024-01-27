@@ -2,7 +2,7 @@
  *  PECS - pecs.hpp
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  1/26/24
  */
 
 #ifndef pecs_hpp
@@ -27,6 +27,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 #define PECS_VALIDATION_BIT 0x1u
 
@@ -35,6 +36,7 @@ namespace pecs
 
 typedef std::pair<std::optional<unsigned int>, vk::raii::Queue> Queue;
 typedef std::optional<std::string> ShaderPath;
+typedef std::pair<vk::Extent2D, vk::Format> ViewportInfo;
 
 enum QueueType
 {
@@ -96,6 +98,34 @@ class Settings
     Settings::GUI gui;
 };
 
+class Object : public Singular
+{
+  public:
+    Object(const vk::raii::Device&, const ViewportInfo&, const ShaderPaths&);
+
+    ~Object() = default;
+
+  private:
+    std::vector<char> readShader(std::string) const;
+    std::vector<vk::raii::ShaderModule> createShaderModules(const vk::raii::Device&) const;
+    std::vector<vk::PipelineShaderStageCreateInfo> shaderCreateInfos(const std::vector<vk::raii::ShaderModule>&) const;
+
+    void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
+
+  protected:
+    const ShaderPaths shaderPaths;
+
+    vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
+    vk::raii::Pipeline vk_graphicsPipeline = nullptr;
+
+    vk::raii::PipelineLayout vk_computeLayout = nullptr;
+    vk::raii::Pipeline vk_computePipeline = nullptr;
+
+    vk::raii::DescriptorSetLayout vk_descriptorLayout = nullptr;
+    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
+    vk::raii::DescriptorSet vk_descriptorSet = nullptr;
+};
+
 class GUI : public Singular
 {
   public:
@@ -107,6 +137,8 @@ class GUI : public Singular
     std::vector<const char *> extensions() const;
     GLFWwindow * window() const;
     const vk::raii::SurfaceKHR& surface() const;
+    const vk::Extent2D& extent() const;
+    const vk::Format& format() const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
@@ -180,6 +212,23 @@ class Device : public Singular
     vk::raii::Device vk_device = nullptr;
 };
 
+class Loop : public Singular
+{
+  public:
+    Loop() = default;
+
+    virtual ~Loop();
+
+    virtual void operator () () {}
+
+    std::vector<Object *>& objectData();
+    void addObject(const Device&, const ViewportInfo&, const ShaderPaths&);
+
+  protected:
+    std::vector<Object *> objects;
+};
+
+
 class Engine : public Singular
 {
   public:
@@ -188,7 +237,10 @@ class Engine : public Singular
 
     ~Engine();
 
-    void run();
+    const Device& getDevice() const;
+    const ViewportInfo viewportInfo() const;
+
+    void run(Loop&);
 
   private:
     void initialize();
@@ -202,33 +254,6 @@ class Engine : public Singular
     Device * device = nullptr;
 
     vk::raii::Instance vk_instance = nullptr;
-};
-
-class Pipeline : public Singular
-{
-  public:
-    Pipeline(const ShaderPaths& s) : shaderPaths(s) {}
-
-    virtual ~Pipeline() = default;
-  
-  protected:
-    std::vector<char> readShader(std::string) const;
-    std::vector<vk::raii::ShaderModule> createShaderModules(const vk::raii::Device&) const;
-    std::vector<vk::PipelineShaderStageCreateInfo> getShaderStageCreateInfos(const std::vector<vk::raii::ShaderModule>&) const;
-
-  protected:
-    ShaderPaths shaderPaths;
-
-    vk::raii::Pipeline vk_pipeline = nullptr;
-    vk::raii::PipelineLayout vk_layout = nullptr;
-};
-
-class GraphicsPipeline : public Pipeline
-{
-  public:
-    GraphicsPipeline(const vk::raii::Device&, const vk::Extent2D&, const vk::Format&, const ShaderPaths&);
-
-    ~GraphicsPipeline() = default;
 };
 
 } // namespace pecs

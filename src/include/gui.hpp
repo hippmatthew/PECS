@@ -2,7 +2,7 @@
  *  PECS - gui.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  1/26/24
  */
 
 #ifndef pecs_gui_hpp
@@ -35,6 +35,8 @@ class GUI : public Singular
     std::vector<const char *> extensions() const;
     GLFWwindow * window() const;
     const vk::raii::SurfaceKHR& surface() const;
+    const vk::Extent2D& extent() const;
+    const vk::Format& format() const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);

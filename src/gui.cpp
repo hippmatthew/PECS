@@ -2,12 +2,10 @@
  *  PECS - gui.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  1/26/24
  */
 
 #include "src/include/gui.hpp"
-
-#include <iostream>
 
 namespace pecs
 {
@@ -46,6 +44,16 @@ GLFWwindow * GUI::window() const
 const vk::raii::SurfaceKHR& GUI::surface() const
 {
   return vk_surface;
+}
+
+const vk::Extent2D& GUI::extent() const
+{
+  return vk_extent;
+}
+
+const vk::Format& GUI::format() const
+{
+  return vk_surfaceFormat.format;
 }
 
 void GUI::createSurface(const vk::raii::Instance& vk_instance)

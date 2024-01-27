@@ -2,12 +2,10 @@
  *  PECS - engine.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  1/26/24
  */
 
 #include "src/include/engine.hpp"
-
-#include <iostream>
 
 #define PECS_ENGINE_NAME "PECS"
 #define PECS_ENGINE_VERSION VK_MAKE_API_VERSION(0, 1, 0, 0)
@@ -33,6 +31,31 @@ Engine::~Engine()
 {
   delete gui;
   delete device;
+}
+
+const Device& Engine::getDevice() const
+{
+  return *device;
+}
+
+const ViewportInfo Engine::viewportInfo() const
+{
+  ViewportInfo i_viewport;
+  i_viewport.first = gui->extent();
+  i_viewport.second = gui->format();
+
+  return i_viewport; 
+}
+
+void Engine::run(Loop&)
+{
+  unsigned int loopCount = 0;
+  while (!glfwWindowShouldClose(gui->window()))
+  {
+    glfwPollEvents();
+
+    Loop();
+  }
 }
 
 void Engine::initialize()
@@ -86,15 +109,6 @@ void Engine::createInstance()
   if (hasPortabilityBit) ci_instance.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
 
   vk_instance = vk_context.createInstance(ci_instance);
-}
-
-void Engine::run()
-{
-  unsigned int loopCount = 0;
-  while (!glfwWindowShouldClose(gui->window()))
-  {
-    glfwPollEvents();
-  }
 }
 
 } // namespace pecs

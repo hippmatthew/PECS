@@ -2,15 +2,17 @@
  *  PECS - renderer.cpp 
  *  Author:   Matthew Hipp
  *  Created:  2/4/24
- *  Updated:  2/6/24
+ *  Updated:  2/7/24
  */
 
 #include "src/include/renderer.hpp"
 
+#include <iostream>
+
 namespace pecs
 {
 
-Renderer::Renderer(const Device& device, const ViewportInfo& vi)
+Renderer::Renderer(const Settings::Renderer& s, const Device& device, const ViewportInfo& vi) : settings(s)
 {
   createCommandPool(device.logical(), device.queueFamilyArray());
   createCommandBuffers(device.logical());
@@ -25,10 +27,17 @@ const std::vector<vk::raii::CommandBuffer>& Renderer::commandBuffers() const
   return vk_commandBuffers;
 }
 
-void Renderer::render(const Object& object, const vk::raii::Image& vk_image, const vk::raii::ImageView& vk_imageView)
-{  
+unsigned int Renderer::maxFlightFrames() const
+{
+  return settings.maxFlightFrames;
+}
+
+void Renderer::start(const unsigned int& frameIndex, const vk::raii::Image& vk_image, const vk::raii::ImageView& vk_imageView)
+{
+  vk_commandBuffers[frameIndex].reset();
+  
   vk::CommandBufferBeginInfo bi_commandBuffer;
-  vk_commandBuffers[0].begin(bi_commandBuffer);
+  vk_commandBuffers[frameIndex].begin(bi_commandBuffer);
 
   vk::ImageMemoryBarrier memoryBarrier{
     .dstAccessMask    = vk::AccessFlagBits::eColorAttachmentWrite,
@@ -43,7 +52,8 @@ void Renderer::render(const Object& object, const vk::raii::Image& vk_image, con
       .layerCount       = 1
     }
   };
-  vk_commandBuffers[0].pipelineBarrier(
+
+  vk_commandBuffers[frameIndex].pipelineBarrier(
     vk::PipelineStageFlagBits::eTopOfPipe,
     vk::PipelineStageFlagBits::eColorAttachmentOutput,
     vk::DependencyFlags(),
@@ -67,9 +77,12 @@ void Renderer::render(const Object& object, const vk::raii::Image& vk_image, con
     .pColorAttachments    = &i_attachment
   };
 
-  vk_commandBuffers[0].beginRenderingKHR(i_rendering);
+  vk_commandBuffers[frameIndex].beginRenderingKHR(i_rendering);
+}
 
-  vk_commandBuffers[0].bindPipeline(vk::PipelineBindPoint::eGraphics, *object.graphicsPipeline());
+void Renderer::render(const Object& object, const unsigned int& frameIndex, const vk::raii::Image& vk_image, const vk::raii::ImageView& vk_imageView)
+{  
+  vk_commandBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *object.graphicsPipeline());
 
   vk::Viewport vk_viewport{
     .x = 0.0f,
@@ -79,23 +92,36 @@ void Renderer::render(const Object& object, const vk::raii::Image& vk_image, con
     .minDepth = 0.0f,
     .maxDepth = 0.0f
   };
-  vk_commandBuffers[0].setViewport(0, vk_viewport);
+  vk_commandBuffers[frameIndex].setViewport(0, vk_viewport);
 
   vk::Rect2D vk_scissor{
     .offset = {0, 0},
     .extent = i_viewport.first
   };
-  vk_commandBuffers[0].setScissor(0, vk_scissor);
+  vk_commandBuffers[frameIndex].setScissor(0, vk_scissor);
 
-  vk_commandBuffers[0].draw(object.vertices, 1, 0, 0);
+  vk_commandBuffers[frameIndex].draw(object.vertices, 1, 0, 0);
+}
 
-  vk_commandBuffers[0].endRendering();
-
-  memoryBarrier.dstAccessMask = {};
-  memoryBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
-  memoryBarrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
+void Renderer::stop(const unsigned int& frameIndex, const vk::raii::Image& vk_image)
+{
+  vk_commandBuffers[frameIndex].endRendering();
   
-  vk_commandBuffers[0].pipelineBarrier(
+  vk::ImageMemoryBarrier memoryBarrier{
+    .srcAccessMask    = vk::AccessFlagBits::eColorAttachmentWrite,
+    .oldLayout        = vk::ImageLayout::eColorAttachmentOptimal,
+    .newLayout        = vk::ImageLayout::ePresentSrcKHR,
+    .image            = *vk_image,
+    .subresourceRange = {
+      .aspectMask       = vk::ImageAspectFlagBits::eColor,
+      .baseMipLevel     = 0,
+      .levelCount       = 1,
+      .baseArrayLayer   = 0,
+      .layerCount       = 1
+    }
+  };
+  
+  vk_commandBuffers[frameIndex].pipelineBarrier(
     vk::PipelineStageFlagBits::eColorAttachmentOutput,
     vk::PipelineStageFlagBits::eBottomOfPipe,
     vk::DependencyFlags(),
@@ -104,7 +130,7 @@ void Renderer::render(const Object& object, const vk::raii::Image& vk_image, con
     memoryBarrier
   );
 
-  vk_commandBuffers[0].end();
+  vk_commandBuffers[frameIndex].end();
 }
 
 void Renderer::createCommandPool(const vk::raii::Device& vk_device, const std::vector<unsigned int>& indices)
@@ -118,14 +144,15 @@ void Renderer::createCommandPool(const vk::raii::Device& vk_device, const std::v
 }
 
 void Renderer::createCommandBuffers(const vk::raii::Device& vk_device)
-{
+{  
   vk::CommandBufferAllocateInfo i_allocate{
     .commandPool        = *vk_commandPool,
     .level              = vk::CommandBufferLevel::ePrimary,
-    .commandBufferCount = 1
+    .commandBufferCount = settings.maxFlightFrames
   };
 
   vk_commandBuffers = vk_device.allocateCommandBuffers(i_allocate);
+  std::cout << "command buffer size: " << vk_commandBuffers.size() << '\n';
 }
 
 } // namespace pecs

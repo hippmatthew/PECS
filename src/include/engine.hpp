@@ -2,7 +2,7 @@
  *  PECS - engine.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/4/24
+ *  Updated:  2/7/24
  */
 
 #ifndef pecs_engine_hpp
@@ -28,13 +28,14 @@ class Engine : public Singular
     void addObject(const ShaderPaths&, unsigned int);
     
   private:
-    void initialize();
+    void initialize(const Settings&);
     void createInstance();
     void createSyncObjects();
 
   private:
     Settings::Engine settings;
     std::vector<const char *> layers;
+    unsigned int frameIndex = 0;
     
     GUI * gui = nullptr;
     Device * device = nullptr;
@@ -42,9 +43,10 @@ class Engine : public Singular
     std::vector<Object *> objects;
 
     vk::raii::Instance vk_instance = nullptr;
-    vk::raii::Semaphore vk_imageSemaphore = nullptr;
-    vk::raii::Semaphore vk_renderSemaphore = nullptr;
-    vk::raii::Fence vk_flightFence = nullptr;
+
+    std::vector<vk::raii::Semaphore> vk_imageSemaphores;
+    std::vector<vk::raii::Semaphore> vk_renderSemaphores;
+    std::vector<vk::raii::Fence> vk_flightFences;
 };
 
 } // namespace pecs

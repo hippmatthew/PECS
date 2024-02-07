@@ -83,19 +83,25 @@ class Settings
       int height = 720;
     };
 
+    struct Renderer
+    {
+      unsigned int maxFlightFrames = 2;
+    };
+
   public:
     Settings() = default;
-    Settings(const Settings&);
-    Settings(Settings&&) = delete;
+    Settings(const Settings&) = default;
+    Settings(Settings&&) = default;
 
     ~Settings() = default;
 
-    Settings& operator = (const Settings&);
-    Settings& operator = (Settings&&) = delete;
+    Settings& operator = (const Settings&) = default;
+    Settings& operator = (Settings&&) = default;
 
   public:
     Settings::Engine engine;
     Settings::GUI gui;
+    Settings::Renderer renderer;
 };
 
 class Loop : public Singular
@@ -231,22 +237,26 @@ class Device : public Singular
 class Renderer : public Singular
 {
   public:
-    Renderer(const Device&, const ViewportInfo&);
+    Renderer(const Settings::Renderer&, const Device&, const ViewportInfo&);
 
     ~Renderer() = default;
 
     const std::vector<vk::raii::CommandBuffer>& commandBuffers() const;
+    unsigned int maxFlightFrames() const;
     
-    void render(const Object&, const vk::raii::Image&, const vk::raii::ImageView&);
+    void start(const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
+    void render(const Object&, const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
+    void stop(const unsigned int&, const vk::raii::Image&);
 
   private:
     void createCommandPool(const vk::raii::Device&, const std::vector<unsigned int>&);
     void createCommandBuffers(const vk::raii::Device&);
 
   private:
+    Settings::Renderer settings;
     ViewportInfo i_viewport;
     vk::Rect2D renderArea;
-    vk::ClearValue vk_clearValue = vk::ClearValue{ vk::ClearColorValue{std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 1.0f } } };
+    vk::ClearValue vk_clearValue = vk::ClearValue{ vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f } } };
     
     vk::raii::CommandPool vk_commandPool = nullptr;
     std::vector<vk::raii::CommandBuffer> vk_commandBuffers;
@@ -266,13 +276,14 @@ class Engine : public Singular
     void addObject(const ShaderPaths&, unsigned int);
     
   private:
-    void initialize();
+    void initialize(const Settings&);
     void createInstance();
     void createSyncObjects();
 
   private:
     Settings::Engine settings;
     std::vector<const char *> layers;
+    unsigned int frameIndex = 0;
     
     GUI * gui = nullptr;
     Device * device = nullptr;
@@ -280,9 +291,10 @@ class Engine : public Singular
     std::vector<Object *> objects;
 
     vk::raii::Instance vk_instance = nullptr;
-    vk::raii::Semaphore vk_imageSemaphore = nullptr;
-    vk::raii::Semaphore vk_renderSemaphore = nullptr;
-    vk::raii::Fence vk_flightFence = nullptr;
+
+    std::vector<vk::raii::Semaphore> vk_imageSemaphores;
+    std::vector<vk::raii::Semaphore> vk_renderSemaphores;
+    std::vector<vk::raii::Fence> vk_flightFences;
 };
 
 } // namespace pecs

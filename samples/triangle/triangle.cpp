@@ -28,11 +28,17 @@ int main()
   pecs::Engine engine;
   Simulation sim;
 
-  pecs::ShaderPaths shaderPaths1{
+  pecs::ShaderPaths shaderPaths{
     .vertex = "triangle/triangle.vert.spv",
     .fragment = "triangle/triangle.frag.spv"
   };
-  engine.addObject(shaderPaths1, 3);
+  engine.addObject(shaderPaths, 3);
+
+  pecs::ShaderPaths shaderPaths2{
+    .vertex = "triangle/triangle2.vert.spv",
+    .fragment = "triangle/triangle.frag.spv"
+  };
+  engine.addObject(shaderPaths2, 3);
 
   engine.run(sim);
 }

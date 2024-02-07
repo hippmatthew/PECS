@@ -2,7 +2,7 @@
  *  PECS - engine.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/6/24
+ *  Updated:  2/7/24
  */
 
 #include "src/include/engine.hpp"
@@ -15,16 +15,16 @@ namespace pecs
 
 Engine::Engine()
 {
-  gui = new GUI;
-  initialize();
+  Settings s;
+
+  initialize(s);
 }
 
 Engine::Engine(const Settings& s)
 {
   settings = s.engine;
-  gui = new GUI(s.gui);
 
-  initialize();
+  initialize(s);
 }
 
 Engine::~Engine()
@@ -53,37 +53,35 @@ void Engine::run(Loop& mainLoop)
   {
     glfwPollEvents();
 
-    static_cast<void>(device->logical().waitForFences(std::array<vk::Fence, 1>{*vk_flightFence}, vk::True, UINT64_MAX));
-    device->logical().resetFences(std::array<vk::Fence, 1>{*vk_flightFence});
+    static_cast<void>(device->logical().waitForFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]}, vk::True, UINT64_MAX));
+    device->logical().resetFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]});
     
-    auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphore, nullptr);
+    auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphores[frameIndex], nullptr);
     if (result.first != vk::Result::eSuccess)
       throw std::runtime_error("error @ pecs::Engine::run() : failed to get next image");
     
-    renderer->commandBuffers()[0].reset();
-    
-    unsigned int index = result.second;
+    renderer->start(frameIndex, gui->image(result.second), gui->imageView(result.second));
+
     for (const auto * object : objects)
-      renderer->render(*object, gui->image(index), gui->imageView(index));
+      renderer->render(*object, frameIndex, gui->image(result.second), gui->imageView(result.second));
+
+    renderer->stop(frameIndex, gui->image(result.second));
     
-    std::vector<vk::Semaphore> waitSemaphores = { *vk_imageSemaphore };
-    std::vector<vk::Semaphore> signalSemaphores = { *vk_renderSemaphore };
+    std::vector<vk::Semaphore> waitSemaphores = { *vk_imageSemaphores[frameIndex] };
+    std::vector<vk::Semaphore> signalSemaphores = { *vk_renderSemaphores[frameIndex] };
     std::vector<vk::PipelineStageFlags> waitStages = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-    
-    std::vector<vk::CommandBuffer> vk_commandBuffers;
-    for (const auto& commandBuffer : renderer->commandBuffers())
-      vk_commandBuffers.emplace_back(*commandBuffer);
+    std::vector<vk::CommandBuffer> commandBuffers = { *renderer->commandBuffers()[frameIndex] };
     
     vk::SubmitInfo i_submit{
       .waitSemaphoreCount = static_cast<unsigned int>(waitSemaphores.size()),
       .pWaitSemaphores    = waitSemaphores.data(),
       .pWaitDstStageMask  = waitStages.data(),
-      .commandBufferCount = static_cast<unsigned int>(vk_commandBuffers.size()),
-      .pCommandBuffers    = vk_commandBuffers.data(),
+      .commandBufferCount = static_cast<unsigned int>(commandBuffers.size()),
+      .pCommandBuffers    = commandBuffers.data(),
       .signalSemaphoreCount = static_cast<unsigned int>(signalSemaphores.size()),
       .pSignalSemaphores    = signalSemaphores.data()
     };
-    device->queue(QueueType::Graphics).submit(i_submit, *vk_flightFence);
+    device->queue(QueueType::Graphics).submit(i_submit, *vk_flightFences[frameIndex]);
 
     std::vector<vk::SwapchainKHR> vk_swapchains = { *(gui->swapchain()) };
 
@@ -92,9 +90,11 @@ void Engine::run(Loop& mainLoop)
       .pWaitSemaphores    = signalSemaphores.data(),
       .swapchainCount     = static_cast<unsigned int>(vk_swapchains.size()),
       .pSwapchains        = vk_swapchains.data(),
-      .pImageIndices      = &index
+      .pImageIndices      = &result.second
     };
     static_cast<void>(device->queue(QueueType::Present).presentKHR(i_present));
+
+    frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
 
     mainLoop();
   }
@@ -107,10 +107,12 @@ void Engine::addObject(const ShaderPaths& shaderPaths, unsigned int vertices)
   objects.emplace_back(new Object(device->logical(), viewportInfo(), shaderPaths, vertices));
 }
 
-void Engine::initialize()
+void Engine::initialize(const Settings& s)
 {
   if (settings.layerBits & PECS_VALIDATION_BIT)
     layers.emplace_back("VK_LAYER_KHRONOS_validation");
+
+  gui = new GUI(s.gui);
 
   createInstance();
 
@@ -118,7 +120,7 @@ void Engine::initialize()
   device = new Device(vk_instance, gui->surface());
   gui->setupWindow(device->physical(), device->logical());
 
-  renderer = new Renderer(*device, viewportInfo());
+  renderer = new Renderer(s.renderer, *device, viewportInfo());
   createSyncObjects();
 }
 
@@ -168,9 +170,12 @@ void Engine::createSyncObjects()
     .flags = vk::FenceCreateFlagBits::eSignaled
   };
 
-  vk_imageSemaphore = device->logical().createSemaphore(ci_semaphore);
-  vk_renderSemaphore = device->logical().createSemaphore(ci_semaphore);
-  vk_flightFence = device->logical().createFence(ci_fence);
+  for (std::size_t i = 0; i < renderer->maxFlightFrames(); ++i)
+  {
+    vk_imageSemaphores.emplace_back(device->logical().createSemaphore(ci_semaphore));
+    vk_renderSemaphores.emplace_back(device->logical().createSemaphore(ci_semaphore));
+    vk_flightFences.emplace_back(device->logical().createFence(ci_fence));
+  }
 }
 
 } // namespace pecs

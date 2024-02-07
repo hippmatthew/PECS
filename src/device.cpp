@@ -2,7 +2,7 @@
  *  PECS - device.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/6/24
+ *  Updated:  2/7/24
  */
 
 #include "src/include/device.hpp"

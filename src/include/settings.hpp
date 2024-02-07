@@ -2,7 +2,7 @@
  *  PECS - settings.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  2/7/24
  */
 
 #ifndef pecs_settings_hpp
@@ -41,19 +41,25 @@ class Settings
       int height = 720;
     };
 
+    struct Renderer
+    {
+      unsigned int maxFlightFrames = 2;
+    };
+
   public:
     Settings() = default;
-    Settings(const Settings&);
-    Settings(Settings&&) = delete;
+    Settings(const Settings&) = default;
+    Settings(Settings&&) = default;
 
     ~Settings() = default;
 
-    Settings& operator = (const Settings&);
-    Settings& operator = (Settings&&) = delete;
+    Settings& operator = (const Settings&) = default;
+    Settings& operator = (Settings&&) = default;
 
   public:
     Settings::Engine engine;
     Settings::GUI gui;
+    Settings::Renderer renderer;
 };
 
 } // namespace pecs

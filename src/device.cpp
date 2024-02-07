@@ -2,7 +2,7 @@
  *  PECS - device.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  2/6/24
  */
 
 #include "src/include/device.hpp"
@@ -33,6 +33,16 @@ const vk::raii::PhysicalDevice& Device::physical() const
 const vk::raii::Device& Device::logical() const
 {
   return vk_device;
+}
+
+const std::vector<unsigned int> Device::queueFamilyArray() const
+{
+  return queues->array();
+}
+
+const vk::raii::Queue& Device::queue(QueueType type) const
+{
+  return queues->queue(type);
 }
 
 bool Device::supportsExtensions(const vk::raii::PhysicalDevice& physicalDevice) const
@@ -120,12 +130,17 @@ void Device::createLogicalDevice()
     }
   }
 
+  vk::PhysicalDeviceDynamicRenderingFeatures dynamicRendering{
+    .dynamicRendering = vk::True
+  };
+
   vk::DeviceCreateInfo ci_device{
-    .queueCreateInfoCount = static_cast<unsigned int>(queueCreateInfos.size()),
-    .pQueueCreateInfos = queueCreateInfos.data(),
-    .enabledExtensionCount = static_cast<unsigned int>(extensions.size()),
-    .ppEnabledExtensionNames = extensions.data(),
-    .pEnabledFeatures = &physicalDeviceFeatures,
+    .pNext                    = &dynamicRendering,
+    .queueCreateInfoCount     = static_cast<unsigned int>(queueCreateInfos.size()),
+    .pQueueCreateInfos        = queueCreateInfos.data(),
+    .enabledExtensionCount    = static_cast<unsigned int>(extensions.size()),
+    .ppEnabledExtensionNames  = extensions.data(),
+    .pEnabledFeatures         = &physicalDeviceFeatures,
   };
 
   vk_device = vk_physicalDevice.createDevice(ci_device);

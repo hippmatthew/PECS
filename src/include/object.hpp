@@ -2,7 +2,7 @@
  *  PECS - object.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/26/24
+ *  Updated:  2/6/24
  */
 
 #ifndef pecs_object_hpp
@@ -29,9 +29,11 @@ struct ShaderPaths
 class Object : public Singular
 {
   public:
-    Object(const vk::raii::Device&, const ViewportInfo&, const ShaderPaths&);
+    Object(const vk::raii::Device&, const ViewportInfo&, const ShaderPaths&, unsigned int);
 
     ~Object() = default;
+
+    const vk::raii::Pipeline& graphicsPipeline() const;
 
   private:
     std::vector<char> readShader(std::string) const;
@@ -40,18 +42,14 @@ class Object : public Singular
 
     void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
 
+  public:
+    const unsigned int vertices;
+  
   protected:
     const ShaderPaths shaderPaths;
 
     vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
     vk::raii::Pipeline vk_graphicsPipeline = nullptr;
-
-    vk::raii::PipelineLayout vk_computeLayout = nullptr;
-    vk::raii::Pipeline vk_computePipeline = nullptr;
-
-    vk::raii::DescriptorSetLayout vk_descriptorLayout = nullptr;
-    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
-    vk::raii::DescriptorSet vk_descriptorSet = nullptr;
 };
 
 } // namespace pecs

@@ -2,7 +2,7 @@
  *  PECS - object.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/26/24
- *  Updated:  1/26/24
+ *  Updated:  2/4/24
  */
 
 #include "src/include/object.hpp"
@@ -10,10 +10,15 @@
 namespace pecs
 {
 
-Object::Object(const vk::raii::Device& vk_device, const ViewportInfo& i_viewport, const ShaderPaths& s)
-  : shaderPaths(s)
+Object::Object(const vk::raii::Device& vk_device, const ViewportInfo& i_viewport, const ShaderPaths& s, unsigned int v)
+: shaderPaths(s), vertices(v)
 {
   createGraphicsPipeline(vk_device, i_viewport);
+}
+
+const vk::raii::Pipeline& Object::graphicsPipeline() const
+{
+  return vk_graphicsPipeline;
 }
 
 std::vector<char> Object::readShader(std::string path) const
@@ -175,7 +180,7 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
 
   vk_graphicsLayout = vk_device.createPipelineLayout(ci_layout);
 
-  vk::PipelineRenderingCreateInfo ci_rendering{
+  vk::PipelineRenderingCreateInfoKHR ci_rendering{
     .colorAttachmentCount = 1,
     .pColorAttachmentFormats = &(i_viewport.second)
   };
@@ -193,7 +198,6 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
     .pColorBlendState     = &ci_blendState,
     .pDynamicState        = &ci_dynamicState,
     .layout               = *vk_graphicsLayout,
-    .renderPass           = nullptr
   };
 
   vk_graphicsPipeline = vk_device.createGraphicsPipeline(nullptr, ci_pipeline);

@@ -2,7 +2,7 @@
  *  PECS - gui.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/26/24
+ *  Updated:  2/6/24
  */
 
 #ifndef pecs_gui_hpp
@@ -37,6 +37,9 @@ class GUI : public Singular
     const vk::raii::SurfaceKHR& surface() const;
     const vk::Extent2D& extent() const;
     const vk::Format& format() const;
+    const vk::raii::SwapchainKHR& swapchain() const;
+    const vk::raii::Image& image(const unsigned int&) const;
+    const vk::raii::ImageView& imageView(const unsigned int&) const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
@@ -56,7 +59,7 @@ class GUI : public Singular
 
     vk::raii::SurfaceKHR vk_surface = nullptr;
     vk::raii::SwapchainKHR vk_swapchain = nullptr;
-    std::vector<vk::Image> vk_images;
+    std::vector<vk::raii::Image> vk_images;
     std::vector<vk::raii::ImageView> vk_imageViews;
     vk::SurfaceFormatKHR vk_surfaceFormat;
     vk::PresentModeKHR vk_presentMode;

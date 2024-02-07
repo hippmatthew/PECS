@@ -6,5 +6,3 @@ obj
 # Files
 .DS_STORE
 Makefile
-**.sln
-**.vcxproj

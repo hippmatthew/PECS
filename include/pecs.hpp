@@ -98,12 +98,24 @@ class Settings
     Settings::GUI gui;
 };
 
+class Loop : public Singular
+{
+  public:
+    Loop() = default;
+
+    virtual ~Loop() = default;
+
+    virtual void operator () () {}
+};
+
 class Object : public Singular
 {
   public:
-    Object(const vk::raii::Device&, const ViewportInfo&, const ShaderPaths&);
+    Object(const vk::raii::Device&, const ViewportInfo&, const ShaderPaths&, unsigned int);
 
     ~Object() = default;
+
+    const vk::raii::Pipeline& graphicsPipeline() const;
 
   private:
     std::vector<char> readShader(std::string) const;
@@ -112,18 +124,14 @@ class Object : public Singular
 
     void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
 
+  public:
+    const unsigned int vertices;
+  
   protected:
     const ShaderPaths shaderPaths;
 
     vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
     vk::raii::Pipeline vk_graphicsPipeline = nullptr;
-
-    vk::raii::PipelineLayout vk_computeLayout = nullptr;
-    vk::raii::Pipeline vk_computePipeline = nullptr;
-
-    vk::raii::DescriptorSetLayout vk_descriptorLayout = nullptr;
-    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
-    vk::raii::DescriptorSet vk_descriptorSet = nullptr;
 };
 
 class GUI : public Singular
@@ -139,6 +147,9 @@ class GUI : public Singular
     const vk::raii::SurfaceKHR& surface() const;
     const vk::Extent2D& extent() const;
     const vk::Format& format() const;
+    const vk::raii::SwapchainKHR& swapchain() const;
+    const vk::raii::Image& image(const unsigned int&) const;
+    const vk::raii::ImageView& imageView(const unsigned int&) const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
@@ -158,7 +169,7 @@ class GUI : public Singular
 
     vk::raii::SurfaceKHR vk_surface = nullptr;
     vk::raii::SwapchainKHR vk_swapchain = nullptr;
-    std::vector<vk::Image> vk_images;
+    std::vector<vk::raii::Image> vk_images;
     std::vector<vk::raii::ImageView> vk_imageViews;
     vk::SurfaceFormatKHR vk_surfaceFormat;
     vk::PresentModeKHR vk_presentMode;
@@ -196,6 +207,8 @@ class Device : public Singular
 
     const vk::raii::PhysicalDevice& physical() const;
     const vk::raii::Device& logical() const;
+    const std::vector<unsigned int> queueFamilyArray() const;
+    const vk::raii::Queue& queue(QueueType) const;
 
   private:
     bool supportsExtensions(const vk::raii::PhysicalDevice&) const;
@@ -204,7 +217,10 @@ class Device : public Singular
     void createLogicalDevice();
 
   private:
-    std::vector<const char *> extensions;
+    std::vector<const char *> extensions = {
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+    };
     
     Queues * queues = nullptr;
     
@@ -212,22 +228,29 @@ class Device : public Singular
     vk::raii::Device vk_device = nullptr;
 };
 
-class Loop : public Singular
+class Renderer : public Singular
 {
   public:
-    Loop() = default;
+    Renderer(const Device&, const ViewportInfo&);
 
-    virtual ~Loop();
+    ~Renderer() = default;
 
-    virtual void operator () () {}
+    const std::vector<vk::raii::CommandBuffer>& commandBuffers() const;
+    
+    void render(const Object&, const vk::raii::Image&, const vk::raii::ImageView&);
 
-    std::vector<Object *>& objectData();
-    void addObject(const Device&, const ViewportInfo&, const ShaderPaths&);
+  private:
+    void createCommandPool(const vk::raii::Device&, const std::vector<unsigned int>&);
+    void createCommandBuffers(const vk::raii::Device&);
 
-  protected:
-    std::vector<Object *> objects;
+  private:
+    ViewportInfo i_viewport;
+    vk::Rect2D renderArea;
+    vk::ClearValue vk_clearValue = vk::ClearValue{ vk::ClearColorValue{std::array<float, 4>{ 0.0f, 0.0f, 0.0f, 1.0f } } };
+    
+    vk::raii::CommandPool vk_commandPool = nullptr;
+    std::vector<vk::raii::CommandBuffer> vk_commandBuffers;
 };
-
 
 class Engine : public Singular
 {
@@ -237,14 +260,15 @@ class Engine : public Singular
 
     ~Engine();
 
-    const Device& getDevice() const;
     const ViewportInfo viewportInfo() const;
 
     void run(Loop&);
-
+    void addObject(const ShaderPaths&, unsigned int);
+    
   private:
     void initialize();
     void createInstance();
+    void createSyncObjects();
 
   private:
     Settings::Engine settings;
@@ -252,8 +276,13 @@ class Engine : public Singular
     
     GUI * gui = nullptr;
     Device * device = nullptr;
+    Renderer * renderer = nullptr;
+    std::vector<Object *> objects;
 
     vk::raii::Instance vk_instance = nullptr;
+    vk::raii::Semaphore vk_imageSemaphore = nullptr;
+    vk::raii::Semaphore vk_renderSemaphore = nullptr;
+    vk::raii::Fence vk_flightFence = nullptr;
 };
 
 } // namespace pecs

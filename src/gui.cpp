@@ -2,7 +2,7 @@
  *  PECS - gui.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/26/24
+ *  Updated:  2/4/24
  */
 
 #include "src/include/gui.hpp"
@@ -56,6 +56,21 @@ const vk::Format& GUI::format() const
   return vk_surfaceFormat.format;
 }
 
+const vk::raii::SwapchainKHR& GUI::swapchain() const
+{
+  return vk_swapchain;
+}
+
+const vk::raii::Image& GUI::image(const unsigned int& index) const
+{
+  return vk_images[index];
+}
+
+const vk::raii::ImageView& GUI::imageView(const unsigned int& index) const
+{
+  return vk_imageViews[index];
+}
+
 void GUI::createSurface(const vk::raii::Instance& vk_instance)
 {
   vk::raii::SurfaceKHR::CType cSurface;
@@ -72,7 +87,10 @@ void GUI::setupWindow(const vk::raii::PhysicalDevice& vk_physicalDevice, const v
   
   createSwapchain(vk_physicalDevice, vk_device);
   
-  vk_images = vk_swapchain.getImages();
+  auto images = vk_swapchain.getImages();
+  for (const auto& image : images)
+    vk_images.emplace_back(vk::raii::Image(vk_device, image));
+
   createImageViews(vk_device);
 }
 
@@ -84,6 +102,7 @@ void GUI::initialize()
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   gl_window = glfwCreateWindow(settings.width, settings.height, settings.windowTitle.c_str(), nullptr, nullptr);
+  
 }
 
 void GUI::createSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, const vk::raii::Device& vk_device)
@@ -186,7 +205,7 @@ void GUI::createImageViews(const vk::raii::Device& vk_device)
   for (const auto& vk_image : vk_images)
   {
     vk::ImageViewCreateInfo ci_imageView{
-      .image            = vk_image,
+      .image            = *vk_image,
       .viewType         = vk::ImageViewType::e2D,
       .format           = vk_surfaceFormat.format,
       .components       = components,

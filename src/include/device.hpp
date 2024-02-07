@@ -2,7 +2,7 @@
  *  PECS - device.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  2/6/24
  */
 
 #ifndef pecs_device_hpp
@@ -57,6 +57,8 @@ class Device : public Singular
 
     const vk::raii::PhysicalDevice& physical() const;
     const vk::raii::Device& logical() const;
+    const std::vector<unsigned int> queueFamilyArray() const;
+    const vk::raii::Queue& queue(QueueType) const;
 
   private:
     bool supportsExtensions(const vk::raii::PhysicalDevice&) const;

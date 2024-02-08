@@ -28,8 +28,8 @@ workspace "PECS Samples"
   configurations { "default" }
   location "samples"
 
-  project "Triangle"
-    location "samples/triangle"
+  project "Triangles"
+    location "samples/triangles"
 
     kind "ConsoleApp"
     language "C++"
@@ -37,10 +37,10 @@ workspace "PECS Samples"
 
     targetdir "samples/bin"
     objdir "samples/obj"
-    targetname "triangle"
+    targetname "triangles"
 
     files {
-      "samples/triangle/triangle.cpp"
+      "samples/triangles/triangles.cpp"
     }
 
     includedirs {

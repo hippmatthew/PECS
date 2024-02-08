@@ -2,7 +2,7 @@
  *  PECS - gui.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/4/24
+ *  Updated:  2/7/24
  */
 
 #include "src/include/gui.hpp"
@@ -94,6 +94,25 @@ void GUI::setupWindow(const vk::raii::PhysicalDevice& vk_physicalDevice, const v
   createImageViews(vk_device);
 }
 
+void GUI::recreateSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, const vk::raii::Device& vk_device)
+{
+  int width = 0, height = 0;
+  glfwGetFramebufferSize(gl_window, &width, &height);
+  while (width == 0 && height == 0)
+  {
+    glfwGetFramebufferSize(gl_window, &width, &height);
+    glfwWaitEvents();
+  }
+  
+  vk_device.waitIdle();
+
+  vk_swapchain.clear();
+  vk_imageViews.clear();
+
+  createSwapchain(vk_physicalDevice, vk_device);
+  createImageViews(vk_device);
+}
+
 void GUI::initialize()
 {
   glfwInit();
@@ -102,7 +121,8 @@ void GUI::initialize()
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   gl_window = glfwCreateWindow(settings.width, settings.height, settings.windowTitle.c_str(), nullptr, nullptr);
-  
+  glfwSetWindowUserPointer(gl_window, this);
+  glfwSetFramebufferSizeCallback(gl_window, resizeFramebuffer);
 }
 
 void GUI::createSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, const vk::raii::Device& vk_device)
@@ -214,6 +234,12 @@ void GUI::createImageViews(const vk::raii::Device& vk_device)
 
     vk_imageViews.emplace_back(vk_device.createImageView(ci_imageView));
   }
+}
+
+void GUI::resizeFramebuffer(GLFWwindow * window, int width, int height)
+{
+  auto gui = reinterpret_cast<GUI *>(glfwGetWindowUserPointer(window));
+  gui->framebufferChanged = true;
 }
 
 } // namespace pecs

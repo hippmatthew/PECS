@@ -7,8 +7,6 @@
 
 #include "src/include/renderer.hpp"
 
-#include <iostream>
-
 namespace pecs
 {
 
@@ -152,7 +150,6 @@ void Renderer::createCommandBuffers(const vk::raii::Device& vk_device)
   };
 
   vk_commandBuffers = vk_device.allocateCommandBuffers(i_allocate);
-  std::cout << "command buffer size: " << vk_commandBuffers.size() << '\n';
 }
 
 } // namespace pecs

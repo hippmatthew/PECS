@@ -29,6 +29,10 @@ Engine::Engine(const Settings& s)
 
 Engine::~Engine()
 {
+  vk_imageSemaphores.clear();
+  vk_renderSemaphores.clear();
+  vk_flightFences.clear();
+  
   delete renderer;
   
   for (auto * object : objects)
@@ -47,18 +51,24 @@ const ViewportInfo Engine::viewportInfo() const
   return i_viewport; 
 }
 
-void Engine::run(Loop& mainLoop)
+void Engine::run()
 { 
   while (!glfwWindowShouldClose(gui->window()))
   {
     glfwPollEvents();
 
     static_cast<void>(device->logical().waitForFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]}, vk::True, UINT64_MAX));
-    device->logical().resetFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]});
     
     auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphores[frameIndex], nullptr);
-    if (result.first != vk::Result::eSuccess)
+    if (result.first == vk::Result::eErrorOutOfDateKHR || result.first == vk::Result::eSuboptimalKHR)
+    {
+      gui->recreateSwapchain(device->physical(), device->logical());
+      continue;
+    }
+    else if (result.first != vk::Result::eSuccess)
       throw std::runtime_error("error @ pecs::Engine::run() : failed to get next image");
+
+    device->logical().resetFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]});
     
     renderer->start(frameIndex, gui->image(result.second), gui->imageView(result.second));
 
@@ -92,11 +102,16 @@ void Engine::run(Loop& mainLoop)
       .pSwapchains        = vk_swapchains.data(),
       .pImageIndices      = &result.second
     };
-    static_cast<void>(device->queue(QueueType::Present).presentKHR(i_present));
+    auto presentResult = device->queue(QueueType::Present).presentKHR(i_present);
+
+    if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR)
+      gui->recreateSwapchain(device->physical(), device->logical());
+    else if (presentResult != vk::Result::eSuccess)
+      throw std::runtime_error("error @ pecs::Engine::run() : failed to present image");
+
+    Main();
 
     frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
-
-    mainLoop();
   }
 
   device->logical().waitIdle();

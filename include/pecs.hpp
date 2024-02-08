@@ -104,16 +104,6 @@ class Settings
     Settings::Renderer renderer;
 };
 
-class Loop : public Singular
-{
-  public:
-    Loop() = default;
-
-    virtual ~Loop() = default;
-
-    virtual void operator () () {}
-};
-
 class Object : public Singular
 {
   public:
@@ -159,6 +149,7 @@ class GUI : public Singular
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
+    void recreateSwapchain(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
 
   private:
     void initialize();
@@ -167,9 +158,11 @@ class GUI : public Singular
     void choosePresentMode(const vk::raii::PhysicalDevice&);
     void chooseExtent(const vk::raii::PhysicalDevice&);
     void createImageViews(const vk::raii::Device&);
+    static void resizeFramebuffer(GLFWwindow *, int, int);
   
   private:
     Settings::GUI settings;
+    bool framebufferChanged = false;
 
     GLFWwindow * gl_window;
 
@@ -272,8 +265,10 @@ class Engine : public Singular
 
     const ViewportInfo viewportInfo() const;
 
-    void run(Loop&);
+    void run();
     void addObject(const ShaderPaths&, unsigned int);
+    
+    virtual void Main() {};
     
   private:
     void initialize(const Settings&);

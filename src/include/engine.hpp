@@ -8,7 +8,6 @@
 #ifndef pecs_engine_hpp
 #define pecs_engine_hpp
 
-#include "src/include/loop.hpp"
 #include "src/include/renderer.hpp"
 
 namespace pecs
@@ -24,8 +23,10 @@ class Engine : public Singular
 
     const ViewportInfo viewportInfo() const;
 
-    void run(Loop&);
+    void run();
     void addObject(const ShaderPaths&, unsigned int);
+    
+    virtual void Main() {};
     
   private:
     void initialize(const Settings&);

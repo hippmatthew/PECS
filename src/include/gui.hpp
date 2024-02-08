@@ -2,7 +2,7 @@
  *  PECS - gui.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/6/24
+ *  Updated:  2/7/24
  */
 
 #ifndef pecs_gui_hpp
@@ -43,6 +43,7 @@ class GUI : public Singular
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
+    void recreateSwapchain(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
 
   private:
     void initialize();
@@ -51,9 +52,11 @@ class GUI : public Singular
     void choosePresentMode(const vk::raii::PhysicalDevice&);
     void chooseExtent(const vk::raii::PhysicalDevice&);
     void createImageViews(const vk::raii::Device&);
+    static void resizeFramebuffer(GLFWwindow *, int, int);
   
   private:
     Settings::GUI settings;
+    bool framebufferChanged = false;
 
     GLFWwindow * gl_window;
 

@@ -51,8 +51,8 @@ workspace "PECS Samples"
   configurations { "default" }
   location "samples"
 
-  project "Triangles"
-    location "samples/triangles"
+  project "BasicShapes"
+    location "samples/basic_shapes"
 
     kind "ConsoleApp"
     language "C++"
@@ -60,10 +60,10 @@ workspace "PECS Samples"
 
     targetdir "samples/bin"
     objdir "samples/obj"
-    targetname "triangles"
+    targetname "shapes"
 
     files {
-      "samples/triangles/triangles.cpp"
+      "samples/basic_shapes/shapes.cpp"
     }
 
     includedirs {
@@ -81,6 +81,7 @@ workspace "PECS Samples"
     links {
       "glfw",
       "vulkan",
+      "glm",
       "pecs-core",
       "pecs-objs"
     }

@@ -44,6 +44,7 @@ class GUI : public Singular
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
     void recreateSwapchain(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
+    void clean();
 
   private:
     void initialize();

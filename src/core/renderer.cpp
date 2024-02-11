@@ -52,15 +52,17 @@ void Renderer::render(std::vector<Object *>& objects, const unsigned int& frameI
   };
   vk_renderBuffers[frameIndex].setScissor(0, vk_scissor);
 
-  std::size_t bufferIndex = 0;
+  vk::DeviceSize vertexOffset = 0, indexOffset = 0;
   for (auto * object : objects)
   {
-    vk_renderBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *object->vk_graphicsPipeline);
-    vk_renderBuffers[frameIndex].bindVertexBuffers(0, { *vk_vertexBuffers[bufferIndex] }, { 0 });
-
-    vk_renderBuffers[frameIndex].draw(object->vertices.size(), 1, 0, 0);
+    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
+    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
     
-    ++bufferIndex;
+    vk_renderBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *object->vk_graphicsPipeline);
+    vk_renderBuffers[frameIndex].bindVertexBuffers(0, { *vk_vertexBuffer }, { vertexOffset });
+    vk_renderBuffers[frameIndex].bindIndexBuffer(*vk_indexBuffer, indexOffset, vk::IndexType::eUint32);
+
+    vk_renderBuffers[frameIndex].drawIndexed(object->indices.size(), 1, 0, 0, 0);
   }
 
   endRendering(frameIndex, vk_image);
@@ -107,129 +109,157 @@ void Renderer::createRenderBuffers(const vk::raii::Device& vk_device)
 void Renderer::createObjectBuffers(std::vector<Object *>& objects, const Device& device)
 {    
   vk::raii::DeviceMemory vk_stagingMemory = nullptr;
-  std::vector<vk::raii::Buffer> vk_stagingBuffers;
-  
-  std::size_t objectIndex = 0;
-  vk::DeviceSize previousObjectSize = 0;
-  std::array<vk::DeviceSize, 2> allocationSizes = { 0, 0 };
-  std::array<vk::DeviceSize, 2> previousOffsets = { 0, 0 };
-  std::vector<vk::DeviceSize> stagingOffsets;
-  std::vector<vk::DeviceSize> vertexOffsets;
+  vk::raii::Buffer vk_vertexStagingBuffer = nullptr;
+  vk::raii::Buffer vk_indexStagingBuffer = nullptr;
 
+  vk::DeviceSize totalVertexSize = 0, totalIndexSize = 0;
   for (auto * object : objects)
   {
-    vk::DeviceSize objectSize = sizeof(object->vertices[0]) * object->vertices.size();
+    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
+    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
 
-    vk::BufferCreateInfo ci_stagingBuffer{
-      .size         = objectSize,
-      .usage        = vk::BufferUsageFlagBits::eTransferSrc,
-      .sharingMode  = vk::SharingMode::eExclusive
-    };
-    vk_stagingBuffers.emplace_back(device.logical().createBuffer(ci_stagingBuffer));
-
-    vk::DeviceSize alignmentShift = 0;
-    vk::DeviceSize offset = previousOffsets[0] + previousObjectSize;
-    while (offset % vk_stagingBuffers[objectIndex].getMemoryRequirements().alignment != 0)
-    {
-      ++offset;
-      ++alignmentShift;
-    }
-
-    allocationSizes[0] += vk_stagingBuffers[objectIndex].getMemoryRequirements().size + alignmentShift;
-    previousOffsets[0] = offset;
-    stagingOffsets.emplace_back(offset);
-    
-     vk::BufferCreateInfo ci_vertexBuffer{
-      .size         = objectSize,
-      .usage        = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-      .sharingMode  = vk::SharingMode::eExclusive
-    };
-    vk_vertexBuffers.emplace_back(device.logical().createBuffer(ci_vertexBuffer));
-    
-    offset = previousOffsets[1] + previousObjectSize;
-    while (offset % vk_vertexBuffers[objectIndex].getMemoryRequirements().alignment != 0)
-    {
-      ++offset;
-      ++alignmentShift;
-    }
-
-    allocationSizes[1] += vk_vertexBuffers[objectIndex].getMemoryRequirements().size + alignmentShift;
-    previousOffsets[1] = offset;
-    vertexOffsets.emplace_back(offset);
-
-    previousObjectSize = objectSize;
-    ++objectIndex;
+    totalVertexSize += vertexSize;
+    totalIndexSize += indexSize;
   }
 
-  vk::MemoryAllocateInfo i_stagingAllocate{
-    .allocationSize   = allocationSizes[0],
-    .memoryTypeIndex  = findMemoryIndex(device.physical(), vk_stagingBuffers[0].getMemoryRequirements().memoryTypeBits,
-                                          vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)
+  vk::BufferCreateInfo ci_vertexStagingBuffer{
+    .size         = totalVertexSize,
+    .usage        = vk::BufferUsageFlagBits::eTransferSrc,
+    .sharingMode  = vk::SharingMode::eExclusive
   };
-  vk_stagingMemory = device.logical().allocateMemory(i_stagingAllocate);
-  
-  vk::MemoryAllocateInfo i_vertexAllocate{
-    .allocationSize = allocationSizes[1],
-    .memoryTypeIndex = findMemoryIndex(device.physical(), vk_vertexBuffers[0].getMemoryRequirements().memoryTypeBits,
-                                          vk::MemoryPropertyFlagBits::eDeviceLocal)
-  };
-  vk_vertexMemory = device.logical().allocateMemory(i_vertexAllocate);
+  vk_vertexStagingBuffer = device.logical().createBuffer(ci_vertexStagingBuffer);
 
-  objectIndex = 0;
+  vk::BufferCreateInfo ci_indexStagingBuffer{
+    .size         = totalIndexSize,
+    .usage        = vk::BufferUsageFlagBits::eTransferSrc,
+    .sharingMode  = vk::SharingMode::eExclusive
+  };
+  vk_indexStagingBuffer = device.logical().createBuffer(ci_indexStagingBuffer);
+
+  vk::DeviceSize offset = vk_vertexStagingBuffer.getMemoryRequirements().size;
+  while (offset % vk_indexStagingBuffer.getMemoryRequirements().alignment != 0)
+    ++offset;
+  
+  vk::MemoryAllocateInfo i_stagingMemory{
+    .allocationSize   = vk_indexStagingBuffer.getMemoryRequirements().size + offset,
+    .memoryTypeIndex  = findMemoryIndex(device.physical(),
+                          vk_vertexStagingBuffer.getMemoryRequirements().memoryTypeBits |
+                            vk_indexStagingBuffer.getMemoryRequirements().memoryTypeBits,
+                          vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)
+  };
+  vk_stagingMemory = device.logical().allocateMemory(i_stagingMemory);
+
+  vk_vertexStagingBuffer.bindMemory(*vk_stagingMemory, 0);
+  vk_indexStagingBuffer.bindMemory(*vk_stagingMemory, offset);
+
+  vk::DeviceSize vertexOffset = 0, indexOffset = 0;
   for (auto * object : objects)
   {
-    vk::DeviceSize objectSize = sizeof(object->vertices[0]) * object->vertices.size();
-    
-    vk_stagingBuffers[objectIndex].bindMemory(*vk_stagingMemory, stagingOffsets[objectIndex]);
-    vk_vertexBuffers[objectIndex].bindMemory(*vk_vertexMemory, vertexOffsets[objectIndex]);
+    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
+    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
 
-    void * vertexData = vk_stagingMemory.mapMemory(stagingOffsets[objectIndex], objectSize);
-    memcpy(vertexData, object->vertices.data(), objectSize);
+    void * data = vk_stagingMemory.mapMemory(vertexOffset, vertexSize);
+    memcpy(data, object->vertices.data(), vertexSize);
     vk_stagingMemory.unmapMemory();
 
-    ++objectIndex;
+    data = vk_stagingMemory.mapMemory(offset + indexOffset, indexSize);
+    memcpy(data, object->indices.data(), indexSize);
+    vk_stagingMemory.unmapMemory();
+
+    vertexOffset += vertexSize;
+    indexOffset += indexSize;
+  }
+
+  vk::BufferCreateInfo ci_vertexBuffer{
+    .size         = totalVertexSize,
+    .usage        = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+    .sharingMode  = vk::SharingMode::eExclusive
+  };
+  vk_vertexBuffer = device.logical().createBuffer(ci_vertexBuffer);
+
+  vk::BufferCreateInfo ci_indexBuffer{
+    .size         = totalIndexSize,
+    .usage        = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+    .sharingMode  = vk::SharingMode::eExclusive
+  };
+  vk_indexBuffer = device.logical().createBuffer(ci_indexBuffer);
+  
+  offset = vk_vertexBuffer.getMemoryRequirements().size;
+  while (offset % vk_indexBuffer.getMemoryRequirements().alignment != 0)
+    ++offset;
+  
+  vk::MemoryAllocateInfo i_objectMemory{
+    .allocationSize   = vk_indexBuffer.getMemoryRequirements().size + offset,
+    .memoryTypeIndex  = findMemoryIndex(device.physical(),
+                          vk_vertexBuffer.getMemoryRequirements().memoryTypeBits |
+                            vk_indexBuffer.getMemoryRequirements().memoryTypeBits,
+                          vk::MemoryPropertyFlagBits::eDeviceLocal)
+  };
+  vk_objectMemory = device.logical().allocateMemory(i_objectMemory);
+
+  vk_vertexBuffer.bindMemory(*vk_objectMemory, 0);
+  vk_indexBuffer.bindMemory(*vk_objectMemory, offset);
+
+  std::vector<vk::raii::CommandBuffer> vk_transferBuffers;
+  vk::CommandBufferAllocateInfo i_transferBuffers{
+    .commandPool        = *vk_transferPool,
+    .level              = vk::CommandBufferLevel::ePrimary,
+    .commandBufferCount = static_cast<unsigned int>(2 * objects.size())
+  };
+  vk_transferBuffers = device.logical().allocateCommandBuffers(i_transferBuffers);
+
+  vertexOffset = indexOffset = 0;
+  std::size_t bufferIndex = 0;
+  for (auto * object : objects)
+  {
+    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
+    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
+
+    vk::CommandBufferBeginInfo bi_transfer{
+      .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
+    };
+
+    vk_transferBuffers[bufferIndex].begin(bi_transfer);
+    vk_transferBuffers[bufferIndex + 1].begin(bi_transfer);
+
+    vk::BufferCopy vertexCopy{
+      .srcOffset  = vertexOffset,
+      .dstOffset  = vertexOffset,
+      .size       = vertexSize
+    };
+    vk_transferBuffers[bufferIndex].copyBuffer(*vk_vertexStagingBuffer, *vk_vertexBuffer, vertexCopy);
+
+    vk::BufferCopy indexCopy{
+      .srcOffset  = indexOffset,
+      .dstOffset  = indexOffset,
+      .size       = indexSize
+    };
+    vk_transferBuffers[bufferIndex + 1].copyBuffer(*vk_indexStagingBuffer, *vk_indexBuffer, indexCopy);
+
+    vk_transferBuffers[bufferIndex + 1].end();
+    vk_transferBuffers[bufferIndex].end();
+
+    bufferIndex += 2;
+    vertexOffset += vertexSize;
+    indexOffset += indexSize;
   }
 
   vk::FenceCreateInfo ci_transferFence;
-  auto vk_transferFence = device.logical().createFence(ci_transferFence);
-
-   vk::CommandBufferAllocateInfo ai_transferBuffer{
-    .commandPool        = *vk_transferPool,
-    .level              = vk::CommandBufferLevel::ePrimary,
-    .commandBufferCount = static_cast<unsigned int>(objects.size())
-  };
-  vk_transferBuffers = device.logical().allocateCommandBuffers(ai_transferBuffer);
-
-  for (std::size_t i = 0; i < vk_stagingBuffers.size(); ++i)
-  {
-    vk::CommandBufferBeginInfo bi_transferBuffer{
-      .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
-    };
-    vk_transferBuffers[i].begin(bi_transferBuffer);
-
-    vk::BufferCopy bufferCopy{
-      .srcOffset  = 0,
-      .dstOffset  = 0,
-      .size       = sizeof(objects[i]->vertices[0]) * objects[i]->vertices.size()
-    };
-    vk_transferBuffers[i].copyBuffer(*vk_stagingBuffers[i], *vk_vertexBuffers[i], bufferCopy);
-
-    vk_transferBuffers[i].end();
-  }
+  vk::raii::Fence vk_transferFence = device.logical().createFence(ci_transferFence);
 
   std::vector<vk::CommandBuffer> transferBuffers;
   for (auto& vk_transferBuffer : vk_transferBuffers)
     transferBuffers.emplace_back(*vk_transferBuffer);
-  
+
   vk::SubmitInfo i_transferSubmit{
     .commandBufferCount = static_cast<unsigned int>(transferBuffers.size()),
     .pCommandBuffers    = transferBuffers.data()
   };
-  device.queue(QueueType::Transfer).submit(i_transferSubmit, *vk_transferFence);
+  device.queue(QueueType::Transfer).submit(i_transferSubmit, { *vk_transferFence });
 
   static_cast<void>(device.logical().waitForFences({ *vk_transferFence }, vk::True, UINT64_MAX));
-  vk_transferBuffers.clear();
 }
+
 
 void Renderer::beginRendering(const unsigned int& frameIndex, const vk::raii::Image& vk_image, const vk::raii::ImageView& vk_imageView)
 { 

@@ -34,6 +34,9 @@ Engine::~Engine()
   vk_renderSemaphores.clear();
   
   delete renderer;
+
+  gui->clean();
+
   delete device;
   delete gui;
 }

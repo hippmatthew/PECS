@@ -2,7 +2,7 @@
  *  PECS::core - settings.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/8/24
+ *  Updated:  2/11/24
  */
 
 #ifndef pecs_core_settings_hpp
@@ -37,8 +37,8 @@ class Settings
     struct GUI
     {
       std::string windowTitle = "PECS Application";
-      int width = 800;
-      int height = 800;
+      int width = 1280;
+      int height = 720;
     };
 
     struct Renderer

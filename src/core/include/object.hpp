@@ -52,7 +52,7 @@ struct Vertex
       vk::VertexInputAttributeDescription{
         .location = 1,
         .binding  = 0,
-        .format   = vk::Format::eR32G32Sfloat,
+        .format   = vk::Format::eR32G32B32Sfloat,
         .offset   = offsetof(Vertex, color)
       }
     };

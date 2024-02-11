@@ -2,7 +2,7 @@
 
 VERT_DIR=shaders/vertex
 FRAG_DIR=shaders/fragment
-OUT_DIR=samples/triangles
+OUT_DIR=samples/spv
 
-glslc $VERT_DIR/triangle.vert -o $OUT_DIR/triangle.vert.spv
-glslc $FRAG_DIR/triangle.frag -o $OUT_DIR/triangle.frag.spv
+glslc $VERT_DIR/default.vert -o $OUT_DIR/default.vert.spv
+glslc $FRAG_DIR/default.frag -o $OUT_DIR/default.frag.spv

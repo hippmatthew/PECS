@@ -2,7 +2,7 @@
  *  PECS - pecs-core.hpp
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/9/24
+ *  Updated:  2/11/24
  */
 
 #ifndef pecs_core_hpp
@@ -86,7 +86,7 @@ struct Vertex
       vk::VertexInputAttributeDescription{
         .location = 1,
         .binding  = 0,
-        .format   = vk::Format::eR32G32Sfloat,
+        .format   = vk::Format::eR32G32B32Sfloat,
         .offset   = offsetof(Vertex, color)
       }
     };
@@ -119,8 +119,8 @@ class Settings
     struct GUI
     {
       std::string windowTitle = "PECS Application";
-      int width = 800;
-      int height = 800;
+      int width = 1280;
+      int height = 720;
     };
 
     struct Renderer
@@ -192,6 +192,7 @@ class GUI : public Singular
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
     void recreateSwapchain(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
+    void clean();
 
   private:
     void initialize();
@@ -299,10 +300,10 @@ class Renderer : public Singular
     vk::raii::CommandPool vk_renderPool = nullptr;
     vk::raii::CommandPool vk_transferPool = nullptr;
     std::vector<vk::raii::CommandBuffer> vk_renderBuffers;
-    std::vector<vk::raii::CommandBuffer> vk_transferBuffers;
 
-    vk::raii::DeviceMemory vk_vertexMemory = nullptr;
-    std::vector<vk::raii::Buffer> vk_vertexBuffers;
+    vk::raii::DeviceMemory vk_objectMemory = nullptr;
+    vk::raii::Buffer vk_vertexBuffer = nullptr;
+    vk::raii::Buffer vk_indexBuffer = nullptr;
 };
 
 class Engine : public Singular

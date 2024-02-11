@@ -43,10 +43,10 @@ class Renderer : public Singular
     vk::raii::CommandPool vk_renderPool = nullptr;
     vk::raii::CommandPool vk_transferPool = nullptr;
     std::vector<vk::raii::CommandBuffer> vk_renderBuffers;
-    std::vector<vk::raii::CommandBuffer> vk_transferBuffers;
 
-    vk::raii::DeviceMemory vk_vertexMemory = nullptr;
-    std::vector<vk::raii::Buffer> vk_vertexBuffers;
+    vk::raii::DeviceMemory vk_objectMemory = nullptr;
+    vk::raii::Buffer vk_vertexBuffer = nullptr;
+    vk::raii::Buffer vk_indexBuffer = nullptr;
 };
 
 } // namespace pecs

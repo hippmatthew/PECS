@@ -113,6 +113,12 @@ void GUI::recreateSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, c
   createImageViews(vk_device);
 }
 
+void GUI::clean()
+{
+  vk_imageViews.clear();
+  vk_swapchain.clear();
+}
+
 void GUI::initialize()
 {
   glfwInit();

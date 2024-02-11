@@ -1,12 +1,12 @@
 /*
- *  PECS - pecs.hpp
+ *  PECS - pecs-core.hpp
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/26/24
+ *  Updated:  2/9/24
  */
 
-#ifndef pecs_hpp
-#define pecs_hpp
+#ifndef pecs_core_hpp
+#define pecs_core_hpp
 
 #ifndef pecs_include_vulkan
 #define pecs_include_vulkan
@@ -24,6 +24,13 @@
 #include <GLFW/glfw3.h>
 
 #endif // pecs_include_glfw
+
+#ifndef pecs_include_glm
+#define pecs_include_glm
+
+#include <glm/glm.hpp>
+
+#endif // pecs_include_glm
 
 #include <string>
 #include <vector>
@@ -53,6 +60,39 @@ struct ShaderPaths
   ShaderPath compute;
 };
 
+struct Vertex
+{
+  glm::vec2 position;
+  glm::vec3 color;
+
+  static vk::VertexInputBindingDescription bindingDescription()
+  {
+    return vk::VertexInputBindingDescription{
+      .binding    = 0,
+      .stride     = sizeof(Vertex),
+      .inputRate  = vk::VertexInputRate::eVertex
+    };
+  }
+
+  static std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions()
+  {
+    return std::array<vk::VertexInputAttributeDescription, 2>{
+      vk::VertexInputAttributeDescription{
+        .location = 0,
+        .binding  = 0,
+        .format   = vk::Format::eR32G32Sfloat,
+        .offset   = offsetof(Vertex, position)
+      },
+      vk::VertexInputAttributeDescription{
+        .location = 1,
+        .binding  = 0,
+        .format   = vk::Format::eR32G32Sfloat,
+        .offset   = offsetof(Vertex, color)
+      }
+    };
+  }
+};
+
 class Singular
 {
   public:
@@ -79,8 +119,8 @@ class Settings
     struct GUI
     {
       std::string windowTitle = "PECS Application";
-      int width = 1280;
-      int height = 720;
+      int width = 800;
+      int height = 800;
     };
 
     struct Renderer
@@ -106,26 +146,28 @@ class Settings
 
 class Object : public Singular
 {
+  friend class Engine;
+  friend class Renderer;
+
   public:
-    Object(const vk::raii::Device&, const ViewportInfo&, const ShaderPaths&, unsigned int);
+    Object(std::vector<Vertex>, std::vector<unsigned int>, ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
+    Object(ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
 
     ~Object() = default;
-
-    const vk::raii::Pipeline& graphicsPipeline() const;
-
-  private:
+    
+  protected:
     std::vector<char> readShader(std::string) const;
     std::vector<vk::raii::ShaderModule> createShaderModules(const vk::raii::Device&) const;
     std::vector<vk::PipelineShaderStageCreateInfo> shaderCreateInfos(const std::vector<vk::raii::ShaderModule>&) const;
 
     void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
 
-  public:
-    const unsigned int vertices;
-  
   protected:
-    const ShaderPaths shaderPaths;
-
+    glm::vec2 position;
+    ShaderPaths shaderPaths;
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+    
     vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
     vk::raii::Pipeline vk_graphicsPipeline = nullptr;
 };
@@ -237,22 +279,30 @@ class Renderer : public Singular
     const std::vector<vk::raii::CommandBuffer>& commandBuffers() const;
     unsigned int maxFlightFrames() const;
     
-    void start(const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
-    void render(const Object&, const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
-    void stop(const unsigned int&, const vk::raii::Image&);
+    void createObjectBuffers(std::vector<Object *>&, const Device&);
+    void render(std::vector<Object *>&, const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&, const Device&);
 
   private:
-    void createCommandPool(const vk::raii::Device&, const std::vector<unsigned int>&);
-    void createCommandBuffers(const vk::raii::Device&);
-
+    unsigned int findMemoryIndex(const vk::raii::PhysicalDevice&, unsigned int, vk::MemoryPropertyFlags) const;
+    
+    void createCommandPools(const vk::raii::Device&, const std::vector<unsigned int>&);
+    void createRenderBuffers(const vk::raii::Device&);
+    void beginRendering(const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
+    void endRendering(const unsigned int&, const vk::raii::Image&);
+    
   private:
     Settings::Renderer settings;
     ViewportInfo i_viewport;
     vk::Rect2D renderArea;
     vk::ClearValue vk_clearValue = vk::ClearValue{ vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f } } };
     
-    vk::raii::CommandPool vk_commandPool = nullptr;
-    std::vector<vk::raii::CommandBuffer> vk_commandBuffers;
+    vk::raii::CommandPool vk_renderPool = nullptr;
+    vk::raii::CommandPool vk_transferPool = nullptr;
+    std::vector<vk::raii::CommandBuffer> vk_renderBuffers;
+    std::vector<vk::raii::CommandBuffer> vk_transferBuffers;
+
+    vk::raii::DeviceMemory vk_vertexMemory = nullptr;
+    std::vector<vk::raii::Buffer> vk_vertexBuffers;
 };
 
 class Engine : public Singular
@@ -263,35 +313,37 @@ class Engine : public Singular
 
     ~Engine();
 
-    const ViewportInfo viewportInfo() const;
-
     void run();
-    void addObject(const ShaderPaths&, unsigned int);
+    void addObject(Object&);
     
     virtual void Main() {};
     
-  private:
+  private:   
+    const ViewportInfo viewportInfo() const;
+
     void initialize(const Settings&);
     void createInstance();
     void createSyncObjects();
 
   private:
-    Settings::Engine settings;
     std::vector<const char *> layers;
     unsigned int frameIndex = 0;
     
     GUI * gui = nullptr;
     Device * device = nullptr;
     Renderer * renderer = nullptr;
-    std::vector<Object *> objects;
-
+    
     vk::raii::Instance vk_instance = nullptr;
 
     std::vector<vk::raii::Semaphore> vk_imageSemaphores;
     std::vector<vk::raii::Semaphore> vk_renderSemaphores;
     std::vector<vk::raii::Fence> vk_flightFences;
+
+  protected:
+    Settings::Engine settings;
+    std::vector<Object *> objects;
 };
 
 } // namespace pecs
 
-#endif // pecs_hpp
+#endif // pecs_core_hpp

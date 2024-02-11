@@ -1,8 +1,8 @@
 workspace "PECS Library"
   configurations { "default" }
-
-  project "PECS Core"
-    location "src"
+  
+  project "PECS-Core"
+    location "src/core"
     filename "Core"
     
     kind "StaticLib"
@@ -14,8 +14,31 @@ workspace "PECS Library"
     targetname "pecs-core"
 
     files {
-      "src/*.cpp",
-      "src/include/*.hpp"
+      "src/core/*.cpp",
+      "src/core/include/*.hpp"
+    }
+
+    includedirs {
+      ".",
+      "/opt/homebrew/include",
+      "/usr/local/include"
+    }
+
+  project "PECS-Objects"
+    location "src/objects"
+    filename "Objects"
+
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++20"
+
+    targetdir "lib"
+    objdir "bin"
+    targetname "pecs-objs"
+
+    files {
+      "src/objects/*.cpp",
+      "src/objects/include/*.hpp"
     }
 
     includedirs {
@@ -58,7 +81,8 @@ workspace "PECS Samples"
     links {
       "glfw",
       "vulkan",
-      "pecs-core"
+      "pecs-core",
+      "pecs-objs"
     }
 
     linkoptions { "-rpath /usr/local/lib" }

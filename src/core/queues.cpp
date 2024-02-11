@@ -1,11 +1,11 @@
 /*
- *  PECS - queues.cpp 
+ *  PECS::core - queues.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  2/8/24
  */
 
-#include "src/include/device.hpp"
+#include "src/core/include/device.hpp"
 
 namespace pecs
 {

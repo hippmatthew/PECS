@@ -2,10 +2,10 @@
  *  PECS::samples::triangle - triangle.cpp
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/4/24
+ *  Updated:  2/9/24
  */
 
-#include "pecs.hpp"
+#include "pecs-objects.hpp"
 
 #include <iostream>
 
@@ -14,8 +14,10 @@ class Simulation : public pecs::Engine
   public:
     void Main()
     {
-      if (++counter % 1000 == 0)
-        std::cout << "running... (" << counter / 1000 << ")\n"; 
+      if (++counter % 100 == 0)
+      {
+        
+      }
     }
 
   private:
@@ -25,18 +27,19 @@ class Simulation : public pecs::Engine
 int main()
 {
   Simulation sim;
-
+  
   pecs::ShaderPaths shaderPaths{
-    .vertex = "triangles/triangle1.vert.spv",
+    .vertex = "triangles/triangle.vert.spv",
     .fragment = "triangles/triangle.frag.spv"
   };
-  sim.addObject(shaderPaths, 3);
+  
+  pecs::objects::Triangle triangle1({ M_PI / 3, M_PI / 6 }, shaderPaths, { 0.3f, 0.2f });
+  pecs::objects::Triangle triangle2({ M_PI / 2, M_PI / 4}, shaderPaths, { -0.9f, -0.6f });
+  pecs::objects::Triangle triangle3({ M_PI / 15, M_PI / 7 }, shaderPaths, { 0.2f, -0.9f });
 
-  pecs::ShaderPaths shaderPaths2{
-    .vertex = "triangles/triangle2.vert.spv",
-    .fragment = "triangles/triangle.frag.spv"
-  };
-  sim.addObject(shaderPaths2, 3);
+  sim.addObject(triangle1);
+  sim.addObject(triangle2);
+  sim.addObject(triangle3);
 
   sim.run();
 }

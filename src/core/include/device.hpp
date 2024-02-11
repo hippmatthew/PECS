@@ -1,14 +1,14 @@
 /*
- *  PECS - device.hpp 
+ *  PECS::core - device.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/6/24
+ *  Updated:  2/8/24
  */
 
-#ifndef pecs_device_hpp
-#define pecs_device_hpp
+#ifndef pecs_core_device_hpp
+#define pecs_core_device_hpp
 
-#include "src/include/gui.hpp"
+#include "src/core/include/gui.hpp"
 
 #include <optional>
 #include <utility>
@@ -80,4 +80,4 @@ class Device : public Singular
 
 } // namespace pecs
 
-#endif // pecs_device_hpp
+#endif // pecs_core_device_hpp

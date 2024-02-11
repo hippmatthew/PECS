@@ -1,11 +1,11 @@
 /*
- *  PECS - engine.cpp 
+ *  PECS::core - engine.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/7/24
+ *  Updated:  2/9/24
  */
 
-#include "src/include/engine.hpp"
+#include "src/core/include/engine.hpp"
 
 #define PECS_ENGINE_NAME "PECS"
 #define PECS_ENGINE_VERSION VK_MAKE_API_VERSION(0, 1, 0, 0)
@@ -28,16 +28,12 @@ Engine::Engine(const Settings& s)
 }
 
 Engine::~Engine()
-{
+{  
+  vk_flightFences.clear();
   vk_imageSemaphores.clear();
   vk_renderSemaphores.clear();
-  vk_flightFences.clear();
   
   delete renderer;
-  
-  for (auto * object : objects)
-    delete object;
-  
   delete device;
   delete gui;
 }
@@ -53,11 +49,13 @@ const ViewportInfo Engine::viewportInfo() const
 
 void Engine::run()
 { 
+  renderer->createObjectBuffers(objects, *device);
+  
   while (!glfwWindowShouldClose(gui->window()))
   {
     glfwPollEvents();
 
-    static_cast<void>(device->logical().waitForFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]}, vk::True, UINT64_MAX));
+    static_cast<void>(device->logical().waitForFences({ *vk_flightFences[frameIndex] }, vk::True, UINT64_MAX));
     
     auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphores[frameIndex], nullptr);
     if (result.first == vk::Result::eErrorOutOfDateKHR || result.first == vk::Result::eSuboptimalKHR)
@@ -68,14 +66,9 @@ void Engine::run()
     else if (result.first != vk::Result::eSuccess)
       throw std::runtime_error("error @ pecs::Engine::run() : failed to get next image");
 
-    device->logical().resetFences(std::array<vk::Fence, 1>{*vk_flightFences[frameIndex]});
+    device->logical().resetFences({ *vk_flightFences[frameIndex] });
     
-    renderer->start(frameIndex, gui->image(result.second), gui->imageView(result.second));
-
-    for (const auto * object : objects)
-      renderer->render(*object, frameIndex, gui->image(result.second), gui->imageView(result.second));
-
-    renderer->stop(frameIndex, gui->image(result.second));
+    renderer->render(objects, frameIndex, gui->image(result.second), gui->imageView(result.second), *device);
     
     std::vector<vk::Semaphore> waitSemaphores = { *vk_imageSemaphores[frameIndex] };
     std::vector<vk::Semaphore> signalSemaphores = { *vk_renderSemaphores[frameIndex] };
@@ -108,7 +101,7 @@ void Engine::run()
       gui->recreateSwapchain(device->physical(), device->logical());
     else if (presentResult != vk::Result::eSuccess)
       throw std::runtime_error("error @ pecs::Engine::run() : failed to present image");
-
+    
     Main();
 
     frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
@@ -117,9 +110,12 @@ void Engine::run()
   device->logical().waitIdle();
 }
 
-void Engine::addObject(const ShaderPaths& shaderPaths, unsigned int vertices)
+void Engine::addObject(Object& o)
 {
-  objects.emplace_back(new Object(device->logical(), viewportInfo(), shaderPaths, vertices));
+  if (o.vertices.size() < 3) return;
+
+  o.createGraphicsPipeline(device->logical(), viewportInfo());
+  objects.emplace_back(&o);
 }
 
 void Engine::initialize(const Settings& s)

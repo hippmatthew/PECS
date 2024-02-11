@@ -1,15 +1,15 @@
 /*
- *  PECS - gui.hpp 
+ *  PECS::core - gui.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/7/24
+ *  Updated:  2/8/24
  */
 
-#ifndef pecs_gui_hpp
-#define pecs_gui_hpp
+#ifndef pecs_core_gui_hpp
+#define pecs_core_gui_hpp
 
-#include "src/include/singular.hpp"
-#include "src/include/settings.hpp"
+#include "src/core/include/singular.hpp"
+#include "src/core/include/settings.hpp"
 
 #ifndef pecs_include_glfw
 #define pecs_include_glfw
@@ -71,4 +71,4 @@ class GUI : public Singular
 
 } // namespace pecs
 
-#endif // pecs_gui_hpp
+#endif // pecs_core_gui_hpp

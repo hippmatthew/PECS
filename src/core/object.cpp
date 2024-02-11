@@ -1,25 +1,23 @@
 /*
- *  PECS - object.cpp 
+ *  PECS::core - object.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/26/24
- *  Updated:  2/4/24
+ *  Updated:  2/9/24
  */
 
-#include "src/include/object.hpp"
+#include "src/core/include/object.hpp"
 
 namespace pecs
 {
 
-Object::Object(const vk::raii::Device& vk_device, const ViewportInfo& i_viewport, const ShaderPaths& s, unsigned int v)
-: shaderPaths(s), vertices(v)
-{
-  createGraphicsPipeline(vk_device, i_viewport);
+Object::Object(std::vector<Vertex> v, std::vector<unsigned int> i, ShaderPaths s, glm::vec2 p)
+: vertices(v), indices(i), shaderPaths(s), position(p)
+{ 
+  for (auto& vertex : vertices)
+    vertex.position += position;
 }
 
-const vk::raii::Pipeline& Object::graphicsPipeline() const
-{
-  return vk_graphicsPipeline;
-}
+Object::Object(ShaderPaths s, glm::vec2 p) : shaderPaths(s), position(p) {}
 
 std::vector<char> Object::readShader(std::string path) const
 {
@@ -116,11 +114,13 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
     .scissorCount   = 1
   };
 
+  auto vk_bindingDescription = Vertex::bindingDescription();
+  auto vk_attributeDescriptions = Vertex::attributeDescriptions();
   vk::PipelineVertexInputStateCreateInfo ci_vertexInput{
-    .vertexBindingDescriptionCount    = 0,
-    .pVertexBindingDescriptions       = nullptr,
-    .vertexAttributeDescriptionCount  = 0,
-    .pVertexAttributeDescriptions     = nullptr
+    .vertexBindingDescriptionCount    = 1,
+    .pVertexBindingDescriptions       = &vk_bindingDescription,
+    .vertexAttributeDescriptionCount  = static_cast<unsigned int>(vk_attributeDescriptions.size()),
+    .pVertexAttributeDescriptions     = vk_attributeDescriptions.data()
   };
 
   vk::PipelineInputAssemblyStateCreateInfo ci_inputAssembly{

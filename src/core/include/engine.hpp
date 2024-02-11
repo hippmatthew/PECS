@@ -1,14 +1,14 @@
 /*
- *  PECS - engine.hpp 
+ *  PECS::core - engine.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/7/24
+ *  Updated:  2/8/24
  */
 
-#ifndef pecs_engine_hpp
-#define pecs_engine_hpp
+#ifndef pecs_core_engine_hpp
+#define pecs_core_engine_hpp
 
-#include "src/include/renderer.hpp"
+#include "src/core/include/renderer.hpp"
 
 namespace pecs
 {
@@ -21,35 +21,37 @@ class Engine : public Singular
 
     ~Engine();
 
-    const ViewportInfo viewportInfo() const;
-
     void run();
-    void addObject(const ShaderPaths&, unsigned int);
+    void addObject(Object&);
     
     virtual void Main() {};
     
-  private:
+  private:   
+    const ViewportInfo viewportInfo() const;
+
     void initialize(const Settings&);
     void createInstance();
     void createSyncObjects();
 
   private:
-    Settings::Engine settings;
     std::vector<const char *> layers;
     unsigned int frameIndex = 0;
     
     GUI * gui = nullptr;
     Device * device = nullptr;
     Renderer * renderer = nullptr;
-    std::vector<Object *> objects;
-
+    
     vk::raii::Instance vk_instance = nullptr;
 
     std::vector<vk::raii::Semaphore> vk_imageSemaphores;
     std::vector<vk::raii::Semaphore> vk_renderSemaphores;
     std::vector<vk::raii::Fence> vk_flightFences;
+
+  protected:
+    Settings::Engine settings;
+    std::vector<Object *> objects;
 };
 
 } // namespace pecs
 
-#endif // pecs_engine_hpp
+#endif // pecs_core_engine_hpp

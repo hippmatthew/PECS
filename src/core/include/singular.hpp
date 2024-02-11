@@ -1,12 +1,12 @@
 /*
- *  PECS - singular.hpp 
+ *  PECS::core - singular.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  1/21/24
+ *  Updated:  2/8/24
  */
 
-#ifndef pecs_singular_hpp
-#define pecs_singular_hpp
+#ifndef pecs_core_singular_hpp
+#define pecs_core_singular_hpp
 
 namespace pecs
 {
@@ -26,4 +26,4 @@ class Singular
 
 } // namespace pecs
 
-#endif // pecs_singular_hpp
+#endif // pecs_core_singular_hpp

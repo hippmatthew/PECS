@@ -1,12 +1,12 @@
 /*
- *  PECS - settings.hpp 
+ *  PECS::core - settings.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/7/24
+ *  Updated:  2/8/24
  */
 
-#ifndef pecs_settings_hpp
-#define pecs_settings_hpp
+#ifndef pecs_core_settings_hpp
+#define pecs_core_settings_hpp
 
 #ifndef pecs_include_vulkan
 #define pecs_include_vulkan
@@ -37,8 +37,8 @@ class Settings
     struct GUI
     {
       std::string windowTitle = "PECS Application";
-      int width = 1280;
-      int height = 720;
+      int width = 800;
+      int height = 800;
     };
 
     struct Renderer
@@ -64,4 +64,4 @@ class Settings
 
 } // namespace pecs
 
-#endif // pecs_settings_hpp
+#endif // pecs_core_settings_hpp

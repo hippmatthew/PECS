@@ -1,11 +1,11 @@
 /*
- *  PECS - device.cpp 
+ *  PECS::core - device.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/7/24
+ *  Updated:  2/8/24
  */
 
-#include "src/include/device.hpp"
+#include "src/core/include/device.hpp"
 
 #include <queue>
 

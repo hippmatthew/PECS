@@ -33,10 +33,10 @@ int main()
     .fragment = "spv/default.frag.spv"
   };
   
-  // pecs::objects::Triangle triangle({ 0.3, 0.2, 0.1}, shaderPaths);
-  pecs::objects::Rectangle rectangle({ 0.3, 0.3 }, shaderPaths);
+  pecs::objects::Triangle triangle({ 0.5, 0.2 }, M_PI / 2, shaderPaths, {0.3, 0.0});
+  pecs::objects::Rectangle rectangle({ 0.3, 0.5 }, shaderPaths, { -0.6, 0.0 });
 
-  // sim.addObject(triangle);
+  sim.addObject(triangle);
   sim.addObject(rectangle);
 
   sim.run();

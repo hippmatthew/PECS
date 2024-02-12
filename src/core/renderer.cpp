@@ -63,6 +63,9 @@ void Renderer::render(std::vector<Object *>& objects, const unsigned int& frameI
     vk_renderBuffers[frameIndex].bindIndexBuffer(*vk_indexBuffer, indexOffset, vk::IndexType::eUint32);
 
     vk_renderBuffers[frameIndex].drawIndexed(object->indices.size(), 1, 0, 0, 0);
+
+    vertexOffset += vertexSize;
+    indexOffset += indexSize;
   }
 
   endRendering(frameIndex, vk_image);
@@ -259,7 +262,6 @@ void Renderer::createObjectBuffers(std::vector<Object *>& objects, const Device&
 
   static_cast<void>(device.logical().waitForFences({ *vk_transferFence }, vk::True, UINT64_MAX));
 }
-
 
 void Renderer::beginRendering(const unsigned int& frameIndex, const vk::raii::Image& vk_image, const vk::raii::ImageView& vk_imageView)
 { 

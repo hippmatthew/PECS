@@ -18,7 +18,7 @@ namespace objects
 class Triangle : public Object
 {
   public:
-    Triangle(std::array<float, 3>, ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
+    Triangle(std::array<float, 2>, float, ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
 
     ~Triangle() = default;
 };

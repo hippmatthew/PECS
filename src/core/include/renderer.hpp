@@ -2,7 +2,7 @@
  *  PECS::core - renderer.hpp 
  *  Author:   Matthew Hipp
  *  Created:  2/4/24
- *  Updated:  2/9/24
+ *  Updated:  2/15/24
  */
 
 #ifndef pecs_core_renderer_hpp
@@ -23,16 +23,20 @@ class Renderer : public Singular
     const std::vector<vk::raii::CommandBuffer>& commandBuffers() const;
     unsigned int maxFlightFrames() const;
     
-    void createObjectBuffers(std::vector<Object *>&, const Device&);
-    void render(std::vector<Object *>&, const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&, const Device&);
+    void setup(const std::vector<Object *>&, const Device&);
+    void render(const std::vector<Object *>&, const unsigned int&, const vk::Image&, const vk::raii::ImageView&, const Device&);
 
   private:
     unsigned int findMemoryIndex(const vk::raii::PhysicalDevice&, unsigned int, vk::MemoryPropertyFlags) const;
     
     void createCommandPools(const vk::raii::Device&, const std::vector<unsigned int>&);
     void createRenderBuffers(const vk::raii::Device&);
-    void beginRendering(const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
-    void endRendering(const unsigned int&, const vk::raii::Image&);
+    void createObjectBuffers(const std::vector<Object *>&, const Device&);
+    void createUniformBuffers(const std::size_t&, const Device&);
+    void createDescriptorPool(unsigned int, const vk::raii::Device&);
+    void createDescriptorSets(const std::vector<Object *>&, const vk::raii::Device&);
+    void beginRendering(const unsigned int&, const vk::Image&, const vk::raii::ImageView&);
+    void endRendering(const unsigned int&, const vk::Image&);
     
   private:
     Settings::Renderer settings;
@@ -47,6 +51,12 @@ class Renderer : public Singular
     vk::raii::DeviceMemory vk_objectMemory = nullptr;
     vk::raii::Buffer vk_vertexBuffer = nullptr;
     vk::raii::Buffer vk_indexBuffer = nullptr;
+
+    vk::raii::DeviceMemory vk_uniformMemory = nullptr;
+    vk::raii::Buffer vk_uniformBuffer = nullptr;
+
+    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
+    std::vector<std::vector<vk::raii::DescriptorSet>> vk_descriptorSets;
 };
 
 } // namespace pecs

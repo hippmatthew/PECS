@@ -2,7 +2,7 @@
  *  PECS::core - gui.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/8/24
+ *  Updated:  2/15/24
  */
 
 #include "src/core/include/gui.hpp"
@@ -61,7 +61,7 @@ const vk::raii::SwapchainKHR& GUI::swapchain() const
   return vk_swapchain;
 }
 
-const vk::raii::Image& GUI::image(const unsigned int& index) const
+const vk::Image& GUI::image(const unsigned int& index) const
 {
   return vk_images[index];
 }
@@ -87,10 +87,7 @@ void GUI::setupWindow(const vk::raii::PhysicalDevice& vk_physicalDevice, const v
   
   createSwapchain(vk_physicalDevice, vk_device);
   
-  auto images = vk_swapchain.getImages();
-  for (const auto& image : images)
-    vk_images.emplace_back(vk::raii::Image(vk_device, image));
-
+  vk_images = vk_swapchain.getImages();
   createImageViews(vk_device);
 }
 
@@ -111,12 +108,6 @@ void GUI::recreateSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, c
 
   createSwapchain(vk_physicalDevice, vk_device);
   createImageViews(vk_device);
-}
-
-void GUI::clean()
-{
-  vk_imageViews.clear();
-  vk_swapchain.clear();
 }
 
 void GUI::initialize()
@@ -231,7 +222,7 @@ void GUI::createImageViews(const vk::raii::Device& vk_device)
   for (const auto& vk_image : vk_images)
   {
     vk::ImageViewCreateInfo ci_imageView{
-      .image            = *vk_image,
+      .image            = vk_image,
       .viewType         = vk::ImageViewType::e2D,
       .format           = vk_surfaceFormat.format,
       .components       = components,

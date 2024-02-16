@@ -2,7 +2,7 @@
  *  PECS::core - engine.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/9/24
+ *  Updated:  2/15/24
  */
 
 #include "src/core/include/engine.hpp"
@@ -29,16 +29,16 @@ Engine::Engine(const Settings& s)
 
 Engine::~Engine()
 {  
+  for (auto * object : objects)
+    object->clean();
+  
   vk_flightFences.clear();
   vk_imageSemaphores.clear();
   vk_renderSemaphores.clear();
   
   delete renderer;
-
-  gui->clean();
-
-  delete device;
   delete gui;
+  delete device;
 }
 
 const ViewportInfo Engine::viewportInfo() const
@@ -52,14 +52,28 @@ const ViewportInfo Engine::viewportInfo() const
 
 void Engine::run()
 { 
-  renderer->createObjectBuffers(objects, *device);
+  renderer->setup(objects, *device);
   
   while (!glfwWindowShouldClose(gui->window()))
   {
+    auto startFrame = std::chrono::high_resolution_clock::now();
+    
     glfwPollEvents();
 
     static_cast<void>(device->logical().waitForFences({ *vk_flightFences[frameIndex] }, vk::True, UINT64_MAX));
-    
+
+    for (auto * object : objects)
+    {
+      if (object->hasTransformed)
+      {
+        object->objectData.model = object->nextTransformation; 
+        object->hasTransformed = false;
+      }
+           
+      object->objectData.view = camera.first;
+      object->objectData.projection = camera.second;
+    }
+      
     auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphores[frameIndex], nullptr);
     if (result.first == vk::Result::eErrorOutOfDateKHR || result.first == vk::Result::eSuboptimalKHR)
     {
@@ -107,18 +121,21 @@ void Engine::run()
     
     Main();
 
+    auto endFrame = std::chrono::high_resolution_clock::now();
+    deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(endFrame - startFrame).count();
+
     frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
   }
 
   device->logical().waitIdle();
 }
 
-void Engine::addObject(Object& o)
+void Engine::addObject(Object * o)
 {
-  if (o.vertices.size() < 3) return;
+  if (o->vertices.size() < 3) return;
 
-  o.createGraphicsPipeline(device->logical(), viewportInfo());
-  objects.emplace_back(&o);
+  o->createGraphicsPipeline(device->logical(), viewportInfo());
+  objects.emplace_back(o);
 }
 
 void Engine::initialize(const Settings& s)
@@ -136,6 +153,12 @@ void Engine::initialize(const Settings& s)
 
   renderer = new Renderer(s.renderer, *device, viewportInfo());
   createSyncObjects();
+
+  camera = Camera(
+    glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+    glm::perspective(glm::radians(45.0f), static_cast<float>(gui->extent().width / gui->extent().height), 0.1f, 10.0f)
+  );
+  camera.second[1][1] *= -1;
 }
 
 void Engine::createInstance()

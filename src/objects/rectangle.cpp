@@ -12,21 +12,19 @@ namespace pecs
 namespace objects
 {
 
-Rectangle::Rectangle(std::array<float, 2> lengths, ShaderPaths s, glm::vec2 p) : Object(s, p)
-{
-  glm::vec2 centering = { 0.5 * lengths[0], 1 - 0.5 * lengths[1] };
-  
+Rectangle::Rectangle(std::array<float, 2> lengths, ShaderPaths s, glm::vec3 p, RotationInfo r) : Object(s)
+{ 
   vertices = {
-    {{0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-    {{0.0f, lengths[1]}, {0.0f, 1.0f, 0.0f}},
-    {{lengths[0], lengths[1]}, {0.0f, 0.0f, 1.0f}},
-    {{lengths[0], 0.0f}, {0.0f, 1.0f, 0.0f}}
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+    {{0.5, -0.5f}, {0.0f, 1.0f, 0.0f}}
   };
 
-  for (auto& vertex : vertices)
-    vertex.position += p - centering;
+  indices = { 0, 3, 2, 2, 1, 0 };
 
-  indices = { 0, 1, 2, 2, 3, 0 };
+  translate(p);
+  rotate(r);
 }
 
 } // namespace pecs::objects

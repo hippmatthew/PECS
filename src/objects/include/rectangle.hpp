@@ -18,7 +18,7 @@ namespace objects
 class Rectangle : public Object
 {
   public:
-    Rectangle(std::array<float, 2>, ShaderPaths, glm::vec2 p = { 0.0f, 0.0f });
+    Rectangle(std::array<float, 2>, ShaderPaths, glm::vec3 t = { 0.0f, 0.0f, 0.0f }, RotationInfo r = { 0.0f, { 0.0f, 0.0f, 1.0f }});
 
     ~Rectangle() = default;
 };

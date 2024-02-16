@@ -87,3 +87,40 @@ workspace "PECS Samples"
     }
 
     linkoptions { "-rpath /usr/local/lib" }
+
+  project "RotatingRectangle"
+    location "samples/rotating_rectangle"
+
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++20"
+
+    targetdir "samples/bin"
+    objdir "samples/obj"
+    targetname "rectangle"
+
+    files {
+      "samples/rotating_rectangle/rotation.cpp"
+    }
+
+    includedirs {
+      "include",
+      "/opt/homebrew/include",
+      "/usr/local/include"
+    }
+
+    libdirs {
+      "lib",
+      "/opt/homebrew/lib",
+      "/usr/local/lib"
+    }
+
+    links {
+      "glfw",
+      "vulkan",
+      "glm",
+      "pecs-core",
+      "pecs-objs"
+    }
+
+    linkoptions { "-rpath /usr/local/lib" }

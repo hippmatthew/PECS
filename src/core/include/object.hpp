@@ -2,7 +2,7 @@
  *  PECS::core - object.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/9/24
+ *  Updated:  2/15/24
  */
 
 #ifndef pecs_core_object_hpp
@@ -14,7 +14,10 @@
 #ifndef pecs_include_glm
 #define pecs_include_glm
 
+#define GLM_FORCE_RADIANS
+
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #endif // pecs_include_glm
 
@@ -59,6 +62,19 @@ struct Vertex
   }
 };
 
+struct UniformBufferObject
+{
+  glm::mat4 model = glm::mat4(1.0f);
+  glm::mat4 view = glm::mat4(1.0f);
+  glm::mat4 projection = glm::mat4(1.0f);
+};
+
+struct RotationInfo
+{
+  float angle = 0.0f;
+  glm::vec3 axis = { 0.0f, 0.0f, 1.0f };
+};
+
 struct ShaderPaths
 {
   ShaderPath vertex;
@@ -66,16 +82,25 @@ struct ShaderPaths
   ShaderPath compute;
 };
 
-class Object : public Singular
+class Object
 {
   friend class Engine;
   friend class Renderer;
 
   public:
-    Object(std::vector<Vertex>, std::vector<unsigned int>, ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
-    Object(ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
+    Object(ShaderPaths);
+    Object(const Object&);
+    Object(Object&&);
 
     ~Object() = default;
+
+    Object& operator = (const Object&);
+    Object& operator = (Object&&);
+
+    void translate(glm::vec3);
+    void rotate(RotationInfo);
+
+    void clean();
     
   protected:
     std::vector<char> readShader(std::string) const;
@@ -85,10 +110,16 @@ class Object : public Singular
     void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
 
   protected:
-    glm::vec2 position;
+    glm::vec3 position;
+    glm::mat4 nextTransformation = glm::mat4(1.0f);
     ShaderPaths shaderPaths;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    bool hasTransformed = false;
+
+    UniformBufferObject objectData;
+    
+    vk::raii::DescriptorSetLayout vk_descriptorLayout = nullptr;
     
     vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
     vk::raii::Pipeline vk_graphicsPipeline = nullptr;

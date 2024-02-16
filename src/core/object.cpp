@@ -2,7 +2,7 @@
  *  PECS::core - object.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/26/24
- *  Updated:  2/9/24
+ *  Updated:  2/12/24
  */
 
 #include "src/core/include/object.hpp"
@@ -10,14 +10,7 @@
 namespace pecs
 {
 
-Object::Object(std::vector<Vertex> v, std::vector<unsigned int> i, ShaderPaths s, glm::vec2 p)
-: vertices(v), indices(i), shaderPaths(s), position(p)
-{ 
-  for (auto& vertex : vertices)
-    vertex.position += position;
-}
-
-Object::Object(ShaderPaths s, glm::vec2 p) : shaderPaths(s), position(p) {}
+Object::Object(ShaderPaths s) : shaderPaths(s) {}
 
 std::vector<char> Object::readShader(std::string path) const
 {
@@ -34,6 +27,152 @@ std::vector<char> Object::readShader(std::string path) const
 
   shader.close();
   return buffer;
+}
+
+Object::Object(const Object& o)
+{
+  shaderPaths = {
+    o.shaderPaths.vertex,
+    o.shaderPaths.fragment,
+    o.shaderPaths.compute
+  };
+
+  position = o.position;
+  
+  vertices = o.vertices;
+  indices = o.indices;
+}
+
+Object::Object(Object&& o)
+{
+  shaderPaths = {
+    o.shaderPaths.vertex,
+    o.shaderPaths.fragment,
+    o.shaderPaths.compute
+  };
+
+  o.shaderPaths.vertex.reset();
+  o.shaderPaths.fragment.reset();
+  o.shaderPaths.vertex.reset();
+
+  position = o.position;
+  o.position = { 0.0f, 0.0f, 0.0f };
+
+  nextTransformation = o.nextTransformation;
+  o.nextTransformation = glm::mat4(1.0f);
+
+  hasTransformed = o.hasTransformed;
+  o.hasTransformed = false;
+
+  vertices = o.vertices;
+  indices = o.indices;
+  
+  objectData = {
+    o.objectData.model,
+    o.objectData.view,
+    o.objectData.projection
+  };
+
+  o.objectData = {
+    glm::mat4(1.0f),
+    glm::mat4(1.0f),
+    glm::mat4(1.0f)
+  };
+}
+
+Object& Object::operator = (const Object& o)
+{
+  if (this == &o) return *this;
+  
+  vk_descriptorLayout.clear();
+  vk_graphicsLayout.clear();
+  vk_graphicsPipeline.clear();
+
+  objectData = {
+    glm::mat4(1.0f),
+    glm::mat4(1.0f),
+    glm::mat4(1.0f)
+  };
+
+  nextTransformation = glm::mat4(1.0f);
+  hasTransformed = false;
+  
+  shaderPaths = {
+    o.shaderPaths.vertex,
+    o.shaderPaths.fragment,
+    o.shaderPaths.compute
+  };
+
+  position = o.position;
+  
+  vertices = o.vertices;
+  indices = o.indices;
+
+  return *this;
+}
+
+Object& Object::operator = (Object&& o)
+{
+  if (this == &o) return *this;
+
+  vk_descriptorLayout.clear();
+  vk_graphicsLayout.clear();
+  vk_graphicsPipeline.clear();
+  
+  shaderPaths = {
+    o.shaderPaths.vertex,
+    o.shaderPaths.fragment,
+    o.shaderPaths.compute
+  };
+  
+  o.shaderPaths.vertex.reset();
+  o.shaderPaths.fragment.reset();
+  o.shaderPaths.vertex.reset();
+
+  position = o.position;
+  o.position = { 0.0f, 0.0f, 0.0f };
+
+  nextTransformation = o.nextTransformation;
+  o.nextTransformation = glm::mat4(1.0f);
+
+  hasTransformed = o.hasTransformed;
+  o.hasTransformed = false;
+
+  vertices = o.vertices;
+  indices = o.indices;
+  
+  objectData = {
+    o.objectData.model,
+    o.objectData.view,
+    o.objectData.projection
+  };
+
+  o.objectData = {
+    glm::mat4(1.0f),
+    glm::mat4(1.0f),
+    glm::mat4(1.0f)
+  };
+
+  return *this;
+}
+
+void Object::translate(glm::vec3 translation)
+{
+  nextTransformation = glm::translate(nextTransformation, translation);
+  hasTransformed = true;
+}
+
+void Object::rotate(RotationInfo rotation)
+{
+  nextTransformation = glm::rotate(nextTransformation, rotation.angle, rotation.axis);
+  hasTransformed = true;
+}
+
+void Object::clean()
+{
+  vk_descriptorLayout.clear();
+  vk_graphicsPipeline.clear();
+  vk_graphicsLayout.clear();
 }
 
 std::vector<vk::raii::ShaderModule> Object::createShaderModules(const vk::raii::Device& vk_device) const
@@ -171,14 +310,27 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
     .pAttachments     = &blendState
   };
 
-  vk::PipelineLayoutCreateInfo ci_layout{
-    .setLayoutCount         = 0,
-    .pSetLayouts            = nullptr,
+  vk::DescriptorSetLayoutBinding descriptorLayoutBinding{
+    .binding          = 0,
+    .descriptorType   = vk::DescriptorType::eUniformBuffer,
+    .descriptorCount  = 1,
+    .stageFlags       = vk::ShaderStageFlagBits::eVertex
+  };
+
+  vk::DescriptorSetLayoutCreateInfo ci_descriptorLayout{
+    .bindingCount = 1,
+    .pBindings    = &descriptorLayoutBinding
+  };
+  vk_descriptorLayout = vk_device.createDescriptorSetLayout(ci_descriptorLayout);
+
+  vk::PipelineLayoutCreateInfo ci_pipelineLayout{
+    .setLayoutCount         = 1,
+    .pSetLayouts            = &*vk_descriptorLayout,
     .pushConstantRangeCount = 0,
     .pPushConstantRanges    = nullptr
   };
 
-  vk_graphicsLayout = vk_device.createPipelineLayout(ci_layout);
+  vk_graphicsLayout = vk_device.createPipelineLayout(ci_pipelineLayout);
 
   vk::PipelineRenderingCreateInfoKHR ci_rendering{
     .colorAttachmentCount = 1,

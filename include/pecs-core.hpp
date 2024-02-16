@@ -13,7 +13,6 @@
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
-#include <vulkan/vulkan_to_string.hpp>
 
 #endif // pecs_include_vulkan
 
@@ -28,13 +27,19 @@
 #ifndef pecs_include_glm
 #define pecs_include_glm
 
+#define GLM_FORCE_RADIANS
+
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #endif // pecs_include_glm
 
-#include <string>
-#include <vector>
+#include <chrono>
 #include <fstream>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #define PECS_VALIDATION_BIT 0x1u
 
@@ -44,6 +49,7 @@ namespace pecs
 typedef std::pair<std::optional<unsigned int>, vk::raii::Queue> Queue;
 typedef std::optional<std::string> ShaderPath;
 typedef std::pair<vk::Extent2D, vk::Format> ViewportInfo;
+typedef std::pair<glm::mat4, glm::mat4> Camera;
 
 enum QueueType
 {
@@ -91,6 +97,19 @@ struct Vertex
       }
     };
   }
+};
+
+struct UniformBufferObject
+{
+  glm::mat4 model = glm::mat4(1.0f);
+  glm::mat4 view = glm::mat4(1.0f);
+  glm::mat4 projection = glm::mat4(1.0f);
+};
+
+struct RotationInfo
+{
+  float angle = 0.0f;
+  glm::vec3 axis = { 0.0f, 0.0f, 1.0f };
 };
 
 class Singular
@@ -144,16 +163,25 @@ class Settings
     Settings::Renderer renderer;
 };
 
-class Object : public Singular
+class Object
 {
   friend class Engine;
   friend class Renderer;
 
   public:
-    Object(std::vector<Vertex>, std::vector<unsigned int>, ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
-    Object(ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
+    Object(ShaderPaths);
+    Object(const Object&);
+    Object(Object&&);
 
     ~Object() = default;
+
+    Object& operator = (const Object&);
+    Object& operator = (Object&&);
+
+    void translate(glm::vec3);
+    void rotate(RotationInfo);
+
+    void clean();
     
   protected:
     std::vector<char> readShader(std::string) const;
@@ -163,10 +191,16 @@ class Object : public Singular
     void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
 
   protected:
-    glm::vec2 position;
+    glm::vec3 position;
+    glm::mat4 nextTransformation = glm::mat4(1.0f);
     ShaderPaths shaderPaths;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    bool hasTransformed = false;
+
+    UniformBufferObject objectData;
+    
+    vk::raii::DescriptorSetLayout vk_descriptorLayout = nullptr;
     
     vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
     vk::raii::Pipeline vk_graphicsPipeline = nullptr;
@@ -186,13 +220,12 @@ class GUI : public Singular
     const vk::Extent2D& extent() const;
     const vk::Format& format() const;
     const vk::raii::SwapchainKHR& swapchain() const;
-    const vk::raii::Image& image(const unsigned int&) const;
+    const vk::Image& image(const unsigned int&) const;
     const vk::raii::ImageView& imageView(const unsigned int&) const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
     void recreateSwapchain(const vk::raii::PhysicalDevice&, const vk::raii::Device&);
-    void clean();
 
   private:
     void initialize();
@@ -211,7 +244,7 @@ class GUI : public Singular
 
     vk::raii::SurfaceKHR vk_surface = nullptr;
     vk::raii::SwapchainKHR vk_swapchain = nullptr;
-    std::vector<vk::raii::Image> vk_images;
+    std::vector<vk::Image> vk_images;
     std::vector<vk::raii::ImageView> vk_imageViews;
     vk::SurfaceFormatKHR vk_surfaceFormat;
     vk::PresentModeKHR vk_presentMode;
@@ -280,16 +313,20 @@ class Renderer : public Singular
     const std::vector<vk::raii::CommandBuffer>& commandBuffers() const;
     unsigned int maxFlightFrames() const;
     
-    void createObjectBuffers(std::vector<Object *>&, const Device&);
-    void render(std::vector<Object *>&, const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&, const Device&);
+    void setup(const std::vector<Object *>&, const Device&);
+    void render(const std::vector<Object *>&, const unsigned int&, const vk::Image&, const vk::raii::ImageView&, const Device&);
 
   private:
     unsigned int findMemoryIndex(const vk::raii::PhysicalDevice&, unsigned int, vk::MemoryPropertyFlags) const;
     
     void createCommandPools(const vk::raii::Device&, const std::vector<unsigned int>&);
     void createRenderBuffers(const vk::raii::Device&);
-    void beginRendering(const unsigned int&, const vk::raii::Image&, const vk::raii::ImageView&);
-    void endRendering(const unsigned int&, const vk::raii::Image&);
+    void createObjectBuffers(const std::vector<Object *>&, const Device&);
+    void createUniformBuffers(const std::size_t&, const Device&);
+    void createDescriptorPool(unsigned int, const vk::raii::Device&);
+    void createDescriptorSets(const std::vector<Object *>&, const vk::raii::Device&);
+    void beginRendering(const unsigned int&, const vk::Image&, const vk::raii::ImageView&);
+    void endRendering(const unsigned int&, const vk::Image&);
     
   private:
     Settings::Renderer settings;
@@ -304,6 +341,12 @@ class Renderer : public Singular
     vk::raii::DeviceMemory vk_objectMemory = nullptr;
     vk::raii::Buffer vk_vertexBuffer = nullptr;
     vk::raii::Buffer vk_indexBuffer = nullptr;
+
+    vk::raii::DeviceMemory vk_uniformMemory = nullptr;
+    vk::raii::Buffer vk_uniformBuffer = nullptr;
+
+    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
+    std::vector<std::vector<vk::raii::DescriptorSet>> vk_descriptorSets;
 };
 
 class Engine : public Singular
@@ -312,10 +355,10 @@ class Engine : public Singular
     Engine();
     Engine(const Settings&);
 
-    ~Engine();
+    virtual ~Engine();
 
     void run();
-    void addObject(Object&);
+    void addObject(Object *);
     
     virtual void Main() {};
     
@@ -340,9 +383,12 @@ class Engine : public Singular
     std::vector<vk::raii::Semaphore> vk_renderSemaphores;
     std::vector<vk::raii::Fence> vk_flightFences;
 
+    Camera camera;
+    std::vector<Object *> objects;
+
   protected:
     Settings::Engine settings;
-    std::vector<Object *> objects;
+    float deltaTime = 0.0f;
 };
 
 } // namespace pecs

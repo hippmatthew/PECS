@@ -12,32 +12,45 @@
 class Simulation : public pecs::Engine
 {
   public:
+    Simulation()
+    {
+      triangle = new pecs::objects::Triangle(
+        {},
+        0.0f,
+        { "spv/default.vert.spv", "spv/default.frag.spv"}
+      );
+      triangle->translate({ 0.0f, 0.3f, 0.3f});
+
+      rectangle = new pecs::objects::Rectangle(
+        {},
+        { "spv/default.vert.spv", "spv/default.frag.spv"}
+      );
+      rectangle->translate({ 0.3f, 0.0f, 0.3f });
+
+      addObject(triangle);
+      addObject(rectangle);
+    }
+    
     void Main()
     {
-      if (++counter % 100 == 0)
-      {
-        
-      }
+      triangle->rotate({glm::radians(270.0f) * deltaTime, {1.0f, 1.0f, 1.0f}});
+      rectangle->rotate({glm::radians(30.0f) * deltaTime, {1.0f, 1.0f, 1.0f}});
+    }
+
+    ~Simulation()
+    {
+      delete triangle;
+      delete rectangle;
     }
 
   private:
-    std::size_t counter = 0;
+    pecs::objects::Triangle * triangle = nullptr;
+    pecs::objects::Rectangle * rectangle = nullptr;
 };
 
 int main()
 {
   Simulation sim;
-  
-  pecs::ShaderPaths shaderPaths{
-    .vertex = "spv/default.vert.spv",
-    .fragment = "spv/default.frag.spv"
-  };
-  
-  pecs::objects::Triangle triangle({ 0.5, 0.2 }, M_PI / 2, shaderPaths, {0.3, 0.0});
-  pecs::objects::Rectangle rectangle({ 0.3, 0.5 }, shaderPaths, { -0.6, 0.0 });
-
-  sim.addObject(triangle);
-  sim.addObject(rectangle);
 
   sim.run();
 }

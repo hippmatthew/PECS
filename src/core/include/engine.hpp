@@ -2,7 +2,7 @@
  *  PECS::core - engine.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/8/24
+ *  Updated:  2/15/24
  */
 
 #ifndef pecs_core_engine_hpp
@@ -10,8 +10,12 @@
 
 #include "src/core/include/renderer.hpp"
 
+#include <chrono>
+
 namespace pecs
 {
+
+typedef std::pair<glm::mat4, glm::mat4> Camera;
 
 class Engine : public Singular
 {
@@ -19,10 +23,10 @@ class Engine : public Singular
     Engine();
     Engine(const Settings&);
 
-    ~Engine();
+    virtual ~Engine();
 
     void run();
-    void addObject(Object&);
+    void addObject(Object *);
     
     virtual void Main() {};
     
@@ -47,9 +51,12 @@ class Engine : public Singular
     std::vector<vk::raii::Semaphore> vk_renderSemaphores;
     std::vector<vk::raii::Fence> vk_flightFences;
 
+    Camera camera;
+    std::vector<Object *> objects;
+
   protected:
     Settings::Engine settings;
-    std::vector<Object *> objects;
+    float deltaTime = 0.0f;
 };
 
 } // namespace pecs

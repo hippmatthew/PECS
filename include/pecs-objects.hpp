@@ -18,7 +18,7 @@ namespace objects
 class Triangle : public Object
 {
   public:
-    Triangle(std::array<float, 2>, float, ShaderPaths, glm::vec2 p = {0.0f, 0.0f});
+    Triangle(std::array<float, 2>, float, ShaderPaths, glm::vec3 p = { 0.0f, 0.0f, 0.0f }, RotationInfo r = {0.0f, { 0.0f, 0.0f, 1.0f }});
 
     ~Triangle() = default;
 };
@@ -26,7 +26,7 @@ class Triangle : public Object
 class Rectangle : public Object
 {
   public:
-    Rectangle(std::array<float, 2>, ShaderPaths, glm::vec2 p = { 0.0f, 0.0f });
+    Rectangle(std::array<float, 2>, ShaderPaths, glm::vec3 t = { 0.0f, 0.0f, 0.0f }, RotationInfo r = { 0.0f, { 0.0f, 0.0f, 1.0f }});
 
     ~Rectangle() = default;
 };

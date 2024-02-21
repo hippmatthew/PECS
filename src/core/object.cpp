@@ -2,7 +2,7 @@
  *  PECS::core - object.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/26/24
- *  Updated:  2/12/24
+ *  Updated:  2/20/24
  */
 
 #include "src/core/include/object.hpp"
@@ -30,83 +30,103 @@ std::vector<char> Object::readShader(std::string path) const
 }
 
 Object::Object(const Object& o)
-{
+{ 
+  vertices = o.vertices;
+  indices = o.indices;
+
   shaderPaths = {
     o.shaderPaths.vertex,
     o.shaderPaths.fragment,
     o.shaderPaths.compute
   };
 
-  position = o.position;
-  
-  vertices = o.vertices;
-  indices = o.indices;
+  projection = {
+    o.projection.model,
+    o.projection.view,
+    o.projection.projection
+  };
+
+  properties = {
+    o.properties.position,
+    o.properties.momentum,
+    o.properties.energy,
+    o.properties.mass,
+    o.properties.charge
+  };
+
+  nextTransformation = o.nextTransformation;
+  hasTransformed = o.hasTransformed;
 }
 
 Object::Object(Object&& o)
 {
+  allocation = o.allocation;
+  o.allocation = nullptr;
+
+  vertices = o.vertices;
+  indices = o.indices;
+
   shaderPaths = {
     o.shaderPaths.vertex,
     o.shaderPaths.fragment,
     o.shaderPaths.compute
   };
-
-  o.shaderPaths.vertex.reset();
-  o.shaderPaths.fragment.reset();
-  o.shaderPaths.vertex.reset();
-
-  position = o.position;
-  o.position = { 0.0f, 0.0f, 0.0f };
+  
+  projection = {
+    o.projection.model,
+    o.projection.view,
+    o.projection.projection
+  };
+  properties = {
+    o.properties.position,
+    o.properties.momentum,
+    o.properties.energy,
+    o.properties.mass,
+    o.properties.charge
+  };
 
   nextTransformation = o.nextTransformation;
-  o.nextTransformation = glm::mat4(1.0f);
-
   hasTransformed = o.hasTransformed;
-  o.hasTransformed = false;
 
-  vertices = o.vertices;
-  indices = o.indices;
-  
-  objectData = {
-    o.objectData.model,
-    o.objectData.view,
-    o.objectData.projection
-  };
+  o.clean(false);
+}
 
-  o.objectData = {
-    glm::mat4(1.0f),
-    glm::mat4(1.0f),
-    glm::mat4(1.0f)
-  };
+Object::~Object()
+{
+  clean();
 }
 
 Object& Object::operator = (const Object& o)
 {
   if (this == &o) return *this;
-  
-  vk_descriptorLayout.clear();
-  vk_graphicsLayout.clear();
-  vk_graphicsPipeline.clear();
 
-  objectData = {
-    glm::mat4(1.0f),
-    glm::mat4(1.0f),
-    glm::mat4(1.0f)
-  };
-
-  nextTransformation = glm::mat4(1.0f);
-  hasTransformed = false;
+  clean();
   
+  vertices = o.vertices;
+  indices = o.indices;
+
   shaderPaths = {
     o.shaderPaths.vertex,
     o.shaderPaths.fragment,
     o.shaderPaths.compute
   };
 
-  position = o.position;
-  
-  vertices = o.vertices;
-  indices = o.indices;
+  projection = {
+    o.projection.model,
+    o.projection.view,
+    o.projection.projection
+  };
+
+  properties = {
+    o.properties.position,
+    o.properties.momentum,
+    o.properties.energy,
+    o.properties.mass,
+    o.properties.charge
+  };
+
+  nextTransformation = o.nextTransformation;
+  hasTransformed = o.hasTransformed;
 
   return *this;
 }
@@ -115,64 +135,133 @@ Object& Object::operator = (Object&& o)
 {
   if (this == &o) return *this;
 
-  vk_descriptorLayout.clear();
-  vk_graphicsLayout.clear();
-  vk_graphicsPipeline.clear();
+  clean();
   
+  allocation = o.allocation;
+  o.allocation = nullptr;
+
+  vertices = o.vertices;
+  indices = o.indices;
+
   shaderPaths = {
     o.shaderPaths.vertex,
     o.shaderPaths.fragment,
     o.shaderPaths.compute
   };
   
-  o.shaderPaths.vertex.reset();
-  o.shaderPaths.fragment.reset();
-  o.shaderPaths.vertex.reset();
+  projection = {
+    o.projection.model,
+    o.projection.view,
+    o.projection.projection
+  };
 
-  position = o.position;
-  o.position = { 0.0f, 0.0f, 0.0f };
+  properties = {
+    o.properties.position,
+    o.properties.momentum,
+    o.properties.energy,
+    o.properties.mass,
+    o.properties.charge
+  };
 
   nextTransformation = o.nextTransformation;
-  o.nextTransformation = glm::mat4(1.0f);
-
   hasTransformed = o.hasTransformed;
-  o.hasTransformed = false;
 
-  vertices = o.vertices;
-  indices = o.indices;
-  
-  objectData = {
-    o.objectData.model,
-    o.objectData.view,
-    o.objectData.projection
-  };
-
-  o.objectData = {
-    glm::mat4(1.0f),
-    glm::mat4(1.0f),
-    glm::mat4(1.0f)
-  };
+  o.clean(false);
 
   return *this;
 }
 
-void Object::translate(glm::vec3 translation)
+Object& Object::addEnergy(float E)
+{
+  properties.energy += E;
+  return *this;
+}
+
+Object& Object::addMomentum(glm::vec3 p)
+{
+  properties.momentum += p;
+  return *this;
+}
+
+Object& Object::addMass(float m)
+{
+  properties.mass += m;
+  return *this;
+}
+
+Object& Object::addCharge(float q)
+{
+  properties.charge += q;
+  return *this;
+}
+
+Object& Object::translate(glm::vec3 translation)
 {
   nextTransformation = glm::translate(nextTransformation, translation);
   hasTransformed = true;
+
+  properties.position += translation;
+
+  return *this;
 }
 
-void Object::rotate(RotationInfo rotation)
+Object& Object::rotate(RotationInfo rotation)
 {
   nextTransformation = glm::rotate(nextTransformation, rotation.angle, rotation.axis);
   hasTransformed = true;
+
+  return *this;
 }
 
-void Object::clean()
+const glm::vec3& Object::momentum() const
 {
-  vk_descriptorLayout.clear();
+  return properties.momentum;
+}
+
+const glm::vec3& Object::position() const
+{
+  return properties.position;
+}
+
+const float& Object::mass() const
+{
+  return properties.mass;
+}
+
+template <typename T>
+void Object::updateCustomProperty(unsigned long index, T& object)
+{
+  if (allocation->otherMappings.size() < index) return;
+
+  allocation->updateBuffer(index, object);
+}
+
+void Object::clean(bool removeAllocation)
+{
+  if (removeAllocation) delete allocation;
+  
+  vk_descriptorLayouts.clear();
   vk_graphicsPipeline.clear();
   vk_graphicsLayout.clear();
+
+  projection = {
+    glm::mat4(1.0f),
+    glm::mat4(1.0f),
+    glm::mat4(1.0f)
+  };
+  
+  properties = {
+    { 0.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, 0.0f },
+    0.0f,
+    0.0f,
+    0.0f
+  };
+
+  nextTransformation = glm::mat4(1.0f);
+  hasTransformed = false;
+
+  valid = false;
 }
 
 std::vector<vk::raii::ShaderModule> Object::createShaderModules(const vk::raii::Device& vk_device) const
@@ -254,12 +343,12 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
   };
 
   auto vk_bindingDescription = Vertex::bindingDescription();
-  auto vk_attributeDescriptions = Vertex::attributeDescriptions();
+  auto vk_attributeDescription = Vertex::attributeDescription();
   vk::PipelineVertexInputStateCreateInfo ci_vertexInput{
     .vertexBindingDescriptionCount    = 1,
     .pVertexBindingDescriptions       = &vk_bindingDescription,
-    .vertexAttributeDescriptionCount  = static_cast<unsigned int>(vk_attributeDescriptions.size()),
-    .pVertexAttributeDescriptions     = vk_attributeDescriptions.data()
+    .vertexAttributeDescriptionCount  = 1,
+    .pVertexAttributeDescriptions     = &vk_attributeDescription
   };
 
   vk::PipelineInputAssemblyStateCreateInfo ci_inputAssembly{
@@ -310,26 +399,68 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
     .pAttachments     = &blendState
   };
 
-  vk::DescriptorSetLayoutBinding descriptorLayoutBinding{
+  vk::DescriptorSetLayoutBinding projectionBinding{
     .binding          = 0,
     .descriptorType   = vk::DescriptorType::eUniformBuffer,
     .descriptorCount  = 1,
     .stageFlags       = vk::ShaderStageFlagBits::eVertex
   };
 
-  vk::DescriptorSetLayoutCreateInfo ci_descriptorLayout{
+  vk::DescriptorSetLayoutCreateInfo ci_projectionLayout{
     .bindingCount = 1,
-    .pBindings    = &descriptorLayoutBinding
+    .pBindings    = &projectionBinding
   };
-  vk_descriptorLayout = vk_device.createDescriptorSetLayout(ci_descriptorLayout);
+
+  vk_descriptorLayouts.emplace_back(vk_device.createDescriptorSetLayout(ci_projectionLayout));
+
+  vk::DescriptorSetLayoutBinding propertiesBinding{
+    .binding          = 0,
+    .descriptorType   = vk::DescriptorType::eUniformBuffer,
+    .descriptorCount  = 1,
+    .stageFlags       = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment
+  };
+  
+  vk::DescriptorSetLayoutCreateInfo ci_propertiesLayout{
+    .bindingCount = 1,
+    .pBindings    = &propertiesBinding
+  };
+
+  vk_descriptorLayouts.emplace_back(vk_device.createDescriptorSetLayout(ci_propertiesLayout));
+
+  if (!allocation->vk_otherBuffers.empty())
+  {
+    std::vector<vk::DescriptorSetLayoutBinding> otherBindings;
+
+    for (unsigned long i = 0; i < allocation->vk_otherBuffers.size(); ++i)
+    {
+      vk::DescriptorSetLayoutBinding otherBinding{
+        .binding          = static_cast<unsigned int>(i),
+        .descriptorType   = vk::DescriptorType::eUniformBuffer,
+        .descriptorCount  = 1,
+        .stageFlags       = vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment
+      };
+
+      otherBindings.emplace_back(otherBinding);
+    }
+
+    vk::DescriptorSetLayoutCreateInfo ci_otherLayout{
+      .bindingCount = static_cast<unsigned int>(otherBindings.size()),
+      .pBindings    = otherBindings.data()
+    };
+
+    vk_descriptorLayouts.emplace_back(vk_device.createDescriptorSetLayout(ci_otherLayout));
+  }
+
+  std::vector<vk::DescriptorSetLayout> descriptorLayouts;
+  for (auto& vk_descriptorLayout : vk_descriptorLayouts)
+    descriptorLayouts.emplace_back(*vk_descriptorLayout);
 
   vk::PipelineLayoutCreateInfo ci_pipelineLayout{
-    .setLayoutCount         = 1,
-    .pSetLayouts            = &*vk_descriptorLayout,
+    .setLayoutCount         = static_cast<unsigned int>(descriptorLayouts.size()),
+    .pSetLayouts            = descriptorLayouts.data(),
     .pushConstantRangeCount = 0,
     .pPushConstantRanges    = nullptr
   };
-
   vk_graphicsLayout = vk_device.createPipelineLayout(ci_pipelineLayout);
 
   vk::PipelineRenderingCreateInfoKHR ci_rendering{
@@ -356,3 +487,13 @@ void Object::createGraphicsPipeline(const vk::raii::Device& vk_device, const Vie
 }
 
 } // namespace pecs
+
+namespace std
+{
+
+pecs::Object&& move(pecs::Object& o)
+{
+  return static_cast<pecs::Object&&>(o);
+}
+
+} // namespace std

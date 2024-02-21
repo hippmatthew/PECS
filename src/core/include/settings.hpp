@@ -2,7 +2,7 @@
  *  PECS::core - settings.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/11/24
+ *  Updated:  2/18/24
  */
 
 #ifndef pecs_core_settings_hpp
@@ -43,6 +43,7 @@ class Settings
     struct Renderer
     {
       unsigned int maxFlightFrames = 2;
+      vk::ClearValue backgroundColor = vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f } } };
     };
 
   public:

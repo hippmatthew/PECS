@@ -2,7 +2,7 @@
  *  PECS::objects - triangle.hpp 
  *  Author:   Matthew Hipp
  *  Created:  2/8/24
- *  Updated:  2/11/24
+ *  Updated:  2/18/24
  */
 
 #ifndef pecs_objects_triangle_hpp
@@ -18,7 +18,7 @@ namespace objects
 class Triangle : public Object
 {
   public:
-    Triangle(std::array<float, 2>, float, ShaderPaths, glm::vec3 p = { 0.0f, 0.0f, 0.0f }, RotationInfo r = {0.0f, { 0.0f, 0.0f, 1.0f }});
+    Triangle(ShaderPaths, glm::vec3 p = { 0.0f, 0.0f, 0.0f }, RotationInfo r = {0.0f, { 0.0f, 0.0f, 1.0f }});
 
     ~Triangle() = default;
 };

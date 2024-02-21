@@ -2,7 +2,7 @@
  *  PECS::core - engine.cpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/15/24
+ *  Updated:  2/20/24
  */
 
 #include "src/core/include/engine.hpp"
@@ -29,13 +29,10 @@ Engine::Engine(const Settings& s)
 
 Engine::~Engine()
 {  
-  for (auto * object : objects)
-    object->clean();
-  
   vk_flightFences.clear();
   vk_imageSemaphores.clear();
   vk_renderSemaphores.clear();
-  
+
   delete renderer;
   delete gui;
   delete device;
@@ -52,7 +49,14 @@ const ViewportInfo Engine::viewportInfo() const
 
 void Engine::run()
 { 
-  renderer->setup(objects, *device);
+  for (auto * object : objects)
+  {
+    object->createGraphicsPipeline(device->logical(), viewportInfo());
+    object->allocation->allocate(renderer->maxFlightFrames());
+    object->allocation->createDescriptors(renderer->maxFlightFrames(), object->vk_descriptorLayouts);
+
+    object->valid = true;
+  }
   
   while (!glfwWindowShouldClose(gui->window()))
   {
@@ -62,17 +66,33 @@ void Engine::run()
 
     static_cast<void>(device->logical().waitForFences({ *vk_flightFences[frameIndex] }, vk::True, UINT64_MAX));
 
+    std::vector<unsigned int> invalidIndices;
+    unsigned long objectIndex = 0;
     for (auto * object : objects)
     {
+      if (!object->valid)
+      {
+        invalidIndices.emplace_back(objectIndex++);
+        continue;
+      }
+      
       if (object->hasTransformed)
       {
-        object->objectData.model = object->nextTransformation; 
+        object->projection.model = object->nextTransformation;
         object->hasTransformed = false;
       }
            
-      object->objectData.view = camera.first;
-      object->objectData.projection = camera.second;
+      object->projection.view = camera.view;
+      object->projection.projection = camera.projection;
+
+      object->allocation->updateProjection(object->projection);
+      object->allocation->updateProperties(object->properties);
+
+      ++objectIndex;
     }
+
+    for (auto& invalidIndex : invalidIndices)
+      objects.erase(objects.begin() + invalidIndex);
       
     auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphores[frameIndex], nullptr);
     if (result.first == vk::Result::eErrorOutOfDateKHR || result.first == vk::Result::eSuboptimalKHR)
@@ -121,10 +141,10 @@ void Engine::run()
     
     Main();
 
+    frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
+
     auto endFrame = std::chrono::high_resolution_clock::now();
     deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(endFrame - startFrame).count();
-
-    frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
   }
 
   device->logical().waitIdle();
@@ -134,7 +154,7 @@ void Engine::addObject(Object * o)
 {
   if (o->vertices.size() < 3) return;
 
-  o->createGraphicsPipeline(device->logical(), viewportInfo());
+  o->allocation = new DeviceAllocation(device, o->vertices, o->indices);
   objects.emplace_back(o);
 }
 
@@ -154,11 +174,13 @@ void Engine::initialize(const Settings& s)
   renderer = new Renderer(s.renderer, *device, viewportInfo());
   createSyncObjects();
 
-  camera = Camera(
-    glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-    glm::perspective(glm::radians(45.0f), static_cast<float>(gui->extent().width / gui->extent().height), 0.1f, 10.0f)
-  );
-  camera.second[1][1] *= -1;
+  camera = Camera{
+    glm::lookAt(glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+    glm::perspective(glm::radians(90.0f), static_cast<float>(gui->extent().width / gui->extent().height), 0.1f, 10.0f)
+  };
+  camera.projection[1][1] *= -1;
+
+  //allocateCamera();
 }
 
 void Engine::createInstance()
@@ -213,6 +235,41 @@ void Engine::createSyncObjects()
     vk_renderSemaphores.emplace_back(device->logical().createSemaphore(ci_semaphore));
     vk_flightFences.emplace_back(device->logical().createFence(ci_fence));
   }
+}
+
+void Engine::allocateCamera()
+{
+  vk::BufferCreateInfo ci_cameraBuffer{
+    .size         = sizeof(Camera),
+    .usage        = vk::BufferUsageFlagBits::eUniformBuffer,
+    .sharingMode  = vk::SharingMode::eExclusive
+  };
+  vk_cameraBuffer = device->logical().createBuffer(ci_cameraBuffer);
+
+  auto memoryProperties = device->physical().getMemoryProperties();
+  vk::MemoryPropertyFlags properties = vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent;
+
+  std::optional<unsigned long> memoryIndex;
+  for (unsigned long i = 0; i < memoryProperties.memoryTypeCount; ++i)
+  {
+    if ((vk_cameraBuffer.getMemoryRequirements().memoryTypeBits & (1 << i)) &&
+        (memoryProperties.memoryTypes[i].propertyFlags & properties) == properties)
+    {
+      memoryIndex = i;
+      break;
+    }
+  }
+  if (!memoryIndex.has_value())
+    throw std::runtime_error("error @ pecs::Engine::allocateCamera() : could not find suitable memory index");
+
+  vk::MemoryAllocateInfo i_cameraMemory{
+    .allocationSize   = ci_cameraBuffer.size,
+    .memoryTypeIndex  = static_cast<unsigned int>(memoryIndex.value())
+  };
+  vk_cameraMemory = device->logical().allocateMemory(i_cameraMemory);
+
+  vk_cameraBuffer.bindMemory(*vk_cameraMemory, 0);
+  cameraMapping = vk_cameraMemory.mapMemory(0, sizeof(Camera));
 }
 
 } // namespace pecs

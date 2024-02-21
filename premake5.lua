@@ -51,8 +51,8 @@ workspace "PECS Samples"
   configurations { "default" }
   location "samples"
 
-  project "BasicShapes"
-    location "samples/basic_shapes"
+  project "FallingBox"
+    location "samples/falling_box"
 
     kind "ConsoleApp"
     language "C++"
@@ -60,47 +60,10 @@ workspace "PECS Samples"
 
     targetdir "samples/bin"
     objdir "samples/obj"
-    targetname "shapes"
+    targetname "fallingbox"
 
     files {
-      "samples/basic_shapes/shapes.cpp"
-    }
-
-    includedirs {
-      "include",
-      "/opt/homebrew/include",
-      "/usr/local/include"
-    }
-
-    libdirs {
-      "lib",
-      "/opt/homebrew/lib",
-      "/usr/local/lib"
-    }
-
-    links {
-      "glfw",
-      "vulkan",
-      "glm",
-      "pecs-core",
-      "pecs-objs"
-    }
-
-    linkoptions { "-rpath /usr/local/lib" }
-
-  project "RotatingRectangle"
-    location "samples/rotating_rectangle"
-
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++20"
-
-    targetdir "samples/bin"
-    objdir "samples/obj"
-    targetname "rectangle"
-
-    files {
-      "samples/rotating_rectangle/rotation.cpp"
+      "samples/falling_box/fallingbox.cpp"
     }
 
     includedirs {

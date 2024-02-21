@@ -2,7 +2,7 @@
  *  PECS::core - engine.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/15/24
+ *  Updated:  2/20/24
  */
 
 #ifndef pecs_core_engine_hpp
@@ -15,7 +15,11 @@
 namespace pecs
 {
 
-typedef std::pair<glm::mat4, glm::mat4> Camera;
+struct Camera
+{
+  glm::mat4 view = glm::mat4(1.0f);
+  glm::mat4 projection = glm::mat4(1.0f);
+};
 
 class Engine : public Singular
 {
@@ -36,6 +40,7 @@ class Engine : public Singular
     void initialize(const Settings&);
     void createInstance();
     void createSyncObjects();
+    void allocateCamera();
 
   private:
     std::vector<const char *> layers;
@@ -50,6 +55,15 @@ class Engine : public Singular
     std::vector<vk::raii::Semaphore> vk_imageSemaphores;
     std::vector<vk::raii::Semaphore> vk_renderSemaphores;
     std::vector<vk::raii::Fence> vk_flightFences;
+
+    vk::raii::DeviceMemory vk_cameraMemory = nullptr;
+    vk::raii::Buffer vk_cameraBuffer = nullptr;
+    void * cameraMapping = nullptr;
+    
+    vk::raii::DescriptorSetLayout vk_globalLayout = nullptr;
+    
+    vk::raii::DescriptorPool vk_globalPool = nullptr;
+    vk::raii::DescriptorSet vk_globalSet = nullptr;
 
     Camera camera;
     std::vector<Object *> objects;

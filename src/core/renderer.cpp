@@ -2,7 +2,7 @@
  *  PECS::core - renderer.cpp 
  *  Author:   Matthew Hipp
  *  Created:  2/4/24
- *  Updated:  2/15/24
+ *  Updated:  2/20/24
  */
 
 #include "src/core/include/renderer.hpp"
@@ -10,14 +10,10 @@
 namespace pecs
 {
 
-Renderer::Renderer(const Settings::Renderer& s, const Device& device, const ViewportInfo& vi) : settings(s)
+Renderer::Renderer(const Settings::Renderer& s, const Device& device, const ViewportInfo& vi) : settings(s), i_viewport(vi)
 {
   createCommandPools(device.logical(), device.queueFamilyArray());
   createRenderBuffers(device.logical());
-
-  i_viewport = vi;
-  renderArea.offset = {0, 0};
-  renderArea.extent = i_viewport.first;
 }
 
 const std::vector<vk::raii::CommandBuffer>& Renderer::commandBuffers() const
@@ -28,14 +24,6 @@ const std::vector<vk::raii::CommandBuffer>& Renderer::commandBuffers() const
 unsigned int Renderer::maxFlightFrames() const
 {
   return settings.maxFlightFrames;
-}
-
-void Renderer::setup(const std::vector<Object *>& objects, const Device& device)
-{
-  createObjectBuffers(objects, device);
-  createUniformBuffers(objects.size(), device);
-  createDescriptorPool(objects.size(), device.logical());
-  createDescriptorSets(objects, device.logical());
 }
 
 void Renderer::render(const std::vector<Object *>& objects, const unsigned int& frameIndex, const vk::Image& vk_image, const vk::raii::ImageView& vk_imageView, const Device& device)
@@ -60,51 +48,39 @@ void Renderer::render(const std::vector<Object *>& objects, const unsigned int& 
   };
   vk_renderBuffers[frameIndex].setScissor(0, vk_scissor);
 
-  vk::DeviceSize vertexOffset = 0, indexOffset = 0;
-  std::size_t objectIndex = 0;
   for (const auto * object : objects)
-  {
-    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
-    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
+  { 
+    std::vector<vk::DescriptorSet> descriptorSets;
+
+    for (auto& vk_projectionSet : object->allocation->vk_projectionSets[frameIndex])
+      descriptorSets.emplace_back(*vk_projectionSet);
+
+    for (auto& vk_propertiesSet : object->allocation->vk_propertiesSets[frameIndex])
+      descriptorSets.emplace_back(*vk_propertiesSet);
+
+    if (!object->allocation->vk_otherSets.empty())
+    {
+      for (auto& vk_otherSet : object->allocation->vk_otherSets[frameIndex])
+        descriptorSets.emplace_back(*vk_otherSet);
+    }
     
-    void * objectData = vk_uniformMemory.mapMemory(
-      (objectIndex + frameIndex * objects.size()) * sizeof(UniformBufferObject),
-      sizeof(object->objectData)
-    );
-    memcpy(objectData, &object->objectData, sizeof(object->objectData));
-    vk_uniformMemory.unmapMemory();
-    
-    vk_renderBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *(object->vk_graphicsPipeline));
-    vk_renderBuffers[frameIndex].bindVertexBuffers(0, { *vk_vertexBuffer }, { vertexOffset });
     vk_renderBuffers[frameIndex].bindDescriptorSets(
       vk::PipelineBindPoint::eGraphics,
       *(object->vk_graphicsLayout),
       0,
-      *vk_descriptorSets[frameIndex][objectIndex],
+      descriptorSets,
       nullptr);
-    vk_renderBuffers[frameIndex].bindIndexBuffer(*vk_indexBuffer, indexOffset, vk::IndexType::eUint32);
+    
+    vk_renderBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *(object->vk_graphicsPipeline));
+    vk_renderBuffers[frameIndex].bindVertexBuffers(0, { *(object->allocation->vk_vertexBuffer) }, { 0 });
+    vk_renderBuffers[frameIndex].bindIndexBuffer(*(object->allocation->vk_indexBuffer), 0, vk::IndexType::eUint32);
 
     vk_renderBuffers[frameIndex].drawIndexed(object->indices.size(), 1, 0, 0, 0);
-
-    vertexOffset += vertexSize;
-    indexOffset += indexSize;
-    ++objectIndex;
   }
 
   endRendering(frameIndex, vk_image);
 }
 
-unsigned int Renderer::findMemoryIndex(const vk::raii::PhysicalDevice& vk_physicalDevice, unsigned int filter, vk::MemoryPropertyFlags vk_memoryProperties) const
-{
-  auto memoryProperties = vk_physicalDevice.getMemoryProperties();
-  for (std::size_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
-  {
-    if ((filter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & vk_memoryProperties) == vk_memoryProperties)
-      return i;
-  }
-
-  throw std::runtime_error("error @ pecs::Renderer::findMemoryIndex() : failed to find suitable memory index");
-}
 
 void Renderer::createCommandPools(const vk::raii::Device& vk_device, const std::vector<unsigned int>& indices)
 {
@@ -113,12 +89,6 @@ void Renderer::createCommandPools(const vk::raii::Device& vk_device, const std::
     .queueFamilyIndex = indices[0]
   };
   vk_renderPool = vk_device.createCommandPool(ci_renderPool);
-  
-  vk::CommandPoolCreateInfo ci_transferPool{
-    .flags            = vk::CommandPoolCreateFlagBits::eTransient,
-    .queueFamilyIndex = indices[3]
-  };
-  vk_transferPool = vk_device.createCommandPool(ci_transferPool);
 }
 
 void Renderer::createRenderBuffers(const vk::raii::Device& vk_device)
@@ -130,237 +100,6 @@ void Renderer::createRenderBuffers(const vk::raii::Device& vk_device)
   };
 
   vk_renderBuffers = vk_device.allocateCommandBuffers(i_renderBuffers);
-}
-
-void Renderer::createObjectBuffers(const std::vector<Object *>& objects, const Device& device)
-{    
-  vk::raii::DeviceMemory vk_stagingMemory = nullptr;
-  vk::raii::Buffer vk_vertexStagingBuffer = nullptr;
-  vk::raii::Buffer vk_indexStagingBuffer = nullptr;
-
-  vk::DeviceSize totalVertexSize = 0, totalIndexSize = 0;
-  for (const auto * object : objects)
-  {
-    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
-    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
-
-    totalVertexSize += vertexSize;
-    totalIndexSize += indexSize;
-  }
-
-  vk::BufferCreateInfo ci_vertexStagingBuffer{
-    .size         = totalVertexSize,
-    .usage        = vk::BufferUsageFlagBits::eTransferSrc,
-    .sharingMode  = vk::SharingMode::eExclusive
-  };
-  vk_vertexStagingBuffer = device.logical().createBuffer(ci_vertexStagingBuffer);
-
-  vk::BufferCreateInfo ci_indexStagingBuffer{
-    .size         = totalIndexSize,
-    .usage        = vk::BufferUsageFlagBits::eTransferSrc,
-    .sharingMode  = vk::SharingMode::eExclusive
-  };
-  vk_indexStagingBuffer = device.logical().createBuffer(ci_indexStagingBuffer);
-
-  vk::DeviceSize offset = vk_vertexStagingBuffer.getMemoryRequirements().size;
-  while (offset % vk_indexStagingBuffer.getMemoryRequirements().alignment != 0)
-    ++offset;
-  
-  vk::MemoryAllocateInfo i_stagingMemory{
-    .allocationSize   = vk_indexStagingBuffer.getMemoryRequirements().size + offset,
-    .memoryTypeIndex  = findMemoryIndex(device.physical(),
-                          vk_vertexStagingBuffer.getMemoryRequirements().memoryTypeBits |
-                            vk_indexStagingBuffer.getMemoryRequirements().memoryTypeBits,
-                          vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)
-  };
-  vk_stagingMemory = device.logical().allocateMemory(i_stagingMemory);
-
-  vk_vertexStagingBuffer.bindMemory(*vk_stagingMemory, 0);
-  vk_indexStagingBuffer.bindMemory(*vk_stagingMemory, offset);
-
-  vk::DeviceSize vertexOffset = 0, indexOffset = 0;
-  for (const auto * object : objects)
-  {
-    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
-    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
-
-    void * data = vk_stagingMemory.mapMemory(vertexOffset, vertexSize);
-    memcpy(data, object->vertices.data(), vertexSize);
-    vk_stagingMemory.unmapMemory();
-
-    data = vk_stagingMemory.mapMemory(offset + indexOffset, indexSize);
-    memcpy(data, object->indices.data(), indexSize);
-    vk_stagingMemory.unmapMemory();
-
-    vertexOffset += vertexSize;
-    indexOffset += indexSize;
-  }
-
-  vk::BufferCreateInfo ci_vertexBuffer{
-    .size         = totalVertexSize,
-    .usage        = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
-    .sharingMode  = vk::SharingMode::eExclusive
-  };
-  vk_vertexBuffer = device.logical().createBuffer(ci_vertexBuffer);
-
-  vk::BufferCreateInfo ci_indexBuffer{
-    .size         = totalIndexSize,
-    .usage        = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
-    .sharingMode  = vk::SharingMode::eExclusive
-  };
-  vk_indexBuffer = device.logical().createBuffer(ci_indexBuffer);
-  
-  offset = vk_vertexBuffer.getMemoryRequirements().size;
-  while (offset % vk_indexBuffer.getMemoryRequirements().alignment != 0)
-    ++offset;
-  
-  vk::MemoryAllocateInfo i_objectMemory{
-    .allocationSize   = vk_indexBuffer.getMemoryRequirements().size + offset,
-    .memoryTypeIndex  = findMemoryIndex(device.physical(),
-                          vk_vertexBuffer.getMemoryRequirements().memoryTypeBits |
-                            vk_indexBuffer.getMemoryRequirements().memoryTypeBits,
-                          vk::MemoryPropertyFlagBits::eDeviceLocal)
-  };
-  vk_objectMemory = device.logical().allocateMemory(i_objectMemory);
-
-  vk_vertexBuffer.bindMemory(*vk_objectMemory, 0);
-  vk_indexBuffer.bindMemory(*vk_objectMemory, offset);
-
-  std::vector<vk::raii::CommandBuffer> vk_transferBuffers;
-  vk::CommandBufferAllocateInfo i_transferBuffers{
-    .commandPool        = *vk_transferPool,
-    .level              = vk::CommandBufferLevel::ePrimary,
-    .commandBufferCount = static_cast<unsigned int>(2 * objects.size())
-  };
-  vk_transferBuffers = device.logical().allocateCommandBuffers(i_transferBuffers);
-
-  vertexOffset = indexOffset = 0;
-  std::size_t bufferIndex = 0;
-  for (const auto * object : objects)
-  {
-    vk::DeviceSize vertexSize = sizeof(object->vertices[0]) * object->vertices.size();
-    vk::DeviceSize indexSize = sizeof(object->indices[0]) * object->indices.size();
-
-    vk::CommandBufferBeginInfo bi_transfer{
-      .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit
-    };
-
-    vk_transferBuffers[bufferIndex].begin(bi_transfer);
-    vk_transferBuffers[bufferIndex + 1].begin(bi_transfer);
-
-    vk::BufferCopy vertexCopy{
-      .srcOffset  = vertexOffset,
-      .dstOffset  = vertexOffset,
-      .size       = vertexSize
-    };
-    vk_transferBuffers[bufferIndex].copyBuffer(*vk_vertexStagingBuffer, *vk_vertexBuffer, vertexCopy);
-
-    vk::BufferCopy indexCopy{
-      .srcOffset  = indexOffset,
-      .dstOffset  = indexOffset,
-      .size       = indexSize
-    };
-    vk_transferBuffers[bufferIndex + 1].copyBuffer(*vk_indexStagingBuffer, *vk_indexBuffer, indexCopy);
-
-    vk_transferBuffers[bufferIndex + 1].end();
-    vk_transferBuffers[bufferIndex].end();
-
-    bufferIndex += 2;
-    vertexOffset += vertexSize;
-    indexOffset += indexSize;
-  }
-
-  vk::FenceCreateInfo ci_transferFence;
-  vk::raii::Fence vk_transferFence = device.logical().createFence(ci_transferFence);
-
-  std::vector<vk::CommandBuffer> transferBuffers;
-  for (auto& vk_transferBuffer : vk_transferBuffers)
-    transferBuffers.emplace_back(*vk_transferBuffer);
-
-  vk::SubmitInfo i_transferSubmit{
-    .commandBufferCount = static_cast<unsigned int>(transferBuffers.size()),
-    .pCommandBuffers    = transferBuffers.data()
-  };
-  device.queue(QueueType::Transfer).submit(i_transferSubmit, { *vk_transferFence });
-
-  static_cast<void>(device.logical().waitForFences({ *vk_transferFence }, vk::True, UINT64_MAX));
-}
-
-void Renderer::createUniformBuffers(const std::size_t& objectCount, const Device& device)
-{
-  vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
-
-  vk::BufferCreateInfo ci_uniformBuffer{
-    .size         = bufferSize * settings.maxFlightFrames * objectCount,
-    .usage        = vk::BufferUsageFlagBits::eUniformBuffer,
-    .sharingMode  = vk::SharingMode::eExclusive
-  };
-  vk_uniformBuffer = device.logical().createBuffer(ci_uniformBuffer);
-
-  vk::MemoryAllocateInfo i_uniformMemory{
-    .allocationSize = ci_uniformBuffer.size,
-    .memoryTypeIndex  = findMemoryIndex(device.physical(), vk_uniformBuffer.getMemoryRequirements().memoryTypeBits,
-                          vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent)
-  };
-  vk_uniformMemory = device.logical().allocateMemory(i_uniformMemory);
-
-  vk_uniformBuffer.bindMemory(*vk_uniformMemory, 0);
-}
-
-void Renderer::createDescriptorPool(unsigned int objectCount, const vk::raii::Device& vk_device)
-{
-  vk::DescriptorPoolSize poolSize{
-    .type             = vk::DescriptorType::eUniformBuffer,
-    .descriptorCount  = settings.maxFlightFrames * objectCount
-  };
-  
-  vk::DescriptorPoolCreateInfo ci_descriptorPool{
-    .flags          = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-    .maxSets        = settings.maxFlightFrames * objectCount,
-    .poolSizeCount  = 1,
-    .pPoolSizes     = &poolSize
-  };
-
-  vk_descriptorPool = vk_device.createDescriptorPool(ci_descriptorPool);
-}
-
-void Renderer::createDescriptorSets(const std::vector<Object *>& objects, const vk::raii::Device& vk_device)
-{
-  std::vector<vk::DescriptorSetLayout> layouts;
-  for (const auto * object : objects)
-    layouts.emplace_back(*(object->vk_descriptorLayout));
-
-  for (std::size_t i = 0; i < settings.maxFlightFrames; ++i)
-  {
-    vk::DescriptorSetAllocateInfo i_descriptorAllocate{
-      .descriptorPool     = *vk_descriptorPool,
-      .descriptorSetCount = static_cast<unsigned int>(objects.size()),
-      .pSetLayouts        = layouts.data()
-    };
-    vk_descriptorSets.emplace_back(vk_device.allocateDescriptorSets(i_descriptorAllocate));
-
-    std::size_t objectIndex = 0;
-    for (const auto * object : objects)
-    {
-      vk::DescriptorBufferInfo i_descriptorBuffer{
-        .buffer = *vk_uniformBuffer,
-        .offset = (objectIndex + i * objects.size()) * sizeof(UniformBufferObject),
-        .range  = sizeof(UniformBufferObject)
-      };
-
-      vk::WriteDescriptorSet writeDescriptor{
-        .dstSet           = *vk_descriptorSets[i][objectIndex],
-        .dstBinding       = 0,
-        .dstArrayElement  = 0,
-        .descriptorCount  = 1,
-        .descriptorType   = vk::DescriptorType::eUniformBuffer,
-        .pBufferInfo      = &i_descriptorBuffer
-      };
-
-      vk_device.updateDescriptorSets(writeDescriptor, nullptr);
-      ++objectIndex;
-    }
-  }
 }
 
 void Renderer::beginRendering(const unsigned int& frameIndex, const vk::Image& vk_image, const vk::raii::ImageView& vk_imageView)
@@ -396,11 +135,12 @@ void Renderer::beginRendering(const unsigned int& frameIndex, const vk::Image& v
     .imageLayout  = vk::ImageLayout::eColorAttachmentOptimal,
     .loadOp       = vk::AttachmentLoadOp::eClear,
     .storeOp      = vk::AttachmentStoreOp::eStore,
-    .clearValue   = vk_clearValue
+    .clearValue   = settings.backgroundColor
   };
 
   vk::RenderingInfo i_rendering{
-    .renderArea           = renderArea,
+    .renderArea           = { .offset = { 0, 0 },
+                              .extent = i_viewport.first },
     .layerCount           = 1,
     .colorAttachmentCount = 1,
     .pColorAttachments    = &i_attachment

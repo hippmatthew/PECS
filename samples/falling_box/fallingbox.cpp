@@ -15,7 +15,7 @@ class Simulation : public pecs::Engine
     Simulation()
     {
       rectangle = new pecs::objects::Rectangle(
-        { "spv/default.vert.spv", "spv/default.frag.spv" },
+        { "spv/fallingbox.vert.spv", "spv/fallingbox.frag.spv" },
         { 0.0f, 0.0f, 0.0f }
       );
       rectangle->rotate({ glm::radians(45.0f), {0.0f, 1.0f, 0.0f }})

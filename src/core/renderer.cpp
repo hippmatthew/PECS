@@ -2,7 +2,7 @@
  *  PECS::core - renderer.cpp 
  *  Author:   Matthew Hipp
  *  Created:  2/4/24
- *  Updated:  2/20/24
+ *  Updated:  3/5/24
  */
 
 #include "src/core/include/renderer.hpp"
@@ -49,38 +49,35 @@ void Renderer::render(const std::vector<Object *>& objects, const unsigned int& 
   vk_renderBuffers[frameIndex].setScissor(0, vk_scissor);
 
   for (const auto * object : objects)
-  { 
+  {     
+    vk_renderBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *(object->graphics->vk_pipeline));
+    
     std::vector<vk::DescriptorSet> descriptorSets;
-
-    for (auto& vk_projectionSet : object->allocation->vk_projectionSets[frameIndex])
-      descriptorSets.emplace_back(*vk_projectionSet);
-
-    for (auto& vk_propertiesSet : object->allocation->vk_propertiesSets[frameIndex])
-      descriptorSets.emplace_back(*vk_propertiesSet);
-
-    if (!object->allocation->vk_otherSets.empty())
-    {
-      for (auto& vk_otherSet : object->allocation->vk_otherSets[frameIndex])
-        descriptorSets.emplace_back(*vk_otherSet);
-    }
+    for (auto& vk_descriptorSet : object->graphics->vk_descriptorSets[frameIndex])
+      descriptorSets.emplace_back(*vk_descriptorSet);
     
     vk_renderBuffers[frameIndex].bindDescriptorSets(
       vk::PipelineBindPoint::eGraphics,
-      *(object->vk_graphicsLayout),
+      *(object->graphics->vk_pipelineLayout),
       0,
       descriptorSets,
       nullptr);
     
-    vk_renderBuffers[frameIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, *(object->vk_graphicsPipeline));
-    vk_renderBuffers[frameIndex].bindVertexBuffers(0, { *(object->allocation->vk_vertexBuffer) }, { 0 });
-    vk_renderBuffers[frameIndex].bindIndexBuffer(*(object->allocation->vk_indexBuffer), 0, vk::IndexType::eUint32);
+    vk_renderBuffers[frameIndex].pushConstants<glm::mat4>(
+      *(object->graphics->vk_pipelineLayout),
+      vk::ShaderStageFlagBits::eVertex,
+      0,
+      object->graphics->model
+    );
+    
+    vk_renderBuffers[frameIndex].bindVertexBuffers(0, *(object->graphics->vk_vertexBuffer), { 0 } );
+    vk_renderBuffers[frameIndex].bindIndexBuffer(*(object->graphics->vk_indexBuffer), 0, vk::IndexType::eUint32);
 
-    vk_renderBuffers[frameIndex].drawIndexed(object->indices.size(), 1, 0, 0, 0);
+    vk_renderBuffers[frameIndex].drawIndexed(object->graphics->indices.size(), 1, 0, 0, 0);
   }
 
   endRendering(frameIndex, vk_image);
 }
-
 
 void Renderer::createCommandPools(const vk::raii::Device& vk_device, const std::vector<unsigned int>& indices)
 {

@@ -15,12 +15,6 @@
 namespace pecs
 {
 
-struct Camera
-{
-  glm::mat4 view = glm::mat4(1.0f);
-  glm::mat4 projection = glm::mat4(1.0f);
-};
-
 class Engine : public Singular
 {
   public:
@@ -59,18 +53,14 @@ class Engine : public Singular
     vk::raii::DeviceMemory vk_cameraMemory = nullptr;
     vk::raii::Buffer vk_cameraBuffer = nullptr;
     void * cameraMapping = nullptr;
-    
-    vk::raii::DescriptorSetLayout vk_globalLayout = nullptr;
-    
-    vk::raii::DescriptorPool vk_globalPool = nullptr;
-    vk::raii::DescriptorSet vk_globalSet = nullptr;
 
     Camera camera;
     std::vector<Object *> objects;
 
   protected:
     Settings::Engine settings;
-    float deltaTime = 0.0f;
+    double pecs_deltaTime = 0.0;
+    double pecs_elapsedTime = 0.0;
 };
 
 } // namespace pecs

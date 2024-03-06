@@ -2,7 +2,7 @@
  *  PECS::objects - rectangle.hpp 
  *  Author:   Matthew Hipp
  *  Created:  2/9/24
- *  Updated:  2/18/24
+ *  Updated:  3/5/24
  */
 
 #ifndef pecs_objects_rectangle_hpp
@@ -18,7 +18,7 @@ namespace objects
 class Rectangle : public Object
 {
   public:
-    Rectangle(ShaderPaths, glm::vec3 t = { 0.0f, 0.0f, 0.0f }, RotationInfo r = { 0.0f, { 0.0f, 0.0f, 1.0f }});
+    Rectangle(GraphicsShaders, glm::vec3, float, glm::vec3);
 
     ~Rectangle() = default;
 };

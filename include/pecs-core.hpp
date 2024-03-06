@@ -49,6 +49,8 @@ namespace pecs
 typedef std::pair<std::optional<unsigned int>, vk::raii::Queue> Queue;
 typedef std::optional<std::string> ShaderPath;
 typedef std::pair<vk::Extent2D, vk::Format> ViewportInfo;
+typedef std::vector<std::pair<vk::ShaderStageFlagBits, vk::raii::ShaderModule>> ShaderModules;
+typedef std::vector<vk::PipelineShaderStageCreateInfo> ShaderInfos;
 
 enum QueueType
 {
@@ -95,25 +97,24 @@ struct ProjectionData{
   alignas(16) glm::mat4 projection = glm::mat4(1.0f);
 };
 
-struct PhysicalProperties
+struct GraphicsShaders
 {
-  alignas(16) glm::vec3 position = { 0.0f, 0.0f, 0.0f };
-  alignas(16) glm::vec3 momentum = { 0.0f, 0.0f, 0.0f };
-  alignas(4) float energy = 0.0f;
-  alignas(4) float mass = 1.0f;
-  alignas(4) float charge = 1.0f;
-};
+  ShaderPath vertex;
+  ShaderPath tesselation1;
+  ShaderPath tesselation2;
+  ShaderPath geometry;
+  ShaderPath fragment;
 
-struct RotationInfo
-{
-  float angle = 0.0f;
-  glm::vec3 axis = { 0.0f, 0.0f, 1.0f };
+  std::vector<ShaderPath> array() const
+  {
+    return { vertex, tesselation1, tesselation2, geometry, fragment };
+  }
 };
 
 struct Camera
 {
-  glm::mat4 view = glm::mat4(1.0f);
-  glm::mat4 projection = glm::mat4(1.0f);
+  alignas(16) glm::mat4 view = glm::mat4(1.0f);
+  alignas(16) glm::mat4 projection = glm::mat4(1.0f);
 };
 
 class Singular
@@ -137,6 +138,7 @@ class Settings
       std::string applicationName = "PECS Application";
       unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
       unsigned int layerBits = PECS_VALIDATION_BIT;
+      float fov = 90.0f;
     };
 
     struct GUI
@@ -149,6 +151,7 @@ class Settings
     struct Renderer
     {
       unsigned int maxFlightFrames = 2;
+      vk::ClearValue backgroundColor = vk::ClearValue{ vk::ClearColorValue{ std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f } } };
     };
 
   public:
@@ -264,58 +267,75 @@ class Device : public Singular
     vk::raii::Device vk_device = nullptr;
 };
 
-class DeviceAllocation : public Singular
+class Component : public Singular
 {
-  friend class Object;
+  public:
+    Component() = default;
+
+    virtual ~Component() = default;
+
+    virtual void initialize() = 0;
+};
+
+class PipelineComponent : public Component
+{
+  public:
+    PipelineComponent() = default;
+
+    virtual ~PipelineComponent() = default;
+
+    virtual void initialize() {}
+  
+  protected:
+    std::vector<char> readShader(std::string) const;
+    unsigned int findMemoryIndex(const vk::raii::PhysicalDevice&, unsigned int, vk::MemoryPropertyFlags) const;
+
+    virtual void createPipeline(const vk::raii::Device&) = 0;
+
+  protected:
+    vk::raii::PipelineLayout vk_pipelineLayout = nullptr;
+    vk::raii::Pipeline vk_pipeline = nullptr; 
+};
+
+class GraphicsComponent : public PipelineComponent
+{
   friend class Renderer;
   
   public:
-    DeviceAllocation(const Device *, const std::vector<Vertex>&, const std::vector<unsigned int>&);
+    GraphicsComponent(const GraphicsShaders&, const std::vector<Vertex>&, const std::vector<unsigned int>&);
 
-    ~DeviceAllocation();
+    ~GraphicsComponent() = default;
 
-    void allocate(std::size_t);
-    void createDescriptors(std::size_t, const std::vector<vk::raii::DescriptorSetLayout>&);
-    
-    template <typename T>
-    unsigned long addAllocation(T&, std::string);
+    GraphicsComponent& translateModel(glm::vec3);
+    GraphicsComponent& rotateModel(float, glm::vec3);
 
-    void updateProjection(ProjectionData&);
-    void updateProperties(PhysicalProperties&);
-
-    template <typename T>
-    void updateBuffer(unsigned long, T&);
+    void initialize(const Device&, const ViewportInfo&, const vk::raii::Buffer&, unsigned long);
 
   private:
-    unsigned int findMemoryIndex(unsigned int, vk::MemoryPropertyFlags);
+    ShaderModules createShaderModules(const vk::raii::Device&) const;
+    ShaderInfos shaderInfos(const ShaderModules&) const;
 
-    void createBuffers();
-    
+    void createPipeline(const vk::raii::Device&);
+    void allocateBuffers(const Device&);
+    void createDescriptorSets(const vk::raii::Device&, unsigned long, const vk::raii::Buffer&);
+
   private:
-    const Device * device = nullptr;
+    const GraphicsShaders paths;
+    ViewportInfo i_viewport;
+    alignas(16) glm::mat4 model = glm::mat4(1.0f);
 
-    const unsigned long vertexSize, indexSize;
-    const Vertex * vertexData;
-    const unsigned int * indexData;
+    const std::vector<Vertex> vertices;
+    const std::vector<unsigned int> indices;
+
+    std::vector<vk::raii::DescriptorSetLayout> vk_descriptorLayouts;
 
     vk::raii::DeviceMemory vk_modelMemory = nullptr;
     vk::raii::Buffer vk_vertexBuffer = nullptr;
     vk::raii::Buffer vk_indexBuffer = nullptr;
 
-    vk::raii::DeviceMemory vk_projectionMemory = nullptr;
-    vk::raii::Buffer vk_projectionBuffer = nullptr;
-    void * projectionMapping = nullptr;
-
-    vk::raii::DeviceMemory vk_propertiesMemory = nullptr;
-    vk::raii::Buffer vk_propertiesBuffer = nullptr;
-    void * propertiesMapping = nullptr;
-
-    std::vector<vk::raii::DeviceMemory> vk_otherMemories;
-    std::vector<vk::raii::Buffer> vk_otherBuffers;
-    std::vector<void *> otherMappings;
-
-    std::unordered_map<std::string, unsigned long> objectSizes;
-    std::vector<std::string> objectTypes;
+    vk::raii::DeviceMemory vk_globalMemory = nullptr;
+    vk::raii::Buffer vk_cameraBuffer = nullptr;
+    void * cameraMapping = nullptr;
 
     vk::raii::DescriptorPool vk_descriptorPool = nullptr;
     std::vector<std::vector<vk::raii::DescriptorSet>> vk_descriptorSets;
@@ -327,57 +347,17 @@ class Object
   friend class Renderer;
 
   public:
-    Object(ShaderPaths);
-    Object(const Object&);
+    Object() = default;
+    Object(const Object&) = delete;
     Object(Object&&);
 
     ~Object();
 
-    Object& operator = (const Object&);
+    Object& operator = (const Object&) = delete;
     Object& operator = (Object&&);
-    
-    Object& addEnergy(float);
-    Object& addMomentum(glm::vec3);
-    Object& addMass(float);
-    Object& addCharge(float);
-    Object& translate(glm::vec3);
-    Object& rotate(RotationInfo);
-
-    const glm::vec3& momentum() const;
-    const glm::vec3& position() const;
-    const float& mass() const;
-
-    template <typename T>
-    void updateCustomProperty(unsigned long, T&);
-
-    void clean(bool removeAllocation = true);
-    
-  private:
-    std::vector<char> readShader(std::string) const;
-    std::vector<vk::raii::ShaderModule> createShaderModules(const vk::raii::Device&) const;
-    std::vector<vk::PipelineShaderStageCreateInfo> shaderCreateInfos(const std::vector<vk::raii::ShaderModule>&) const;
-
-    void createGraphicsPipeline(const vk::raii::Device&, const ViewportInfo&);
-
-  private:
-    bool valid = false;
-    bool hasTransformed = false;
-
-    glm::mat4 nextTransformation = glm::mat4(1.0f);
-
-    std::vector<vk::raii::DescriptorSetLayout> vk_descriptorLayouts;
-    vk::raii::PipelineLayout vk_graphicsLayout = nullptr;
-    vk::raii::Pipeline vk_graphicsPipeline = nullptr;
 
   protected:
-    DeviceAllocation * allocation = nullptr;
-    
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    ShaderPaths shaderPaths;
-    
-    ProjectionData projection;
-    PhysicalProperties properties;
+    GraphicsComponent * graphics = nullptr;
 };
 
 class Renderer : public Singular
@@ -444,18 +424,14 @@ class Engine : public Singular
     vk::raii::DeviceMemory vk_cameraMemory = nullptr;
     vk::raii::Buffer vk_cameraBuffer = nullptr;
     void * cameraMapping = nullptr;
-    
-    vk::raii::DescriptorSetLayout vk_globalLayout = nullptr;
-    
-    vk::raii::DescriptorPool vk_globalPool = nullptr;
-    vk::raii::DescriptorSet vk_globalSet = nullptr;
 
     Camera camera;
     std::vector<Object *> objects;
 
   protected:
     Settings::Engine settings;
-    float deltaTime = 0.0f;
+    double pecs_deltaTime = 0.0;
+    double pecs_elapsedTime = 0.0;
 };
 
 } // namespace pecs

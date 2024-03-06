@@ -18,7 +18,7 @@ namespace objects
 class Triangle : public Object
 {
   public:
-    Triangle(ShaderPaths, glm::vec3 p = { 0.0f, 0.0f, 0.0f }, RotationInfo r = {0.0f, { 0.0f, 0.0f, 1.0f }});
+    Triangle(GraphicsShaders, glm::vec3, float, glm::vec3);
 
     ~Triangle() = default;
 };
@@ -26,10 +26,10 @@ class Triangle : public Object
 class Rectangle : public Object
 {
   public:
-    Rectangle(ShaderPaths, glm::vec3 t = { 0.0f, 0.0f, 0.0f }, RotationInfo r = { 0.0f, { 0.0f, 0.0f, 1.0f }});
+    Rectangle(GraphicsShaders, glm::vec3, float, glm::vec3);
 
     ~Rectangle() = default;
-};
+};;
 
 } // namespace pecs::objects
 } // namespace pecs

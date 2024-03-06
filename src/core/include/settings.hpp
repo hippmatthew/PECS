@@ -2,7 +2,7 @@
  *  PECS::core - settings.hpp 
  *  Author:   Matthew Hipp
  *  Created:  1/21/24
- *  Updated:  2/18/24
+ *  Updated:  3/5/24
  */
 
 #ifndef pecs_core_settings_hpp
@@ -31,6 +31,7 @@ class Settings
       std::string applicationName = "PECS Application";
       unsigned int applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
       unsigned int layerBits = PECS_VALIDATION_BIT;
+      float fov = 90.0f;
     };
 
     struct GUI

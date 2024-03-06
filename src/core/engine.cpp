@@ -29,33 +29,26 @@ Engine::Engine(const Settings& s)
 
 Engine::~Engine()
 {  
+  vk_cameraMemory.unmapMemory();
+  
   vk_flightFences.clear();
   vk_imageSemaphores.clear();
   vk_renderSemaphores.clear();
+
+  vk_cameraBuffer.clear();
+  vk_cameraMemory.clear();
 
   delete renderer;
   delete gui;
   delete device;
 }
 
-const ViewportInfo Engine::viewportInfo() const
-{
-  ViewportInfo i_viewport;
-  i_viewport.first = gui->extent();
-  i_viewport.second = gui->format();
-
-  return i_viewport; 
-}
-
 void Engine::run()
-{ 
+{   
   for (auto * object : objects)
   {
-    object->createGraphicsPipeline(device->logical(), viewportInfo());
-    object->allocation->allocate(renderer->maxFlightFrames());
-    object->allocation->createDescriptors(renderer->maxFlightFrames(), object->vk_descriptorLayouts);
-
-    object->valid = true;
+    if (object->graphics != nullptr)
+      object->graphics->initialize(*device, viewportInfo(), vk_cameraBuffer, renderer->maxFlightFrames());
   }
   
   while (!glfwWindowShouldClose(gui->window()))
@@ -65,34 +58,6 @@ void Engine::run()
     glfwPollEvents();
 
     static_cast<void>(device->logical().waitForFences({ *vk_flightFences[frameIndex] }, vk::True, UINT64_MAX));
-
-    std::vector<unsigned int> invalidIndices;
-    unsigned long objectIndex = 0;
-    for (auto * object : objects)
-    {
-      if (!object->valid)
-      {
-        invalidIndices.emplace_back(objectIndex++);
-        continue;
-      }
-      
-      if (object->hasTransformed)
-      {
-        object->projection.model = object->nextTransformation;
-        object->hasTransformed = false;
-      }
-           
-      object->projection.view = camera.view;
-      object->projection.projection = camera.projection;
-
-      object->allocation->updateProjection(object->projection);
-      object->allocation->updateProperties(object->properties);
-
-      ++objectIndex;
-    }
-
-    for (auto& invalidIndex : invalidIndices)
-      objects.erase(objects.begin() + invalidIndex);
       
     auto result = gui->swapchain().acquireNextImage(UINT64_MAX, *vk_imageSemaphores[frameIndex], nullptr);
     if (result.first == vk::Result::eErrorOutOfDateKHR || result.first == vk::Result::eSuboptimalKHR)
@@ -123,13 +88,11 @@ void Engine::run()
     };
     device->queue(QueueType::Graphics).submit(i_submit, *vk_flightFences[frameIndex]);
 
-    std::vector<vk::SwapchainKHR> vk_swapchains = { *(gui->swapchain()) };
-
     vk::PresentInfoKHR i_present{
       .waitSemaphoreCount = static_cast<unsigned int>(signalSemaphores.size()),
       .pWaitSemaphores    = signalSemaphores.data(),
-      .swapchainCount     = static_cast<unsigned int>(vk_swapchains.size()),
-      .pSwapchains        = vk_swapchains.data(),
+      .swapchainCount     = 1,
+      .pSwapchains        = &*(gui->swapchain()),
       .pImageIndices      = &result.second
     };
     auto presentResult = device->queue(QueueType::Present).presentKHR(i_present);
@@ -144,7 +107,8 @@ void Engine::run()
     frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
 
     auto endFrame = std::chrono::high_resolution_clock::now();
-    deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(endFrame - startFrame).count();
+    pecs_deltaTime = std::chrono::duration<double, std::chrono::seconds::period>(endFrame - startFrame).count();
+    pecs_elapsedTime += pecs_deltaTime;
   }
 
   device->logical().waitIdle();
@@ -152,10 +116,16 @@ void Engine::run()
 
 void Engine::addObject(Object * o)
 {
-  if (o->vertices.size() < 3) return;
-
-  o->allocation = new DeviceAllocation(device, o->vertices, o->indices);
   objects.emplace_back(o);
+}
+
+const ViewportInfo Engine::viewportInfo() const
+{
+  ViewportInfo i_viewport;
+  i_viewport.first = gui->extent();
+  i_viewport.second = gui->format();
+
+  return i_viewport; 
 }
 
 void Engine::initialize(const Settings& s)
@@ -176,11 +146,11 @@ void Engine::initialize(const Settings& s)
 
   camera = Camera{
     glm::lookAt(glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-    glm::perspective(glm::radians(90.0f), static_cast<float>(gui->extent().width / gui->extent().height), 0.1f, 10.0f)
+    glm::perspective(glm::radians(settings.fov), static_cast<float>(gui->extent().width / gui->extent().height), 0.1f, 10.0f)
   };
   camera.projection[1][1] *= -1;
 
-  //allocateCamera();
+  allocateCamera();
 }
 
 void Engine::createInstance()
@@ -270,6 +240,8 @@ void Engine::allocateCamera()
 
   vk_cameraBuffer.bindMemory(*vk_cameraMemory, 0);
   cameraMapping = vk_cameraMemory.mapMemory(0, sizeof(Camera));
+
+  memcpy(cameraMapping, &camera, sizeof(camera));
 }
 
 } // namespace pecs

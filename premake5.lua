@@ -1,8 +1,9 @@
-workspace "PECS Library"
+workspace "PECS-Library"
   configurations { "default" }
+  location "."
   
-  project "PECS-Core"
-    location "src/core"
+  project "PECS"
+    location "src"
     filename "Core"
     
     kind "StaticLib"
@@ -11,11 +12,11 @@ workspace "PECS Library"
    
     targetdir "lib"
     objdir "bin"
-    targetname "pecs-core"
+    targetname "pecs"
 
     files {
       "src/core/*.cpp",
-      "src/core/include/*.hpp"
+      "src/objects/*.cpp"
     }
 
     includedirs {
@@ -24,46 +25,19 @@ workspace "PECS Library"
       "/usr/local/include"
     }
 
-  project "PECS-Objects"
-    location "src/objects"
-    filename "Objects"
-
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++20"
-
-    targetdir "lib"
-    objdir "bin"
-    targetname "pecs-objs"
-
-    files {
-      "src/objects/*.cpp",
-      "src/objects/include/*.hpp"
-    }
-
-    includedirs {
-      ".",
-      "/opt/homebrew/include",
-      "/usr/local/include"
-    }
-
-workspace "PECS Samples"
-  configurations { "default" }
-  location "samples"
-
-  project "FallingBox"
-    location "samples/falling_box"
+  project "Test"
+    location "test"
 
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++20"
 
-    targetdir "samples/bin"
-    objdir "samples/obj"
-    targetname "fallingbox"
+    targetdir "test"
+    objdir "test/obj"
+    targetname "test"
 
     files {
-      "samples/falling_box/fallingbox.cpp"
+      "test/src/*.cpp"
     }
 
     includedirs {
@@ -82,8 +56,7 @@ workspace "PECS Samples"
       "glfw",
       "vulkan",
       "glm",
-      "pecs-core",
-      "pecs-objs"
+      "pecs"
     }
 
     linkoptions { "-rpath /usr/local/lib" }

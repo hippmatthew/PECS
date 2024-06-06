@@ -1,34 +1,80 @@
-/*
- *  PECS::core - device.hpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/8/24
- */
-
 #ifndef pecs_core_device_hpp
 #define pecs_core_device_hpp
 
 #include "src/core/include/gui.hpp"
 
 #include <optional>
-#include <utility>
+#include <map>
+
+#define PECS_GRAPHCIS_QUEUE_BIT 0x000001u
+#define PECS_PRESENT_QUEUE_BIT  0x000010u
+#define PECS_SYNC_COMPUTE_BIT   0x000100u
+#define PECS_SYNC_TRANSFER_BIT  0x001000u
+#define PECS_ASYNC_COMPUTE_BIT  0x010000u
+#define PECS_ASYNC_TRANSFER_BIT 0x100000u
 
 namespace pecs
 {
 
 typedef std::pair<std::optional<unsigned int>, vk::raii::Queue> Queue;
+typedef std::pair<unsigned int, unsigned long> queueIndex;
 
 enum QueueType
 {
   Graphics,
   Present,
-  Compute,
-  Transfer
+  SyncCompute,
+  SyncTransfer,
+  AsyncCompute,
+  AsyncTransfer,
 };
 
 class Device : public Singular
 {
+  private:
+    class QueueFamily : public Singular
+    {
+      friend class QueueFamilies;
+      
+      public:
+        QueueFamily(unsigned int);
+
+        ~QueueFamily();
+
+        bool operator & (const unsigned int) const;
+        QueueFamily& operator ^ (const unsigned int);
+        
+        const unsigned int index() const;
+        const unsigned int types() const;
+        const vk::raii::Queue& queue() const;
+
+      private:
+        unsigned int qf_index = 0xFFFFFFFFu;
+        unsigned int qf_types = 0x0u;
+        vk::raii::Queue qf_queue = nullptr;
+    };
+    
+    class QueueFamilies : public Singular
+    {
+      friend class Device;
+      
+      public:
+        QueueFamilies() = default;
+
+        ~QueueFamilies();
+
+        const bool isComplete() const;
+
+        void newFamily();
+        unsigned int searchFor(QueueType);
+      
+      private:
+        
+        std::vector<QueueFamily *> familes;
+    };
+    
   public:
+    
     class Queues : public Singular
     {
       public:

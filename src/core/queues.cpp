@@ -11,33 +11,21 @@ namespace pecs
 {
 
 Device::Queues::Queues(const vk::raii::PhysicalDevice& vk_physicalDevice, const vk::raii::SurfaceKHR& vk_surface)
-{
-  int index = 0;
+{ 
+  unsigned long index = 0;
   for (const auto& queueFamily : vk_physicalDevice.getQueueFamilyProperties())
   {
-    if (!graphics.first.has_value() && !present.first.has_value() && queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
-    { 
-      graphics.first = index++;
-      continue;
-    }
+    if (!graphics.first.has_value() && queueFamily.queueFlags & vk::QueueFlagBits::eGraphics)
+      graphics.first = index;
 
     if (!present.first.has_value() && vk_physicalDevice.getSurfaceSupportKHR(index, *vk_surface))
-    {
-      present.first = index++;
-      continue;
-    }
+      present.first = index;
 
     if (!compute.first.has_value() && queueFamily.queueFlags & vk::QueueFlagBits::eCompute)
-    {
-      compute.first = index++;
-      continue;
-    }
+      compute.first = index;
 
     if (!transfer.first.has_value() && queueFamily.queueFlags & vk::QueueFlagBits::eTransfer)
-    {
-      transfer.first = index++;
-      continue;
-    }
+      transfer.first = index;
 
     if (isComplete()) break;
   }
@@ -56,6 +44,8 @@ unsigned int Device::Queues::index(QueueType type) const
     case Transfer:
       return transfer.first.value();
   }
+
+  throw std::runtime_error("error @ pecs::Device::index() : failed to find a valid queue index");
 }
 
 const vk::raii::Queue& Device::Queues::queue(QueueType type) const
@@ -71,6 +61,8 @@ const vk::raii::Queue& Device::Queues::queue(QueueType type) const
     case Transfer:
       return transfer.second;
   }
+
+  throw std::runtime_error("error @ pecs::Device::queue() : Failed to return a valid queue");
 }
 
 std::vector<unsigned int> Device::Queues::array() const

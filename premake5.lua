@@ -1,10 +1,19 @@
 workspace "PECS-Library"
   configurations { "default" }
+  platforms { "MacOS-ARM", "Linux-x86_64" }
   location "."
+  
+  filter { "platforms:MacOS-ARM" }
+    system "macosx"
+    architecture "ARM64"
+
+  filter { "platforms:Linux-x86_64" }
+    system "linux"
+    architecture "x86_64"
   
   project "PECS"
     location "src"
-    filename "Core"
+    filename "PECS"
     
     kind "StaticLib"
     language "C++"
@@ -19,44 +28,52 @@ workspace "PECS-Library"
       "src/objects/*.cpp"
     }
 
-    includedirs {
-      ".",
-      "/opt/homebrew/include",
-      "/usr/local/include"
-    }
+    includedirs { "." } 
+    
+    filter { "platforms:MacOS-ARM" }
+      includedirs {
+        "/opt/homebrew/include",
+        "/usr/local/include"
+      }
 
-  project "Test"
+  project "Test-Program"
     location "test"
+    filename "Test"
 
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++20"
+    cppdialect "c++20"
 
-    targetdir "test"
+    targetdir "test/bin"
     objdir "test/obj"
-    targetname "test"
+    targetname "output"
 
     files {
       "test/src/*.cpp"
     }
 
     includedirs {
-      "include",
-      "/opt/homebrew/include",
-      "/usr/local/include"
+      ".",
+      "./include"
     }
 
-    libdirs {
-      "lib",
-      "/opt/homebrew/lib",
-      "/usr/local/lib"
-    }
+    libdirs { "lib" }
 
     links {
-      "glfw",
       "vulkan",
-      "glm",
+      "glfw",
       "pecs"
     }
 
-    linkoptions { "-rpath /usr/local/lib" }
+    filter { "platforms:MacOS-ARM" }
+      includedirs {
+        "/opt/homebrew/include",
+        "/usr/local/include"
+      }
+
+      libdirs {
+        "/opt/homebrew/lib",
+        "/usr/local/lib"
+      }
+
+      linkoptions { "-rpath /usr/local/lib" }

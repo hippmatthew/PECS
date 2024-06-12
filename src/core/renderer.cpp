@@ -1,10 +1,3 @@
-/*
- *  PECS::core - renderer.cpp 
- *  Author:   Matthew Hipp
- *  Created:  2/4/24
- *  Updated:  3/5/24
- */
-
 #include "src/core/include/renderer.hpp"
 
 namespace pecs
@@ -12,7 +5,7 @@ namespace pecs
 
 Renderer::Renderer(const Settings::Renderer& s, const Device& device, const ViewportInfo& vi) : settings(s), i_viewport(vi)
 {
-  createCommandPools(device.logical(), device.queueFamilyArray());
+  createCommandPools(device.logical(), device.familyIndex(FamilyType::AllQueue));
   createRenderBuffers(device.logical());
 }
 
@@ -79,11 +72,11 @@ void Renderer::render(const std::vector<Object *>& objects, const unsigned int& 
   endRendering(frameIndex, vk_image);
 }
 
-void Renderer::createCommandPools(const vk::raii::Device& vk_device, const std::vector<unsigned int>& indices)
+void Renderer::createCommandPools(const vk::raii::Device& vk_device, const unsigned long& index)
 {
   vk::CommandPoolCreateInfo ci_renderPool{
     .flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-    .queueFamilyIndex = indices[0]
+    .queueFamilyIndex = static_cast<unsigned int>(index)
   };
   vk_renderPool = vk_device.createCommandPool(ci_renderPool);
 }

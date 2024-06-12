@@ -1,28 +1,64 @@
-/*
- *  PECS::core - device.cpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/8/24
- */
-
 #include "src/core/include/device.hpp"
 
 #include <queue>
 
+namespace std
+{
+
+std::string to_string(pecs::FamilyType type)
+{
+  switch (type)
+  {
+    case pecs::FamilyType::AllQueue:
+      return "AllQueue";
+    case pecs::FamilyType::Compute:
+      return "AsyncCompute";
+    case pecs::FamilyType::Transfer:
+      return "AsyncTransfer";
+    case pecs::FamilyType::Sparse:
+      return "Sparse";
+    default:
+      return "NoFamily";
+  }
+}
+
+} // namespace std
+
 namespace pecs
 {
+
+FamilyType to_family(unsigned int bits)
+{
+  
+  if ((bits & PECS_ALLQUEUE_FAMILY) == (PECS_ALLQUEUE_FAMILY))
+    return FamilyType::AllQueue;
+
+  if ((bits & PECS_ASYNC_COMBINE_FAMILY) == (PECS_ASYNC_COMBINE_FAMILY))
+    return FamilyType::AsyncCombine;
+
+  if (bits & PECS_SPARSE_FAMILY)
+    return FamilyType::Sparse;
+
+  if ((bits & PECS_ASYNC_COMPUTE_FAMILY) == (PECS_ASYNC_COMPUTE_FAMILY))
+    return FamilyType::Compute;
+
+  if ((bits & PECS_ASYNC_TRANSFER_FAMILY) == (PECS_ASYNC_TRANSFER_FAMILY))
+    return FamilyType::Transfer;
+  
+  return FamilyType::NoFamily;
+}
 
 Device::Device(const vk::raii::Instance& vk_instance, const vk::raii::SurfaceKHR& vk_surface)
 {
   vk_physicalDevice = bestPhysicalDevice(vk_instance, vk_surface);
-  queues = new Queues(vk_physicalDevice, vk_surface);
+  queueFamilies = new QueueFamilies(vk_physicalDevice, vk_surface);
   createLogicalDevice();
-  queues->setQueues(vk_device);
+  queueFamilies->setQueues(vk_device);
 }
 
 Device::~Device()
 {
-  delete queues;
+  delete queueFamilies;
 }
 
 const vk::raii::PhysicalDevice& Device::physical() const
@@ -35,14 +71,26 @@ const vk::raii::Device& Device::logical() const
   return vk_device;
 }
 
-const std::vector<unsigned int> Device::queueFamilyArray() const
+bool Device::hasFamily(FamilyType type) const
 {
-  return queues->array();
+  for (const auto& familyType : queueFamilies->familyTypes)
+  {
+    if (familyType == type)
+      return true;
+  }
+
+  return false;
 }
 
-const vk::raii::Queue& Device::queue(QueueType type) const
+const unsigned long Device::familyIndex(FamilyType type) const
 {
-  return queues->queue(type);
+  return queueFamilies->familyMap.at(std::to_string(type))->qf_index;
+}
+
+const vk::raii::Queue& Device::queue(FamilyType type) const
+{
+  auto * family = queueFamilies->familyMap.at(std::to_string(type));
+  return family->qf_queue;
 }
 
 bool Device::supportsExtensions(const vk::raii::PhysicalDevice& physicalDevice) const
@@ -73,9 +121,19 @@ vk::raii::PhysicalDevice Device::bestPhysicalDevice(const vk::raii::Instance& vk
   for (const auto& physicalDevice : physicalDevices)
   {
     auto properties = physicalDevice.getProperties();
-    Queues queueFamilies(physicalDevice, vk_surface);
+    QueueFamilies families(physicalDevice, vk_surface);
 
-    if (!queueFamilies.isComplete()) continue;
+    bool hasAllQueue = false;
+    for (const auto& familyType : families.familyTypes)
+    {
+      if (familyType == AllQueue)
+      {
+        hasAllQueue = true;
+        break;
+      }
+    }
+
+    if (!hasAllQueue) continue;
     if (!supportsExtensions(physicalDevice)) continue;
     if (physicalDevice.getSurfaceFormatsKHR(*vk_surface).empty()) continue;
     if (physicalDevice.getSurfacePresentModesKHR(*vk_surface).empty()) continue;
@@ -108,10 +166,12 @@ void Device::createLogicalDevice()
   float queuePriority = 1.0f;
   std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
-  for (unsigned int index : queues->array())
+  for (const auto& familyType : queueFamilies->familyTypes)
   {
+    auto * family = queueFamilies->familyMap.at(std::to_string(familyType));
+    
     vk::DeviceQueueCreateInfo createInfo{
-      .queueFamilyIndex = index,
+      .queueFamilyIndex = static_cast<unsigned int>(family->qf_index),
       .queueCount       = 1,
       .pQueuePriorities = &queuePriority
     };
@@ -123,9 +183,9 @@ void Device::createLogicalDevice()
 
   for (const auto& extension : vk_physicalDevice.enumerateDeviceExtensionProperties())
   {
-    if (std::string(extension.extensionName) == "VK_KHR_portability_subset")
+    if (std::string(extension.extensionName) == VK_KHR_PORTABILITY_SUBSET_NAME)
     {
-      extensions.emplace_back("VK_KHR_portability_subset");
+      extensions.emplace_back(VK_KHR_PORTABILITY_SUBSET_NAME);
       break;
     }
   }

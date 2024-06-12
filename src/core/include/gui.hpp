@@ -1,10 +1,3 @@
-/*
- *  PECS::core - gui.hpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/15/24
- */
-
 #ifndef pecs_core_gui_hpp
 #define pecs_core_gui_hpp
 

@@ -6,18 +6,25 @@
 #include <optional>
 #include <map>
 
-#define PECS_GRAPHCIS_QUEUE_BIT 0x000001u
-#define PECS_PRESENT_QUEUE_BIT  0x000010u
-#define PECS_SYNC_COMPUTE_BIT   0x000100u
-#define PECS_SYNC_TRANSFER_BIT  0x001000u
-#define PECS_ASYNC_COMPUTE_BIT  0x010000u
-#define PECS_ASYNC_TRANSFER_BIT 0x100000u
+#define VK_KHR_PORTABILITY_SUBSET_NAME "VK_KHR_portability_subset"
+
+#define PECS_GRAPHICS_QUEUE_BIT 0x0000001u
+#define PECS_PRESENT_QUEUE_BIT  0x0000010u
+#define PECS_SYNC_COMPUTE_BIT   0x0000100u
+#define PECS_SYNC_TRANSFER_BIT  0x0001000u
+#define PECS_ASYNC_COMPUTE_BIT  0x0010000u
+#define PECS_ASYNC_TRANSFER_BIT 0x0100000u
+#define PECS_SPARSE_BIT         0x1000000u
+
+#define PECS_GRAPHICS_FAMILY        PECS_GRAPHICS_QUEUE_BIT | PECS_PRESENT_QUEUE_BIT
+#define PECS_ASYNC_COMPUTE_FAMILY   PECS_ASYNC_COMPUTE_BIT
+#define PECS_ASYNC_TRANSFER_FAMILY  PECS_ASYNC_TRANSFER_BIT
+#define PECS_ASYNC_COMBINE_FAMILY   PECS_ASYNC_COMPUTE_BIT | PECS_ASYNC_TRANSFER_BIT
+#define PECS_SPARSE_FAMILY          PECS_SPARSE_BIT
+#define PECS_ALLQUEUE_FAMILY        PECS_GRAPHICS_FAMILY | PECS_SYNC_COMPUTE_BIT | PECS_SYNC_TRANSFER_BIT
 
 namespace pecs
 {
-
-typedef std::pair<std::optional<unsigned int>, vk::raii::Queue> Queue;
-typedef std::pair<unsigned int, unsigned long> queueIndex;
 
 enum QueueType
 {
@@ -27,73 +34,57 @@ enum QueueType
   SyncTransfer,
   AsyncCompute,
   AsyncTransfer,
+  SparseBinding
+};
+
+enum FamilyType
+{
+  AllQueue,
+  Transfer,
+  Compute,
+  AsyncCombine,
+  Sparse,
+  NoFamily
 };
 
 class Device : public Singular
 {
   private:
+    class QueueFamilies;
+    
     class QueueFamily : public Singular
     {
+      friend class Device;
       friend class QueueFamilies;
       
       public:
-        QueueFamily(unsigned int);
+        QueueFamily(unsigned long, unsigned int);
 
-        ~QueueFamily();
-
-        bool operator & (const unsigned int) const;
-        QueueFamily& operator ^ (const unsigned int);
-        
-        const unsigned int index() const;
-        const unsigned int types() const;
-        const vk::raii::Queue& queue() const;
-
+        ~QueueFamily() = default;
+      
       private:
-        unsigned int qf_index = 0xFFFFFFFFu;
-        unsigned int qf_types = 0x0u;
+        const unsigned long qf_index = -1;
+        const unsigned int qf_types = 0x0000000u;
         vk::raii::Queue qf_queue = nullptr;
     };
     
     class QueueFamilies : public Singular
-    {
+    { 
       friend class Device;
       
       public:
-        QueueFamilies() = default;
+        QueueFamilies(const vk::raii::PhysicalDevice&, const vk::raii::SurfaceKHR&);
 
         ~QueueFamilies();
-
-        const bool isComplete() const;
-
-        void newFamily();
-        unsigned int searchFor(QueueType);
+        
+        void setQueues(const vk::raii::Device&);
       
       private:
-        
-        std::vector<QueueFamily *> familes;
-    };
-    
-  public:
-    
-    class Queues : public Singular
-    {
-      public:
-        Queues(const vk::raii::PhysicalDevice&, const vk::raii::SurfaceKHR&);
-
-        ~Queues() = default;
-
-        unsigned int index(QueueType) const;
-        const vk::raii::Queue& queue(QueueType) const;
-        std::vector<unsigned int> array() const;
-        bool isComplete() const;
-
-        void setQueues(const vk::raii::Device&);
+        void addFamily(FamilyType, unsigned long);
 
       private:
-        Queue graphics = Queue(std::nullopt, nullptr);
-        Queue present = Queue(std::nullopt, nullptr);
-        Queue compute = Queue(std::nullopt, nullptr);
-        Queue transfer = Queue(std::nullopt, nullptr);
+        std::map<std::string, QueueFamily *> familyMap;
+        std::vector<FamilyType> familyTypes;
     };
   
   public:
@@ -103,8 +94,9 @@ class Device : public Singular
 
     const vk::raii::PhysicalDevice& physical() const;
     const vk::raii::Device& logical() const;
-    const std::vector<unsigned int> queueFamilyArray() const;
-    const vk::raii::Queue& queue(QueueType) const;
+    bool hasFamily(FamilyType) const;
+    const unsigned long familyIndex(FamilyType) const;
+    const vk::raii::Queue& queue(FamilyType) const;
 
   private:
     bool supportsExtensions(const vk::raii::PhysicalDevice&) const;
@@ -113,17 +105,26 @@ class Device : public Singular
     void createLogicalDevice();
 
   private:
-    std::vector<const char *> extensions = {
+    std::vector<const char *> extensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
     };
     
-    Queues * queues = nullptr;
+    QueueFamilies * queueFamilies = nullptr;
     
     vk::raii::PhysicalDevice vk_physicalDevice = nullptr;
     vk::raii::Device vk_device = nullptr;
 };
 
+FamilyType to_family(unsigned int);
+
 } // namespace pecs
+
+namespace std
+{
+
+std::string to_string(pecs::FamilyType);
+
+} // namespace std
 
 #endif // pecs_core_device_hpp

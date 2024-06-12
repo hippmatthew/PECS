@@ -1,10 +1,3 @@
-/*
- *  PECS::core - engine.hpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/20/24
- */
-
 #ifndef pecs_core_engine_hpp
 #define pecs_core_engine_hpp
 

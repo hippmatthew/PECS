@@ -1,10 +1,3 @@
-/*
- *  PECS::core - pipelinecomponent.cpp 
- *  Author:   Matthew Hipp
- *  Created:  3/5/24
- *  Updated:  3/5/24
- */
-
 #include "src/core/include/component.hpp"
 
 namespace pecs

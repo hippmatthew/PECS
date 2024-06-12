@@ -1,10 +1,3 @@
-/*
- *  PECS::core - engine.cpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/20/24
- */
-
 #include "src/core/include/engine.hpp"
 
 #define PECS_ENGINE_NAME "PECS"
@@ -86,7 +79,7 @@ void Engine::run()
       .signalSemaphoreCount = static_cast<unsigned int>(signalSemaphores.size()),
       .pSignalSemaphores    = signalSemaphores.data()
     };
-    device->queue(QueueType::Graphics).submit(i_submit, *vk_flightFences[frameIndex]);
+    device->queue(FamilyType::AllQueue).submit(i_submit, *vk_flightFences[frameIndex]);
 
     vk::PresentInfoKHR i_present{
       .waitSemaphoreCount = static_cast<unsigned int>(signalSemaphores.size()),
@@ -95,7 +88,7 @@ void Engine::run()
       .pSwapchains        = &*(gui->swapchain()),
       .pImageIndices      = &result.second
     };
-    auto presentResult = device->queue(QueueType::Present).presentKHR(i_present);
+    auto presentResult = device->queue(FamilyType::AllQueue).presentKHR(i_present);
 
     if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR)
       gui->recreateSwapchain(device->physical(), device->logical());

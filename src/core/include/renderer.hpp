@@ -1,10 +1,3 @@
-/*
- *  PECS::core - renderer.hpp 
- *  Author:   Matthew Hipp
- *  Created:  2/4/24
- *  Updated:  2/18/24
- */
-
 #ifndef pecs_core_renderer_hpp
 #define pecs_core_renderer_hpp
 
@@ -26,7 +19,7 @@ class Renderer : public Singular
     void render(const std::vector<Object *>&, const unsigned int&, const vk::Image&, const vk::raii::ImageView&, const Device&);
 
   private:
-    void createCommandPools(const vk::raii::Device&, const std::vector<unsigned int>&);
+    void createCommandPools(const vk::raii::Device&, const unsigned long&);
     void createRenderBuffers(const vk::raii::Device&);
     void beginRendering(const unsigned int&, const vk::Image&, const vk::raii::ImageView&);
     void endRendering(const unsigned int&, const vk::Image&);

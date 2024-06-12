@@ -1,10 +1,3 @@
-/*
- *  PECS::core - graphicscomponent.cpp 
- *  Author:   Matthew Hipp
- *  Created:  3/5/24
- *  Updated:  3/5/24
- */
-
 #include "src/core/include/component.hpp"
 
 namespace pecs
@@ -302,10 +295,18 @@ void GraphicsComponent::allocateBuffers(const Device& device)
 
   vk_vertexBuffer.bindMemory(*vk_objectMemory, 0);
   vk_indexBuffer.bindMemory(*vk_objectMemory, offset);
+  
+  FamilyType familyType;
+  if (device.hasFamily(FamilyType::Transfer))
+    familyType = FamilyType::Transfer;
+  else if (device.hasFamily(FamilyType::AsyncCombine))
+    familyType = FamilyType::AsyncCombine;
+  else
+    familyType = FamilyType::AllQueue;
 
   vk::CommandPoolCreateInfo ci_transferPool{
     .flags  = vk::CommandPoolCreateFlagBits::eTransient,
-    .queueFamilyIndex = device.queueFamilyArray()[3]
+    .queueFamilyIndex = static_cast<unsigned int>(device.familyIndex(familyType))
   };
   auto vk_transferPool = device.logical().createCommandPool(ci_transferPool);
 
@@ -348,7 +349,7 @@ void GraphicsComponent::allocateBuffers(const Device& device)
     .pCommandBuffers = transferBuffers.data()
   };
 
-  device.queue(QueueType::Transfer).submit(i_transferSubmit, *vk_transferFence);
+  device.queue(familyType).submit(i_transferSubmit, *vk_transferFence);
 
   static_cast<void>(device.logical().waitForFences(*vk_transferFence, vk::True, UINT64_MAX));
 }
@@ -394,9 +395,7 @@ void GraphicsComponent::createDescriptorSets(const vk::raii::Device& vk_device, 
       .pBufferInfo      = &cameraInfo
     };
 
-    std::vector<vk::WriteDescriptorSet> writes = { globalWrite };
-
-    vk_device.updateDescriptorSets(writes, nullptr);
+    vk_device.updateDescriptorSets({ globalWrite }, nullptr);
   }
 }
 

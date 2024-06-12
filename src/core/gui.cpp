@@ -1,10 +1,3 @@
-/*
- *  PECS::core - gui.cpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/15/24
- */
-
 #include "src/core/include/gui.hpp"
 
 namespace pecs

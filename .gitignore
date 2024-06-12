@@ -8,3 +8,4 @@ shaders
 # Files
 .DS_STORE
 Makefile
+.cache

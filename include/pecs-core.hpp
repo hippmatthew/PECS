@@ -1,10 +1,3 @@
-/*
- *  PECS - pecs-core.hpp
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  2/20/24
- */
-
 #ifndef pecs_core_hpp
 #define pecs_core_hpp
 
@@ -36,17 +29,34 @@
 
 #include <chrono>
 #include <fstream>
+#include <map>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#define VK_KHR_PORTABILITY_SUBSET_NAME "VK_KHR_portability_subset"
+
 #define PECS_VALIDATION_BIT 0x1u
+
+#define PECS_GRAPHICS_QUEUE_BIT 0x0000001u
+#define PECS_PRESENT_QUEUE_BIT  0x0000010u
+#define PECS_SYNC_COMPUTE_BIT   0x0000100u
+#define PECS_SYNC_TRANSFER_BIT  0x0001000u
+#define PECS_ASYNC_COMPUTE_BIT  0x0010000u
+#define PECS_ASYNC_TRANSFER_BIT 0x0100000u
+#define PECS_SPARSE_BIT         0x1000000u
+
+#define PECS_GRAPHICS_FAMILY        PECS_GRAPHICS_QUEUE_BIT | PECS_PRESENT_QUEUE_BIT
+#define PECS_ASYNC_COMPUTE_FAMILY   PECS_ASYNC_COMPUTE_BIT
+#define PECS_ASYNC_TRANSFER_FAMILY  PECS_ASYNC_TRANSFER_BIT
+#define PECS_ASYNC_COMBINE_FAMILY   PECS_ASYNC_COMPUTE_BIT | PECS_ASYNC_TRANSFER_BIT
+#define PECS_SPARSE_FAMILY          PECS_SPARSE_BIT
+#define PECS_ALLQUEUE_FAMILY        PECS_GRAPHICS_FAMILY | PECS_SYNC_COMPUTE_BIT | PECS_SYNC_TRANSFER_BIT
 
 namespace pecs
 {
 
-typedef std::pair<std::optional<unsigned int>, vk::raii::Queue> Queue;
 typedef std::optional<std::string> ShaderPath;
 typedef std::pair<vk::Extent2D, vk::Format> ViewportInfo;
 typedef std::vector<std::pair<vk::ShaderStageFlagBits, vk::raii::ShaderModule>> ShaderModules;
@@ -56,8 +66,21 @@ enum QueueType
 {
   Graphics,
   Present,
+  SyncCompute,
+  SyncTransfer,
+  AsyncCompute,
+  AsyncTransfer,
+  SparseBinding
+};
+
+enum FamilyType
+{
+  AllQueue,
+  Transfer,
   Compute,
-  Transfer
+  AsyncCombine,
+  Sparse,
+  NoFamily
 };
 
 struct ShaderPaths
@@ -217,26 +240,42 @@ class GUI : public Singular
 
 class Device : public Singular
 {
-  public:
-    class Queues : public Singular
+  private:
+    class QueueFamilies;
+    
+    class QueueFamily : public Singular
     {
+      friend class Device;
+      friend class QueueFamilies;
+      
       public:
-        Queues(const vk::raii::PhysicalDevice&, const vk::raii::SurfaceKHR&);
+        QueueFamily(unsigned long, unsigned int);
 
-        ~Queues() = default;
+        ~QueueFamily() = default;
+      
+      private:
+        const unsigned long qf_index = -1;
+        const unsigned int qf_types = 0x0000000u;
+        vk::raii::Queue qf_queue = nullptr;
+    };
+    
+    class QueueFamilies : public Singular
+    { 
+      friend class Device;
+      
+      public:
+        QueueFamilies(const vk::raii::PhysicalDevice&, const vk::raii::SurfaceKHR&);
 
-        unsigned int index(QueueType) const;
-        const vk::raii::Queue& queue(QueueType) const;
-        std::vector<unsigned int> array() const;
-        bool isComplete() const;
-
+        ~QueueFamilies();
+        
         void setQueues(const vk::raii::Device&);
+      
+      private:
+        void addFamily(FamilyType, unsigned long);
 
       private:
-        Queue graphics = Queue(std::nullopt, nullptr);
-        Queue present = Queue(std::nullopt, nullptr);
-        Queue compute = Queue(std::nullopt, nullptr);
-        Queue transfer = Queue(std::nullopt, nullptr);
+        std::map<std::string, QueueFamily *> familyMap;
+        std::vector<FamilyType> familyTypes;
     };
   
   public:
@@ -246,8 +285,9 @@ class Device : public Singular
 
     const vk::raii::PhysicalDevice& physical() const;
     const vk::raii::Device& logical() const;
-    const std::vector<unsigned int> queueFamilyArray() const;
-    const vk::raii::Queue& queue(QueueType) const;
+    bool hasFamily(FamilyType) const;
+    const unsigned long familyIndex(FamilyType) const;
+    const vk::raii::Queue& queue(FamilyType) const;
 
   private:
     bool supportsExtensions(const vk::raii::PhysicalDevice&) const;
@@ -256,12 +296,12 @@ class Device : public Singular
     void createLogicalDevice();
 
   private:
-    std::vector<const char *> extensions = {
+    std::vector<const char *> extensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
     };
     
-    Queues * queues = nullptr;
+    QueueFamilies * queueFamilies = nullptr;
     
     vk::raii::PhysicalDevice vk_physicalDevice = nullptr;
     vk::raii::Device vk_device = nullptr;
@@ -373,7 +413,7 @@ class Renderer : public Singular
     void render(const std::vector<Object *>&, const unsigned int&, const vk::Image&, const vk::raii::ImageView&, const Device&);
 
   private:
-    void createCommandPools(const vk::raii::Device&, const std::vector<unsigned int>&);
+    void createCommandPools(const vk::raii::Device&, const unsigned long&);
     void createRenderBuffers(const vk::raii::Device&);
     void beginRendering(const unsigned int&, const vk::Image&, const vk::raii::ImageView&);
     void endRendering(const unsigned int&, const vk::Image&);
@@ -434,6 +474,15 @@ class Engine : public Singular
     double pecs_elapsedTime = 0.0;
 };
 
+FamilyType to_family(unsigned int);
+
 } // namespace pecs
+
+namespace std
+{
+
+std::string to_string(pecs::FamilyType);
+
+} // namespace std
 
 #endif // pecs_core_hpp

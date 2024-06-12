@@ -1,10 +1,3 @@
-/*
- *  PECS::core - settings.hpp 
- *  Author:   Matthew Hipp
- *  Created:  1/21/24
- *  Updated:  3/5/24
- */
-
 #ifndef pecs_core_settings_hpp
 #define pecs_core_settings_hpp
 

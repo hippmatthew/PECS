@@ -1,10 +1,3 @@
-/*
- *  PECS::core - object.cpp 
- *  Author:   Matthew Hipp
- *  Created:  1/26/24
- *  Updated:  3/5/24
- */
-
 #include "src/core/include/object.hpp"
 
 namespace pecs

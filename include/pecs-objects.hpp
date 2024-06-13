@@ -31,6 +31,17 @@ class Rectangle : public Object
     ~Rectangle() = default;
 };;
 
+class Box : public Object
+{
+  public:
+    Box(GraphicsShaders, glm::vec3, float, glm::vec3);
+
+    ~Box() = default;
+
+    Box& translate(glm::vec3);
+    Box& rotate(float, glm::vec3);
+};
+
 } // namespace pecs::objects
 } // namespace pecs
 

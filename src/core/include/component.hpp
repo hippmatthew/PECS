@@ -56,8 +56,8 @@ struct Vertex
     return vk::VertexInputAttributeDescription{
       .location = 0,
       .binding  = 0,
-      .format   = vk::Format::eR32G32Sfloat,
-      .offset   = offsetof(Vertex, position)
+      .format   = vk::Format::eR32G32B32Sfloat,
+      .offset   = __offsetof(Vertex, position)
     };
   }
 };
@@ -123,7 +123,7 @@ class GraphicsComponent : public PipelineComponent
   private:
     const GraphicsShaders paths;
     ViewportInfo i_viewport;
-    alignas(16) glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
 
     const std::vector<Vertex> vertices;
     const std::vector<unsigned int> indices;
@@ -133,10 +133,6 @@ class GraphicsComponent : public PipelineComponent
     vk::raii::DeviceMemory vk_objectMemory = nullptr;
     vk::raii::Buffer vk_vertexBuffer = nullptr;
     vk::raii::Buffer vk_indexBuffer = nullptr;
-
-    vk::raii::DeviceMemory vk_globalMemory = nullptr;
-    vk::raii::Buffer vk_cameraBuffer = nullptr;
-    void * cameraMapping = nullptr;
 
     vk::raii::DescriptorPool vk_descriptorPool = nullptr;
     std::vector<std::vector<vk::raii::DescriptorSet>> vk_descriptorSets;

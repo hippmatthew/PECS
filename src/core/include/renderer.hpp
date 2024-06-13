@@ -18,7 +18,7 @@ class Renderer : public Singular
     
     void render(const std::vector<Object *>&, const unsigned int&, const vk::Image&, const vk::raii::ImageView&, const Device&);
 
-  private:
+  private:    
     void createCommandPools(const vk::raii::Device&, const unsigned long&);
     void createRenderBuffers(const vk::raii::Device&);
     void beginRendering(const unsigned int&, const vk::Image&, const vk::raii::ImageView&);

@@ -95,7 +95,7 @@ void Engine::run()
     else if (presentResult != vk::Result::eSuccess)
       throw std::runtime_error("error @ pecs::Engine::run() : failed to present image");
     
-    Main();
+    this->Main();
 
     frameIndex = (frameIndex + 1) % renderer->maxFlightFrames();
 
@@ -138,7 +138,7 @@ void Engine::initialize(const Settings& s)
   createSyncObjects();
 
   camera = Camera{
-    glm::lookAt(glm::vec3(2.0f, 0.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+    glm::lookAt(glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
     glm::perspective(glm::radians(settings.fov), static_cast<float>(gui->extent().width / gui->extent().height), 0.1f, 10.0f)
   };
   camera.projection[1][1] *= -1;

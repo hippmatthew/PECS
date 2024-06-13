@@ -126,7 +126,7 @@ void GraphicsComponent::createPipeline(const vk::raii::Device& vk_device)
     .rasterizerDiscardEnable  = vk::False,
     .polygonMode              = vk::PolygonMode::eFill,
     .cullMode                 = vk::CullModeFlagBits::eBack,
-    .frontFace                = vk::FrontFace::eCounterClockwise,
+    .frontFace                = vk::FrontFace::eClockwise,
     .depthBiasEnable          = vk::False,
     .depthBiasConstantFactor  = 0.0f,
     .depthBiasClamp           = 0.0f,
@@ -213,7 +213,7 @@ void GraphicsComponent::createPipeline(const vk::raii::Device& vk_device)
     .pDepthStencilState   = nullptr,
     .pColorBlendState     = &ci_blendState,
     .pDynamicState        = &ci_dynamicState,
-    .layout               = *vk_pipelineLayout,
+    .layout               = *vk_pipelineLayout
   };
 
   vk_pipeline = vk_device.createGraphicsPipeline(nullptr, ci_pipeline);

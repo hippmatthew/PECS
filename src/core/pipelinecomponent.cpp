@@ -33,7 +33,7 @@ unsigned int PipelineComponent::findMemoryIndex(const vk::raii::PhysicalDevice& 
     }
   }
   
-  throw std::runtime_error("error @ pecs::Engine::allocateCamera() : could not find suitable memory index");
+  throw std::runtime_error("error @ pecs::PipelineComponent::findMemeoryIndex() : could not find suitable memory index");
 }
 
 } // namespace pecs

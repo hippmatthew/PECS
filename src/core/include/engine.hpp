@@ -1,61 +1,37 @@
-#ifndef pecs_core_engine_hpp
-#define pecs_core_engine_hpp
+#ifndef vecs_core_engine_hpp
+#define vecs_core_engine_hpp
 
-#include "src/core/include/renderer.hpp"
+#include "src/core/include/gui.hpp"
+#include "src/core/include/settings.hpp"
 
-#include <chrono>
-
-namespace pecs
+namespace vecs
 {
 
-class Engine : public Singular
+class Engine
 {
   public:
-    Engine();
-    Engine(const Settings&);
+    Engine() = default;
+    Engine(const Engine&) = delete;
+    Engine(Engine&&) = delete;
 
-    virtual ~Engine();
+    ~Engine();
 
-    void run();
-    void addObject(Object *);
+    Engine& operator = (const Engine&) = delete;
+    Engine& operator = (Engine&&) = delete;
+
+    void initialize();
     
-    virtual void Main() {};
-    
-  private:   
-    const ViewportInfo viewportInfo() const;
-
-    void initialize(const Settings&);
-    void createInstance();
-    void createSyncObjects();
-    void allocateCamera();
+    virtual void run();
 
   private:
-    std::vector<const char *> layers;
-    unsigned int frameIndex = 0;
-    
+    void createInstance();
+
+  private:
     GUI * gui = nullptr;
-    Device * device = nullptr;
-    Renderer * renderer = nullptr;
     
     vk::raii::Instance vk_instance = nullptr;
-
-    std::vector<vk::raii::Semaphore> vk_imageSemaphores;
-    std::vector<vk::raii::Semaphore> vk_renderSemaphores;
-    std::vector<vk::raii::Fence> vk_flightFences;
-
-    vk::raii::DeviceMemory vk_cameraMemory = nullptr;
-    vk::raii::Buffer vk_cameraBuffer = nullptr;
-    void * cameraMapping = nullptr;
-
-    Camera camera;
-    std::vector<Object *> objects;
-
-  protected:
-    Settings::Engine settings;
-    double pecs_deltaTime = 0.0;
-    double pecs_elapsedTime = 0.0;
 };
 
-} // namespace pecs
+} // namespace vecs
 
-#endif // pecs_core_engine_hpp
+#endif // vecs_core_engine_hpp

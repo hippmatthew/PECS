@@ -1,5 +1,5 @@
-#ifndef vecs_core_settings_hpp
-#define vecs_core_settings_hpp
+#ifndef vecs_hpp
+#define vecs_hpp
 
 #ifndef vecs_include_vulkan
 #define vecs_include_vulkan
@@ -8,6 +8,14 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #endif // vecs_include_vulkan
+
+#ifndef vecs_include_glfw
+#define vecs_include_glfw
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
+#endif // vecs_include_glfw
 
 #include <string>
 
@@ -52,6 +60,51 @@ class Settings
     bool s_portabilityEnabled = false;
 };
 
+class GUI
+{
+  public:
+    GUI();
+    GUI(const GUI&) = delete;
+    GUI(GUI&&) = delete;
+
+    ~GUI();
+
+    GUI& operator = (const GUI&) = delete;
+    GUI& operator = (GUI&&) = delete;
+
+    std::vector<const char *> extensions() const;
+    bool shouldClose() const;
+    void pollEvents() const;
+
+  private:
+    GLFWwindow * gl_window = nullptr;
+};
+
+class Engine
+{
+  public:
+    Engine() = default;
+    Engine(const Engine&) = delete;
+    Engine(Engine&&) = delete;
+
+    ~Engine();
+
+    Engine& operator = (const Engine&) = delete;
+    Engine& operator = (Engine&&) = delete;
+
+    void initialize();
+    
+    virtual void run();
+
+  private:
+    void createInstance();
+
+  private:
+    GUI * gui = nullptr;
+    
+    vk::raii::Instance vk_instance = nullptr;
+};
+
 } // namespace vecs
 
-#endif // vecs_core_settings_hpp
+#endif // vecs_hpp

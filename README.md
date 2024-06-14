@@ -1,4 +1,4 @@
-# **P**hysics **E**ngine *for* **C**omputation *and* **S**imulation
+# **V**ulkan **E**ngine *for* **C**omputation *and* **S**imulation
 
 ### Dependencies
 

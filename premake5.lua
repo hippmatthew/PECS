@@ -1,4 +1,4 @@
-workspace "PECS-Library"
+workspace "VECS-Library"
   configurations { "default" }
   platforms { "MacOS-ARM", "Linux-x86_64" }
   location "."
@@ -11,9 +11,9 @@ workspace "PECS-Library"
     system "linux"
     architecture "x86_64"
   
-  project "PECS"
+  project "VECS"
     location "src"
-    filename "PECS"
+    filename "VECS"
     
     kind "StaticLib"
     language "C++"
@@ -21,11 +21,11 @@ workspace "PECS-Library"
    
     targetdir "lib"
     objdir "bin"
-    targetname "pecs"
+    targetname "vecs"
 
     files {
-      "src/core/*.cpp",
-      "src/objects/*.cpp"
+      "src/core/include/*.hpp",
+      "src/core/*.cpp"
     }
 
     includedirs { "." } 
@@ -49,6 +49,7 @@ workspace "PECS-Library"
     targetname "output"
 
     files {
+      "test/src/include/*.hpp",
       "test/src/*.cpp"
     }
 
@@ -62,7 +63,7 @@ workspace "PECS-Library"
     links {
       "vulkan",
       "glfw",
-      "pecs"
+      "vecs"
     }
 
     filter { "platforms:MacOS-ARM" }

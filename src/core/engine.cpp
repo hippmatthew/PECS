@@ -15,6 +15,7 @@ void Engine::initialize()
 {
   gui = new GUI;
   createInstance();
+  gui->createSurface(vk_instance);
 }
 
 void Engine::run()

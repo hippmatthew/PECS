@@ -39,4 +39,12 @@ void GUI::pollEvents() const
   glfwPollEvents();
 }
 
+void GUI::createSurface(const vk::raii::Instance& vk_instance)
+{
+  vk::raii::SurfaceKHR::CType surface;
+  glfwCreateWindowSurface(*vk_instance, gl_window, nullptr, &surface);
+  
+  vk_surface = vk::raii::SurfaceKHR(vk_instance, surface);
+}
+
 } // namespace vecs

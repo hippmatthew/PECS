@@ -6,7 +6,8 @@ namespace vecs
 
 class Device
 {
-  
+  public:
+    
 };
 
 } // namespace vecs

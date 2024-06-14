@@ -1,13 +1,14 @@
 #include "src/core/include/engine.hpp"
 
 #define VK_VALIDATION_LAYER_NAME "VK_LAYER_KHRONOS_validation"
-#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 1, 0, 0)
+#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 1, 2, 0)
 
 namespace vecs
 {
 
 Engine::~Engine()
 {
+  delete device;
   delete gui;
 }
 
@@ -16,6 +17,7 @@ void Engine::initialize()
   gui = new GUI;
   createInstance();
   gui->createSurface(vk_instance);
+  device = new Device(vk_instance, *gui);
 }
 
 void Engine::run()

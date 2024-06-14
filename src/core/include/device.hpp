@@ -1,4 +1,4 @@
-#ifndef vec_core_device_hpp
+#ifndef vecs_core_device_hpp
 #define vecs_core_device_hpp
 
 #include "src/core/include/gui.hpp"
@@ -58,12 +58,12 @@ class Device
 
         ~QueueFamily() = default;
 
-        QueueFamily& operator = (const QueueFamily&) = default;
+        QueueFamily& operator = (const QueueFamily&) = delete;
         QueueFamily& operator = (QueueFamily&&) = delete;
 
       private:
-        const unsigned long qf_index = -1;
-        const unsigned int qf_types = 0x0000000u;
+        const unsigned long qf_index;
+        const unsigned int qf_types;
         vk::raii::Queue qf_queue = nullptr;
     };
 
@@ -102,13 +102,11 @@ class Device
 
     const vk::raii::PhysicalDevice& physical() const;
     const vk::raii::Device& logical() const;
-    bool hasFamily() const;
+    bool hasFamily(FamilyType) const;
     unsigned long familyIndex(FamilyType) const;
     const vk::raii::Queue& queue(FamilyType) const;
 
   private:
-    bool supportsExtensions(const vk::raii::PhysicalDevice&) const;
-    
     void getGPU(const vk::raii::Instance&, const vk::raii::SurfaceKHR&);
     void createDevice();
 

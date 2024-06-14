@@ -39,6 +39,11 @@ void GUI::pollEvents() const
   glfwPollEvents();
 }
 
+const vk::raii::SurfaceKHR& GUI::surface() const
+{
+  return vk_surface;
+}
+
 void GUI::createSurface(const vk::raii::Instance& vk_instance)
 {
   vk::raii::SurfaceKHR::CType surface;

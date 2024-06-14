@@ -26,6 +26,7 @@ class Settings
     unsigned int width() const;
     unsigned int height() const;
     bool portability_enabled() const;
+    std::vector<const char *> device_extensions() const;
 
     Settings& update_name(std::string);
     Settings& update_version(unsigned int);
@@ -34,6 +35,8 @@ class Settings
     Settings& update_width(unsigned int);
     Settings& update_height(unsigned int);
     Settings& toggle_portability();
+    Settings& add_device_extension(const char *);
+    Settings& remove_device_extension(const char *);
     
     void set_default();
 
@@ -50,6 +53,11 @@ class Settings
     unsigned int s_height = 720;
 
     bool s_portabilityEnabled = false;
+
+    std::vector<const char *> s_gpuExtensions{
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+    };
 };
 
 } // namespace vecs

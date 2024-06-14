@@ -44,6 +44,11 @@ bool Settings::portability_enabled() const
   return s_portabilityEnabled;
 }
 
+std::vector<const char *> Settings::device_extensions() const
+{
+  return s_gpuExtensions; 
+}
+
 Settings& Settings::update_name(std::string newName)
 {
   s_name = newName;
@@ -83,6 +88,28 @@ Settings& Settings::update_height(unsigned int newHeight)
 Settings& Settings::toggle_portability()
 {
   s_portabilityEnabled = !s_portabilityEnabled;
+  return *this;
+}
+
+Settings& Settings::add_device_extension(const char * ext)
+{
+  s_gpuExtensions.emplace_back(ext);
+  return *this;
+}
+
+Settings& Settings::remove_device_extension(const char * ext)
+{
+  unsigned long index = 0;
+  for (const auto * extension : s_gpuExtensions)
+  {
+    if (std::string(extension) == std::string(ext))
+    {
+      s_gpuExtensions.erase(s_gpuExtensions.begin() + index);
+      break;
+    }
+    ++index;
+  }
+
   return *this;
 }
 

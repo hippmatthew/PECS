@@ -15,9 +15,7 @@ namespace vecs
 {
 
 class GUI
-{
-  friend class Engine;
-  
+{ 
   public:
     GUI();
     GUI(const GUI&) = delete;
@@ -28,13 +26,13 @@ class GUI
     GUI& operator = (const GUI&) = delete;
     GUI& operator = (GUI&&) = delete;
 
-  private:
     std::vector<const char *> extensions() const;
     bool shouldClose() const;
     void pollEvents() const;
+    const vk::raii::SurfaceKHR& surface() const;
 
     void createSurface(const vk::raii::Instance&);
-
+    
   private:
     GLFWwindow * gl_window = nullptr;
     vk::raii::SurfaceKHR vk_surface = nullptr;

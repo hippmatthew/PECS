@@ -18,7 +18,6 @@
 #endif // vecs_include_glfw
 
 #include <map>
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -48,7 +47,16 @@ enum FamilyType
 class Settings
 { 
   public:
+    Settings(const Settings&) = delete;
+    Settings(Settings&&) = delete;
+
+    ~Settings();
+    
+    Settings& operator = (const Settings&) = delete;
+    Settings& operator = (Settings&&) = delete;
+    
     static Settings& instance();
+    static void destroy();
 
     std::string name() const;
     unsigned int version() const;
@@ -75,6 +83,8 @@ class Settings
     Settings() = default;
   
   private:
+    static Settings * p_settings;
+    
     std::string s_name = "VECS Application";
     unsigned int s_version = VK_MAKE_API_VERSION(0, 1, 0, 0);
     bool s_validationEnabled = true;
@@ -130,12 +140,12 @@ class Device
 
         ~QueueFamily() = default;
 
-        QueueFamily& operator = (const QueueFamily&) = default;
+        QueueFamily& operator = (const QueueFamily&) = delete;
         QueueFamily& operator = (QueueFamily&&) = delete;
 
       private:
-        const unsigned long qf_index = -1;
-        const unsigned int qf_types = 0x0000000u;
+        const unsigned long qf_index;
+        const unsigned int qf_types;
         vk::raii::Queue qf_queue = nullptr;
     };
 

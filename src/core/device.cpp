@@ -168,7 +168,6 @@ const vk::raii::Queue& Device::queue(FamilyType type) const
 
 void Device::getGPU(const vk::raii::Instance& vk_instance, const vk::raii::SurfaceKHR& vk_surface)
 {
-  Settings settings = Settings::instance();
   std::queue<vk::raii::PhysicalDevice> discreteGPUs, integratedGPUs, virtualGPUs;
 
   vk::raii::PhysicalDevices GPUs(vk_instance);
@@ -189,7 +188,7 @@ void Device::getGPU(const vk::raii::Instance& vk_instance, const vk::raii::Surfa
     if (!hasAllFamily) continue;
 
     bool supportsExtensions;
-    for (const auto& extension : settings.device_extensions())
+    for (const auto& extension : Settings::instance().device_extensions())
     {
       supportsExtensions = false;
       for (const auto& property : GPU.enumerateDeviceExtensionProperties())
@@ -230,9 +229,7 @@ void Device::getGPU(const vk::raii::Instance& vk_instance, const vk::raii::Surfa
 }
 
 void Device::createDevice()
-{
-  Settings settings = Settings::instance();
-  
+{  
   float queuePriority = 1.0f;
   std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
@@ -251,18 +248,15 @@ void Device::createDevice()
 
   vk::PhysicalDeviceFeatures features{};
 
-  if (settings.portability_enabled())
-  {
-    std::cout << "portability enabled\n";
-    settings.add_device_extension(VK_PORTABILITY_SUBSET_NAME);
-  } 
+  if (Settings::instance().portability_enabled())
+    Settings::instance().add_device_extension(VK_PORTABILITY_SUBSET_NAME);
     
 
   vk::PhysicalDeviceDynamicRenderingFeatures dynamicRendering{
     .dynamicRendering = true
   };
 
-  std::vector<const char *> extensions = settings.device_extensions();
+  std::vector<const char *> extensions = Settings::instance().device_extensions();
   vk::DeviceCreateInfo ci_device{
     .pNext                    = &dynamicRendering,
     .queueCreateInfoCount     = static_cast<unsigned int>(queueCreateInfos.size()),

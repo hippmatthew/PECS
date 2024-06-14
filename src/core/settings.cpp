@@ -3,10 +3,24 @@
 namespace vecs
 {
 
+Settings * Settings::p_settings = nullptr;
+
+Settings::~Settings()
+{
+  destroy();
+}
+
 Settings& Settings::instance()
 {
-  static Settings settings;
-  return settings;
+  if (p_settings == nullptr)
+    p_settings = new Settings;
+  return *p_settings;
+}
+
+void Settings::destroy()
+{
+  delete p_settings;
+  p_settings = nullptr;
 }
 
 std::string Settings::name() const

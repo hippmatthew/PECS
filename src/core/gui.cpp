@@ -4,15 +4,19 @@ namespace vecs
 {
 
 GUI::GUI()
-{
-  Settings settings = Settings::instance();
-  
+{  
   glfwInit();
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-  gl_window = glfwCreateWindow(settings.width(), settings.height(), settings.title().c_str(), nullptr, nullptr);
+  gl_window = glfwCreateWindow(
+    Settings::instance().width(),
+    Settings::instance().height(),
+    Settings::instance().title().c_str(),
+    nullptr,
+    nullptr
+  );
 };
 
 GUI::~GUI()

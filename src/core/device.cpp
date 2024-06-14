@@ -48,19 +48,19 @@ Device::QueueFamilies::QueueFamilies(const vk::raii::PhysicalDevice& vk_physical
     switch (to_family(types))
     {
       case All:
-        f_all.emplace(index);
+        f_all.emplace(index++);
         continue;
       case Compute:
-        f_compute.emplace(index);
+        f_compute.emplace(index++);
         continue;
       case Transfer:
-        f_transfer.emplace(index);
+        f_transfer.emplace(index++);
         continue;
       case Async:
-        f_async.emplace(index);
+        f_async.emplace(index++);
         continue;
       case Sparse:
-        f_sparse.emplace(index);
+        f_sparse.emplace(index++);
         continue;
     }
   }

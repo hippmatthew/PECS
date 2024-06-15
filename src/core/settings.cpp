@@ -63,6 +63,26 @@ std::vector<const char *> Settings::device_extensions() const
   return s_gpuExtensions; 
 }
 
+vk::Format Settings::format() const
+{
+  return s_format;
+}
+
+vk::ColorSpaceKHR Settings::color_space() const
+{
+  return s_colorSpace;
+}
+
+vk::PresentModeKHR Settings::present_mode() const
+{
+  return s_presentMode;
+}
+
+vk::Extent2D Settings::extent() const
+{
+  return s_extent;
+}
+
 Settings& Settings::update_name(std::string newName)
 {
   s_name = newName;
@@ -127,6 +147,33 @@ Settings& Settings::remove_device_extension(const char * ext)
   return *this;
 }
 
+Settings& Settings::update_format(vk::Format f)
+{
+  s_format = f;
+  return *this;
+}
+
+Settings& Settings::update_color_space(vk::ColorSpaceKHR cs)
+{
+  s_colorSpace = cs;
+  return *this;
+}
+
+Settings& Settings::update_present_mode(vk::PresentModeKHR pm)
+{
+  s_presentMode = pm;
+  return *this;
+}
+
+Settings& Settings::update_extent(unsigned int w, unsigned int h)
+{
+  s_extent = vk::Extent2D{
+    .width = w,
+    .height = h
+  };
+  return *this;
+}
+
 void Settings::set_default()
 {
   s_name = s_title = "VECS Application";
@@ -134,6 +181,18 @@ void Settings::set_default()
   s_validationEnabled = true;
   s_width = 1280;
   s_height = 720;
+  s_portabilityEnabled = false;
+  s_gpuExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+  };
+  s_format = vk::Format::eB8G8R8A8Srgb;
+  s_colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+  s_presentMode = vk::PresentModeKHR::eMailbox;
+  s_extent = vk::Extent2D{
+    .width = s_width,
+    .height = s_height
+  };
 }
 
 } // namespace vecs

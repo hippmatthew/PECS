@@ -36,6 +36,10 @@ class Settings
     unsigned int height() const;
     bool portability_enabled() const;
     std::vector<const char *> device_extensions() const;
+    vk::Format format() const;
+    vk::ColorSpaceKHR color_space() const;
+    vk::PresentModeKHR present_mode() const;
+    vk::Extent2D extent() const;
 
     Settings& update_name(std::string);
     Settings& update_version(unsigned int);
@@ -46,6 +50,10 @@ class Settings
     Settings& toggle_portability();
     Settings& add_device_extension(const char *);
     Settings& remove_device_extension(const char *);
+    Settings& update_format(vk::Format);
+    Settings& update_color_space(vk::ColorSpaceKHR);
+    Settings& update_present_mode(vk::PresentModeKHR);
+    Settings& update_extent(unsigned int width, unsigned int height);
     
     void set_default();
 
@@ -68,6 +76,14 @@ class Settings
     std::vector<const char *> s_gpuExtensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
+    };
+
+    vk::Format s_format = vk::Format::eB8G8R8A8Srgb;
+    vk::ColorSpaceKHR s_colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
+    vk::PresentModeKHR s_presentMode = vk::PresentModeKHR::eMailbox;
+    vk::Extent2D s_extent{
+      .width = s_width,
+      .height = s_height
     };
 };
 

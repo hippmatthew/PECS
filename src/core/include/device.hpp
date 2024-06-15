@@ -3,6 +3,14 @@
 
 #include "src/core/include/gui.hpp"
 
+#ifndef vecs_include_vulkan
+#define vecs_include_vulkan
+
+#define VULKAN_HPP_NO_CONSTRUCTORS
+#include <vulkan/vulkan_raii.hpp>
+
+#endif // vecs_include_vulkan
+
 #include <map>
 #include <vector>
 
@@ -42,6 +50,8 @@ enum FamilyType
   Async,
   Sparse
 };
+
+class GUI;
 
 class Device
 {
@@ -91,7 +101,7 @@ class Device
     };
   
   public:
-    Device(const vk::raii::Instance&, const GUI&);
+    Device(const vk::raii::Instance&, const vecs::GUI&);
     Device(const Device&) = delete;
     Device(Device&&) = delete;
 

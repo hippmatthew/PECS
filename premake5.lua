@@ -36,20 +36,20 @@ workspace "PECS-Library"
         "/usr/local/include"
       }
 
-  project "Test-Program"
-    location "test"
+  project "Test"
+    location "test/main"
     filename "Test"
 
     kind "ConsoleApp"
     language "C++"
     cppdialect "c++20"
 
-    targetdir "test/bin"
-    objdir "test/obj"
+    targetdir "test/main/bin"
+    objdir "test/main/obj"
     targetname "output"
 
     files {
-      "test/src/*.cpp"
+      "test/main/src/*.cpp"
     }
 
     includedirs {

@@ -19,6 +19,8 @@ Settings& Settings::instance()
 
 void Settings::destroy()
 {
+  if (p_settings == nullptr) return;
+  
   delete p_settings;
   p_settings = nullptr;
 }

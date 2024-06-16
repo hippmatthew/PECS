@@ -35,6 +35,9 @@
 namespace vecs
 {
 
+class Device;
+class GUI;
+
 enum QueueType
 {
   Graphics,
@@ -62,7 +65,7 @@ enum Shader
   Tesselation2,
   Geometry,
   Fragment,
-  Compute
+  sCompute
 };
 
 struct VertexData

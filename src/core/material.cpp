@@ -79,6 +79,9 @@ std::vector<Shader> Material::shaders() const
   if (fragment.has_value())
     paths.emplace_back(Shader::Fragment);
 
+  if (compute.has_value())
+    paths.emplace_back(Shader::sCompute);
+
   return paths;
 }
 
@@ -101,7 +104,7 @@ std::vector<char> Material::binary(Shader type) const
       break;
     case Fragment:
       path = fragment.value();
-    case Compute:
+    case sCompute:
       path = compute.value();
   }
   

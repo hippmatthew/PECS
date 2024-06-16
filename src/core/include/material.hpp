@@ -16,7 +16,7 @@ enum Shader
   Tesselation2,
   Geometry,
   Fragment,
-  Compute
+  sCompute
 };
 
 class Material

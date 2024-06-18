@@ -167,7 +167,7 @@ void Renderer::render(const Device& device, GUI& gui)
 
   vk_renderCommands[frameIndex].endRendering();
   
-  vk::ImageMemoryBarrier memoryBarrier{
+  memoryBarrier = {
     .srcAccessMask    = vk::AccessFlagBits::eColorAttachmentWrite,
     .oldLayout        = vk::ImageLayout::eColorAttachmentOptimal,
     .newLayout        = vk::ImageLayout::ePresentSrcKHR,
@@ -259,7 +259,7 @@ void Renderer::createCommands(const Device& device, unsigned long maxBuffers)
   
   vk::CommandPoolCreateInfo ci_renderPool{
     .flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-    .queueFamilyIndex = device.familyIndex(FamilyType::All)
+    .queueFamilyIndex = static_cast<unsigned int>(device.familyIndex(FamilyType::All))
   };
   vk_renderPool = device.logical().createCommandPool(ci_renderPool);
 
@@ -273,7 +273,7 @@ void Renderer::createCommands(const Device& device, unsigned long maxBuffers)
 
   vk::CommandPoolCreateInfo ci_transferPool{
     .flags            = vk::CommandPoolCreateFlagBits::eTransient,
-    .queueFamilyIndex = index
+    .queueFamilyIndex = static_cast<unsigned int>(index)
   };
   vk_transferPool = device.logical().createCommandPool(ci_transferPool);
 

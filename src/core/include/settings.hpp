@@ -40,6 +40,8 @@ class Settings
     vk::ColorSpaceKHR color_space() const;
     vk::PresentModeKHR present_mode() const;
     vk::Extent2D extent() const;
+    unsigned long max_flight_frames() const;
+    vk::ClearValue background_color() const;
 
     Settings& update_name(std::string);
     Settings& update_version(unsigned int);
@@ -54,6 +56,8 @@ class Settings
     Settings& update_color_space(vk::ColorSpaceKHR);
     Settings& update_present_mode(vk::PresentModeKHR);
     Settings& update_extent(unsigned int width, unsigned int height);
+    Settings& update_max_flight_frames(unsigned long);
+    Settings& update_background_color(vk::ClearValue);
     
     void set_default();
 
@@ -85,6 +89,9 @@ class Settings
       .width = s_width,
       .height = s_height
     };
+
+    unsigned long s_maxFrames = 2;
+    vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 };
 
 } // namespace vecs

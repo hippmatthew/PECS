@@ -72,6 +72,7 @@ class Material
     std::optional<std::string> compute;
 
   friend class MaterialBuilder;
+  friend class Renderer;
 };
 
 };

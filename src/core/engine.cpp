@@ -9,7 +9,6 @@ namespace vecs
 Engine::~Engine()
 {
   delete gui;
-  delete device;
 }
 
 void Engine::initialize()
@@ -17,15 +16,23 @@ void Engine::initialize()
   gui = new GUI;
   createInstance();
   gui->createSurface(vk_instance);
-  device = new Device(vk_instance, *gui);
+  device = std::make_shared<Device>(vk_instance, *gui);
   gui->setupWindow(*device);
+
+  Synchronization::instance().link_device(device);
+
+  renderer = new Renderer;
 }
 
 void Engine::run()
 {
+  renderer->load(*device);
+  
   while (!gui->shouldClose())
   {
     gui->pollEvents();
+
+    renderer->render(*device, *gui);
   }
 }
 

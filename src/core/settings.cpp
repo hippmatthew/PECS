@@ -85,6 +85,16 @@ vk::Extent2D Settings::extent() const
   return s_extent;
 }
 
+unsigned long Settings::max_flight_frames() const
+{
+  return s_maxFrames;
+}
+
+vk::ClearValue Settings::background_color() const
+{
+  return s_backColor;
+}
+
 Settings& Settings::update_name(std::string newName)
 {
   s_name = newName;
@@ -176,6 +186,18 @@ Settings& Settings::update_extent(unsigned int w, unsigned int h)
   return *this;
 }
 
+Settings& Settings::update_max_flight_frames(unsigned long frames)
+{
+  s_maxFrames = frames;
+  return *this;
+}
+
+Settings& Settings::update_background_color(vk::ClearValue color)
+{
+  s_backColor = color;
+  return *this;
+}
+
 void Settings::set_default()
 {
   s_name = s_title = "VECS Application";
@@ -195,6 +217,8 @@ void Settings::set_default()
     .width = s_width,
     .height = s_height
   };
+  s_maxFrames = 2;
+  s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 }
 
 } // namespace vecs

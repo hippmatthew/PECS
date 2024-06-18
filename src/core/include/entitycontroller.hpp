@@ -41,16 +41,16 @@ class EntityController
     static EntityController& instance();
     static void destroy();
 
-    const std::list<Entity *>& entities() const;
+    const std::list<std::shared_ptr<Entity>>& entities() const;
 
-    void add_entities(std::list<Entity *>&);
+    void add_entities(std::list<std::shared_ptr<Entity>>&);
 
   private:
     EntityController() = default;
   
   private:
     static EntityController * p_controller;
-    std::list<Entity *> e_list;
+    std::list<std::shared_ptr<Entity>> e_list;
 };
 
 } //namespace vecs

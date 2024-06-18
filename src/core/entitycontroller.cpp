@@ -42,14 +42,14 @@ void EntityController::destroy()
   p_controller = nullptr;
 }
 
-const std::list<Entity *>& EntityController::entities() const
+const std::list<std::shared_ptr<Entity>>& EntityController::entities() const
 {
   return e_list;
 }
 
-void EntityController::add_entities(std::list<Entity *>& list)
+void EntityController::add_entities(std::list<std::shared_ptr<Entity>>& list)
 {
-  for (auto * entity : list)
+  for (auto& entity : list)
     e_list.emplace_back(entity);
 }
 

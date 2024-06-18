@@ -33,11 +33,17 @@ class GUI
     bool shouldClose() const;
     void pollEvents() const;
     const vk::raii::SurfaceKHR& surface() const;
+    const vk::raii::SwapchainKHR& swapchain() const;
+    const vk::Image& image(unsigned long) const;
+    const vk::raii::ImageView& imageView(unsigned long) const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vecs::Device&);
+    void recreateSwapchain(const vecs::Device&);
   
   private:
+    static void resizeFramebuffer(GLFWwindow *, int, int);
+
     void chooseSurfaceFormat(const vk::raii::PhysicalDevice&) const;
     void choosePresentMode(const vk::raii::PhysicalDevice&) const;
     void chooseExtent(const vk::raii::PhysicalDevice&) const;
@@ -47,6 +53,7 @@ class GUI
 
   private:
     GLFWwindow * gl_window = nullptr;
+    bool modifiedFramebuffer = false;
 
     vk::raii::SurfaceKHR vk_surface = nullptr;
     

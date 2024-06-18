@@ -5,10 +5,9 @@
 namespace vecs
 {
 
-GraphicsComponent::GraphicsBuilder::GraphicsBuilder(std::string tag, Material mat)
+GraphicsComponent::GraphicsBuilder::GraphicsBuilder(Material mat)
 {
   p_component = new GraphicsComponent;
-  p_component->pipelineTag = tag;
   p_component->material = mat;
 }
 
@@ -39,17 +38,17 @@ GraphicsComponent::GraphicsBuilder& GraphicsComponent::GraphicsBuilder::add_mode
 
 GraphicsComponent::GraphicsBuilder& GraphicsComponent::GraphicsBuilder::add_uniform_buffer(std::shared_ptr<Custom> data)
 {
-  if (p_component->uniforms.find(data->tag) == p_component->uniforms.end() ) return *this;
+  if (p_component->uniformMap.find(data->tag) == p_component->uniformMap.end() ) return *this;
 
-  p_component->uniforms.emplace(std::make_pair(data->tag, data));
+  p_component->uniformMap.emplace(std::make_pair(data->tag, data));
   return *this;
 }
 
 GraphicsComponent::GraphicsBuilder& GraphicsComponent::GraphicsBuilder::add_push_constant(std::shared_ptr<Custom> data)
 {
-  if (p_component->pushConstants.find(data->tag) == p_component->uniforms.end()) return *this;
+  if (p_component->pushConstantMap.find(data->tag) == p_component->uniformMap.end()) return *this;
 
-  p_component->pushConstants.emplace(std::make_pair(data->tag, data));
+  p_component->pushConstantMap.emplace(std::make_pair(data->tag, data));
   return *this;
 }
 

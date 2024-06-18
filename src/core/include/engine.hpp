@@ -1,7 +1,7 @@
 #ifndef vecs_core_engine_hpp
 #define vecs_core_engine_hpp
 
-#include "src/core/include/device.hpp"
+#include "src/core/include/renderer.hpp"
 
 namespace vecs
 {
@@ -27,7 +27,8 @@ class Engine
 
   private:
     GUI * gui = nullptr;
-    Device * device = nullptr;
+    std::shared_ptr<Device> device = nullptr;
+    Renderer * renderer = nullptr;
     
     vk::raii::Instance vk_instance = nullptr;
 };

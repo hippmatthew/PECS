@@ -17,6 +17,9 @@ GUI::GUI()
     nullptr,
     nullptr
   );
+
+  glfwSetWindowUserPointer(gl_window, this);
+  glfwSetFramebufferSizeCallback(gl_window, resizeFramebuffer);
 };
 
 GUI::~GUI()
@@ -48,6 +51,21 @@ const vk::raii::SurfaceKHR& GUI::surface() const
   return vk_surface;
 }
 
+const vk::raii::SwapchainKHR& GUI::swapchain() const
+{
+  return vk_swapchain;
+}
+
+const vk::Image& GUI::image(unsigned long index) const
+{
+  return vk_images[index];
+}
+
+const vk::raii::ImageView& GUI::imageView(unsigned long index) const
+{
+  return vk_imageViews[index];
+}
+
 void GUI::createSurface(const vk::raii::Instance& vk_instance)
 {
   vk::raii::SurfaceKHR::CType surface;
@@ -66,6 +84,34 @@ void GUI::setupWindow(const vecs::Device& device)
 
   vk_images = vk_swapchain.getImages();
   createImageViews(device.logical());
+}
+
+void GUI::recreateSwapchain(const vecs::Device& device)
+{
+  int width = 0; int height = 0;
+  glfwGetFramebufferSize(gl_window, &width, &height);
+
+  while (width == 0 && height == 0)
+  {
+    glfwGetFramebufferSize(gl_window, &width, &height);
+    glfwWaitEvents();
+  }
+
+  device.logical().waitIdle();
+
+  vk_swapchain.clear();
+  vk_images.clear();
+  vk_imageViews.clear();
+
+  createSwapchain(device.physical(), device.logical());
+  vk_images = vk_swapchain.getImages();
+  createImageViews(device.logical());
+}
+
+void GUI::resizeFramebuffer(GLFWwindow * window, int width, int height)
+{
+  auto gui = reinterpret_cast<GUI *>(glfwGetWindowUserPointer(window));
+  gui->modifiedFramebuffer = true;
 }
 
 void GUI::chooseSurfaceFormat(const vk::raii::PhysicalDevice& vk_physicalDevice) const

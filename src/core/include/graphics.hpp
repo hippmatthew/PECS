@@ -64,6 +64,7 @@ class Custom
     Custom& operator = (Custom&&) = default;
   
     virtual unsigned int size() = 0;
+    virtual void bindPushConstant(const vk::raii::CommandBuffer&, const vk::PipelineLayout&) = 0;
   
   protected:
     std::string tag;
@@ -86,7 +87,16 @@ class Data : public Custom
     Data& operator = (const Data&) = default;
     Data& operator = (Data&&) = default;
 
-    unsigned int size() { return sizeof(T); };
+    unsigned int size() override { return sizeof(T); };
+    void bindPushConstant(const vk::raii::CommandBuffer& buffer, const vk::PipelineLayout& layout) override
+    {
+      buffer.pushConstants<T>(
+        layout,
+        vk::ShaderStageFlagBits::eAllGraphics,
+        0,
+        data
+      );
+    }
 
   private:
     T data;
@@ -103,7 +113,7 @@ class GraphicsComponent
     class GraphicsBuilder
     {
       public: 
-        GraphicsBuilder(std::string, Material);
+        GraphicsBuilder(Material);
         GraphicsBuilder(const GraphicsBuilder&) = delete;
         GraphicsBuilder(GraphicsBuilder&&) = delete;
 
@@ -137,17 +147,20 @@ class GraphicsComponent
     GraphicsComponent& rotate(float, glm::vec3);
   
   private:
-    std::string pipelineTag;
     Material material;
 
     std::vector<VertexData> vertices;
     std::vector<unsigned int> indices;
     glm::mat4 model = glm::mat4(1.0f);
 
-    std::map<std::string, std::shared_ptr<Custom>> uniforms;
-    std::map<std::string, std::shared_ptr<Custom>> pushConstants;
+    std::map<std::string, std::shared_ptr<Custom>> uniformMap;
+    std::map<std::string, std::shared_ptr<Custom>> pushConstantMap;
+    
+    std::vector<std::string> uniformTags;
+    std::vector<std::string> pushConstantTags;
 
   friend class GraphicsBuilder;
+  friend class Renderer;
 };
 
 } // namespace vecs

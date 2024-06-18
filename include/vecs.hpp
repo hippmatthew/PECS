@@ -92,6 +92,12 @@ struct VertexData
   glm::vec3 v_position;
 };
 
+struct Camera
+{
+  glm::mat4 view = glm::mat4(1.0f);
+  glm::mat4 projection = glm::mat4(1.0f);
+};
+
 class Settings
 { 
   public:
@@ -118,6 +124,8 @@ class Settings
     vk::ColorSpaceKHR color_space() const;
     vk::PresentModeKHR present_mode() const;
     vk::Extent2D extent() const;
+    unsigned long max_flight_frames() const;
+    vk::ClearValue background_color() const;
 
     Settings& update_name(std::string);
     Settings& update_version(unsigned int);
@@ -132,6 +140,8 @@ class Settings
     Settings& update_color_space(vk::ColorSpaceKHR);
     Settings& update_present_mode(vk::PresentModeKHR);
     Settings& update_extent(unsigned int width, unsigned int height);
+    Settings& update_max_flight_frames(unsigned long);
+    Settings& update_background_color(vk::ClearValue);
     
     void set_default();
 
@@ -163,6 +173,9 @@ class Settings
       .width = s_width,
       .height = s_height
     };
+
+    unsigned long s_maxFrames = 2;
+    vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 };
 
 class Entity
@@ -200,16 +213,16 @@ class EntityController
     static EntityController& instance();
     static void destroy();
 
-    const std::list<Entity *>& entities() const;
+    const std::list<std::shared_ptr<Entity>>& entities() const;
 
-    void add_entities(std::list<Entity *>&);
+    void add_entities(std::list<std::shared_ptr<Entity>>&);
 
   private:
     EntityController() = default;
   
   private:
     static EntityController * p_controller;
-    std::list<Entity *> e_list;
+    std::list<std::shared_ptr<Entity>> e_list;
 };
 
 class Material
@@ -265,6 +278,7 @@ class Material
     std::optional<std::string> compute;
 
   friend class MaterialBuilder;
+  friend class Renderer;
 };
 
 class Custom
@@ -280,6 +294,7 @@ class Custom
     Custom& operator = (Custom&&) = default;
   
     virtual unsigned int size() = 0;
+    virtual void bindPushConstant(const vk::raii::CommandBuffer&, const vk::PipelineLayout&) = 0;
   
   protected:
     std::string tag;
@@ -302,7 +317,16 @@ class Data : public Custom
     Data& operator = (const Data&) = default;
     Data& operator = (Data&&) = default;
 
-    unsigned int size() { return sizeof(T); };
+    unsigned int size() override { return sizeof(T); };
+    void bindPushConstant(const vk::raii::CommandBuffer& buffer, const vk::PipelineLayout& layout) override
+    {
+      buffer.pushConstants<T>(
+        layout,
+        vk::ShaderStageFlagBits::eAllGraphics,
+        0,
+        data
+      );
+    }
 
   private:
     T data;
@@ -319,7 +343,7 @@ class GraphicsComponent
     class GraphicsBuilder
     {
       public: 
-        GraphicsBuilder(std::string, Material);
+        GraphicsBuilder(Material);
         GraphicsBuilder(const GraphicsBuilder&) = delete;
         GraphicsBuilder(GraphicsBuilder&&) = delete;
 
@@ -353,17 +377,20 @@ class GraphicsComponent
     GraphicsComponent& rotate(float, glm::vec3);
   
   private:
-    std::string pipelineTag;
     Material material;
 
     std::vector<VertexData> vertices;
     std::vector<unsigned int> indices;
     glm::mat4 model = glm::mat4(1.0f);
 
-    std::map<std::string, std::shared_ptr<Custom>> uniforms;
-    std::map<std::string, std::shared_ptr<Custom>> pushConstants;
+    std::map<std::string, std::shared_ptr<Custom>> uniformMap;
+    std::map<std::string, std::shared_ptr<Custom>> pushConstantMap;
+    
+    std::vector<std::string> uniformTags;
+    std::vector<std::string> pushConstantTags;
 
   friend class GraphicsBuilder;
+  friend class Renderer;
 };
 
 class GUI
@@ -382,11 +409,17 @@ class GUI
     bool shouldClose() const;
     void pollEvents() const;
     const vk::raii::SurfaceKHR& surface() const;
+    const vk::raii::SwapchainKHR& swapchain() const;
+    const vk::Image& image(unsigned long) const;
+    const vk::raii::ImageView& imageView(unsigned long) const;
 
     void createSurface(const vk::raii::Instance&);
     void setupWindow(const vecs::Device&);
+    void recreateSwapchain(const vecs::Device&);
   
   private:
+    static void resizeFramebuffer(GLFWwindow *, int, int);
+
     void chooseSurfaceFormat(const vk::raii::PhysicalDevice&) const;
     void choosePresentMode(const vk::raii::PhysicalDevice&) const;
     void chooseExtent(const vk::raii::PhysicalDevice&) const;
@@ -396,6 +429,7 @@ class GUI
 
   private:
     GLFWwindow * gl_window = nullptr;
+    bool modifiedFramebuffer = false;
 
     vk::raii::SurfaceKHR vk_surface = nullptr;
     
@@ -483,6 +517,98 @@ class Device
     vk::raii::Device vk_device = nullptr;
 };
 
+class Synchronization
+{
+  public:
+    Synchronization(const Synchronization&) = delete;
+    Synchronization(Synchronization&&) = delete;
+
+    ~Synchronization();
+
+    Synchronization& operator = (const Synchronization&) = delete;
+    Synchronization& operator = (Synchronization&&) = delete;
+    
+    static Synchronization& instance();
+    static void destroy();
+
+    const vk::raii::Fence& fence(std::string) const;
+    const vk::raii::Semaphore& semaphore(std::string) const;
+    void wait_fences(std::vector<std::string>) const;
+
+    void add_fence(std::string, bool signaled = false);
+    void add_semaphore(std::string);
+    void remove_fence(std::string);
+    void remove_semaphore(std::string);
+
+    void link_device(std::shared_ptr<Device>);
+  
+  private:
+    Synchronization() = default;
+
+  private:
+    static Synchronization * p_sync;
+    
+    std::shared_ptr<Device> vecs_device = nullptr;
+    
+    std::map<std::string, vk::raii::Fence> fenceMap;
+    std::map<std::string, vk::raii::Semaphore> semaphoreMap;
+};
+
+class Renderer
+{
+  public:
+    Renderer() = default;
+    Renderer(const Renderer&) = delete;
+    Renderer(Renderer&&) = delete;
+
+    ~Renderer() = default;
+
+    Renderer& operator = (const Renderer&) = delete;
+    Renderer& operator = (Renderer&&) = delete;
+
+    void load(const Device&);
+    void render(const Device&, GUI&);
+
+  private:
+    unsigned int findIndex(const vk::raii::PhysicalDevice&, unsigned int, vk::MemoryPropertyFlags) const;
+    void initializeSyncObjects() const;
+    
+    void createCommands(const Device&, unsigned long);
+    void createBuffers(const Device&, const std::shared_ptr<GraphicsComponent>&);
+    void allocateMemory(const Device&);
+    void addPipeline(const Device&, const std::shared_ptr<GraphicsComponent>&);
+    void allocatePools(const Device&);
+    void allocateDescriptors(const Device&, const std::shared_ptr<GraphicsComponent>&, unsigned long);
+    void loadModels(const Device&, const std::shared_ptr<GraphicsComponent>&, unsigned long);
+    void updateBuffers(const Device&, const std::shared_ptr<GraphicsComponent>&, unsigned long);
+
+  private:
+    std::vector<std::shared_ptr<GraphicsComponent>> entities;
+    unsigned long frameIndex = 0;
+    
+    vk::raii::DeviceMemory vk_stagingMemory = nullptr;
+    vk::raii::DeviceMemory vk_deviceMemory = nullptr;
+    std::vector<std::vector<unsigned int>> stagingOffsets;
+    std::vector<unsigned int> deviceOffsets;
+
+    vk::raii::Buffer vk_cameraTransfer = nullptr;
+    vk::raii::Buffer vk_cameraDevice = nullptr;
+    std::vector<std::vector<vk::raii::Buffer>> vk_transferBuffers;
+    std::vector<std::vector<vk::raii::Buffer>> vk_deviceBuffers;
+  
+    std::map<std::string, vk::raii::PipelineLayout> pipelineLayoutMap;
+    std::map<std::string, vk::raii::Pipeline> pipelineMap;
+
+    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
+    std::map<std::string, std::vector<vk::raii::DescriptorSetLayout>> descriptorLayoutMap;
+    std::vector<vk::raii::DescriptorSets> vk_descriptorSets;
+
+    vk::raii::CommandPool vk_renderPool = nullptr;
+    vk::raii::CommandPool vk_transferPool = nullptr;
+    vk::raii::CommandBuffers vk_renderCommands = nullptr;
+    vk::raii::CommandBuffers vk_transferCommands = nullptr;
+};
+
 class Engine
 {
   public:
@@ -504,7 +630,8 @@ class Engine
 
   private:
     GUI * gui = nullptr;
-    Device * device = nullptr;
+    std::shared_ptr<Device> device = nullptr;
+    Renderer * renderer = nullptr;
     
     vk::raii::Instance vk_instance = nullptr;
 };

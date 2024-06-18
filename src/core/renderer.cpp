@@ -566,7 +566,7 @@ void Renderer::addPipeline(const Device& device, const std::shared_ptr<GraphicsC
     for (unsigned long i = 0; i < entity->uniformTags.size(); ++i)
     {
       vk::DescriptorSetLayoutBinding uniformBinding{
-        .binding          = i,
+        .binding          = static_cast<unsigned int>(i),
         .descriptorType   = vk::DescriptorType::eUniformBuffer,
         .descriptorCount  = 1,
         .stageFlags       = vk::ShaderStageFlagBits::eAllGraphics
@@ -640,7 +640,7 @@ void Renderer::addPipeline(const Device& device, const std::shared_ptr<GraphicsC
     .pDepthStencilState   = nullptr,
     .pColorBlendState     = &ci_blendState,
     .pDynamicState        = &ci_dynamicStates,
-    .layout               = *(pipelineLayoutMap[entity->material.tag])
+    .layout               = *(pipelineLayoutMap.at(entity->material.tag))
   };
 
   pipelineMap.emplace(std::make_pair(entity->material.tag, device.logical().createGraphicsPipeline(nullptr, ci_pipeline)));
@@ -693,7 +693,7 @@ void Renderer::allocateDescriptors(const Device& device, const std::shared_ptr<G
     };
 
     vk_descriptorSets[index].emplace_back(device.logical().allocateDescriptorSets(ai_sets));
-    (sets == 0) ? sets = vk_descriptorSets[index].size() / Settings::instance().max_flight_frames() : sets == sets;
+    sets = vk_descriptorSets[index].size() / Settings::instance().max_flight_frames();
 
     vk::DescriptorBufferInfo globalInfo{
       .buffer = *vk_cameraDevice,
@@ -726,7 +726,7 @@ void Renderer::allocateDescriptors(const Device& device, const std::shared_ptr<G
     {
       vk::WriteDescriptorSet write{
         .dstSet           = *vk_descriptorSets[index][i + (j * sets)],
-        .dstBinding       = i - 1,
+        .dstBinding       = static_cast<unsigned int>(i - 1),
         .dstArrayElement  = 0,
         .descriptorCount  = 1,
         .descriptorType   = vk::DescriptorType::eUniformBuffer,

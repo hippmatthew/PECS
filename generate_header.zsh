@@ -1,7 +1,9 @@
 #!/bin/zsh
 
+source .helpers.zsh
+
 FILE=include/vecs.hpp
-VERSION="0.0.6.3"
+VERSION="0.0.6.5"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
 EXTRAS_START=7
@@ -18,45 +20,6 @@ SYNC_START=9
 SYNC_END=44
 ENGINE_START=9
 ENGINE_END=33
-
-clear()
-{
-  echo -n > $FILE
-}
-
-input()
-{
-  local LINE=$1
-  echo $LINE >> $FILE
-}
-
-newline()
-{
-  input ""
-}
-
-read_file()
-{
-  local NAME=$1
-  local START=$2
-  local END=$3
-  local LINE_NUM=1
-
-  while IFS= read -r LINE
-  do
-    if (( LINE_NUM >= START ))
-    then
-      input $LINE
-    fi
-
-    LINE_NUM=$((LINE_NUM + 1))
-
-    if (( LINE_NUM > END ))
-    then
-      break
-    fi
-  done < src/core/include/$NAME.hpp
-}
 
 clear
 
@@ -134,7 +97,23 @@ read_file engine $ENGINE_START $ENGINE_END
 
 newline
 
+input "FamilyType to_family(unsigned int);"
+input "unsigned int to_bits(FamilyType);"
+
 input "} // namespace vecs"
+
+newline
+
+input "namespace std"
+input "{"
+
+newline
+
+input "std::string to_string(vecs::FamilyType);"
+
+newline
+
+input "} // namspace std"
 
 newline
 

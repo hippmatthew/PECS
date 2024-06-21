@@ -1,4 +1,4 @@
-// vecs_hpp version 0.0.6.3 generated on 06-21-2024 16:40:53
+// vecs_hpp version 0.0.6.5 generated on 06-21-2024 16:55:45
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -385,6 +385,15 @@ class Engine
     vk::raii::Instance vk_instance = nullptr;
 };
 
+FamilyType to_family(unsigned int);
+unsigned int to_bits(FamilyType);
 } // namespace vecs
+
+namespace std
+{
+
+std::string to_string(vecs::FamilyType);
+
+} // namspace std
 
 #endif // vecs_hpp

@@ -109,6 +109,6 @@ namespace std
 
 std::string to_string(vecs::FamilyType);
 
-} //namespace std
+} // namespace std
 
 #endif // vecs_core_device_hpp

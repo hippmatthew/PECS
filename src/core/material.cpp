@@ -1,5 +1,7 @@
 #include "src/core/include/material.hpp"
 
+#include <fstream>
+
 namespace vecs
 {
 
@@ -60,32 +62,32 @@ Material::MaterialBuilder Material::Builder(std::string materialTag)
   return MaterialBuilder(materialTag);
 }
 
-std::vector<Shader> Material::shaders() const
+std::vector<ShaderType> Material::shaders() const
 {
-  std::vector<Shader> paths;
+  std::vector<ShaderType> paths;
   
   if (vertex.has_value())
-    paths.emplace_back(Shader::Vertex);
+    paths.emplace_back(ShaderType::Vertex);
 
   if (tesselation1.has_value())
-    paths.emplace_back(Shader::Tesselation1);
+    paths.emplace_back(ShaderType::Tesselation1);
 
   if (tesselation2.has_value())
-    paths.emplace_back(Shader::Tesselation2);
+    paths.emplace_back(ShaderType::Tesselation2);
 
   if (geometry.has_value())
-    paths.emplace_back(Shader::Geometry);
+    paths.emplace_back(ShaderType::Geometry);
 
   if (fragment.has_value())
-    paths.emplace_back(Shader::Fragment);
+    paths.emplace_back(ShaderType::Fragment);
 
   if (compute.has_value())
-    paths.emplace_back(Shader::sCompute);
+    paths.emplace_back(ShaderType::ComputeShader);
 
   return paths;
 }
 
-std::vector<char> Material::binary(Shader type) const
+std::vector<char> Material::binary(ShaderType type) const
 {
   std::string path;
   switch (type)
@@ -104,7 +106,7 @@ std::vector<char> Material::binary(Shader type) const
       break;
     case Fragment:
       path = fragment.value();
-    case sCompute:
+    case ComputeShader:
       path = compute.value();
   }
   

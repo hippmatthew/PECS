@@ -12,8 +12,6 @@ class Synchronization
     Synchronization(const Synchronization&) = delete;
     Synchronization(Synchronization&&) = delete;
 
-    ~Synchronization();
-
     Synchronization& operator = (const Synchronization&) = delete;
     Synchronization& operator = (Synchronization&&) = delete;
     
@@ -33,11 +31,12 @@ class Synchronization
   
   private:
     Synchronization() = default;
+    ~Synchronization() = default;
 
   private:
     static Synchronization * p_sync;
     
-    std::shared_ptr<Device> vecs_device = nullptr;
+    std::shared_ptr<Device> p_device = nullptr;
     
     std::map<std::string, vk::raii::Fence> fenceMap;
     std::map<std::string, vk::raii::Semaphore> semaphoreMap;

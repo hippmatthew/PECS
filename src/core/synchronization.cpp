@@ -5,11 +5,6 @@ namespace vecs
 
 Synchronization * Synchronization::p_sync = nullptr;
 
-Synchronization::~Synchronization()
-{
-  destroy();
-}
-
 Synchronization& Synchronization::instance()
 {
   if (p_sync == nullptr)
@@ -19,8 +14,12 @@ Synchronization& Synchronization::instance()
 }
 
 void Synchronization::destroy()
-{
+{  
   if (p_sync == nullptr) return;
+
+  p_sync->fenceMap.clear();
+  p_sync->semaphoreMap.clear();
+  p_sync->p_device.reset();
 
   delete p_sync;
   p_sync = nullptr;
@@ -46,7 +45,7 @@ void Synchronization::wait_fences(std::vector<std::string> tags) const
     fences.emplace_back(*(fenceMap.at(tag)));
   }
 
-  static_cast<void>(vecs_device->logical().waitForFences(
+  static_cast<void>(p_device->logical().waitForFences(
     vk::ArrayProxy<vk::Fence>(fences.size(), fences.data()),
     vk::True,
     UINT64_MAX
@@ -61,7 +60,7 @@ void Synchronization::add_fence(std::string tag, bool signaled)
     .flags  = signaled ? vk::FenceCreateFlagBits::eSignaled : vk::FenceCreateFlags()
   };
 
-  fenceMap.emplace(std::make_pair(tag, vecs_device->logical().createFence(ci_fence)));
+  fenceMap.emplace(std::make_pair(tag, p_device->logical().createFence(ci_fence)));
 }
 
 void Synchronization::add_semaphore(std::string tag)
@@ -69,7 +68,7 @@ void Synchronization::add_semaphore(std::string tag)
   if (semaphoreMap.find(tag) != semaphoreMap.end()) return;
   
   vk::SemaphoreCreateInfo ci_semaphore;
-  semaphoreMap.emplace(std::make_pair(tag, vecs_device->logical().createSemaphore(ci_semaphore)));
+  semaphoreMap.emplace(std::make_pair(tag, p_device->logical().createSemaphore(ci_semaphore)));
 }
 
 void Synchronization::remove_fence(std::string tag)
@@ -88,9 +87,9 @@ void Synchronization::remove_semaphore(std::string tag)
 
 void Synchronization::link_device(std::shared_ptr<Device> link)
 {
-  if (vecs_device != nullptr) return;
+  if (p_device != nullptr) return;
 
-  vecs_device = link;
+  p_device = link;
 }
 
 }

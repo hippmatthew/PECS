@@ -1,23 +1,14 @@
 #ifndef vecs_core_material_hpp
 #define vecs_core_material_hpp
 
-#include <fstream>
+#include "src/core/include/extras.hpp"
+
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace vecs
 {
-
-enum Shader
-{
-  Vertex,
-  Tesselation1,
-  Tesselation2,
-  Geometry,
-  Fragment,
-  sCompute
-};
 
 class Material
 { 
@@ -59,8 +50,8 @@ class Material
     static MaterialBuilder Builder(std::string);
 
   private:
-    std::vector<Shader> shaders() const;
-    std::vector<char> binary(Shader) const;
+    std::vector<ShaderType> shaders() const;
+    std::vector<char> binary(ShaderType) const;
   
   private:
     std::string tag;
@@ -72,7 +63,6 @@ class Material
     std::optional<std::string> compute;
 
   friend class MaterialBuilder;
-  friend class Renderer;
 };
 
 };

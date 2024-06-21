@@ -19,8 +19,6 @@ class Settings
   public:
     Settings(const Settings&) = delete;
     Settings(Settings&&) = delete;
-
-    ~Settings();
     
     Settings& operator = (const Settings&) = delete;
     Settings& operator = (Settings&&) = delete;
@@ -63,6 +61,7 @@ class Settings
 
   private:
     Settings() = default;
+    ~Settings() = default;
   
   private:
     static Settings * p_settings;

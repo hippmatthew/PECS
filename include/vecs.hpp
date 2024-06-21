@@ -1,32 +1,23 @@
+// vecs_hpp version 0.0.6.3 generated on 06-21-2024 16:40:53
+
 #ifndef vecs_hpp
 #define vecs_hpp
 
-#ifndef vecs_include_vulkan
-#define vecs_include_vulkan
+#ifndef vecs_include_dependencies
+#define vecs_include_dependencies
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
 
-#endif // vecs_include_vulkan
-
-#ifndef vecs_include_glfw
-#define vecs_include_glfw
-
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-
-#endif // vecs_include_glfw
-
-#ifndef vecs_include_glm
-#define vecs_include_glm
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#endif // vecs_include_glm
+#endif // vecs_include_dependencies
 
-#include <list>
 #include <map>
 #include <memory>
 #include <string>
@@ -35,8 +26,12 @@
 namespace vecs
 {
 
-class Device;
+class Settings;
+class Material;
 class GUI;
+class Device;
+class Synchronization;
+class Engine;
 
 enum QueueType
 {
@@ -58,44 +53,14 @@ enum FamilyType
   Sparse
 };
 
-enum Shader
+enum ShaderType
 {
   Vertex,
   Tesselation1,
   Tesselation2,
   Geometry,
   Fragment,
-  sCompute
-};
-
-struct VertexData
-{
-  static vk::VertexInputBindingDescription binding()
-  {
-    return vk::VertexInputBindingDescription{
-      .binding  = 0,
-      .stride     = sizeof(VertexData),
-      .inputRate  = vk::VertexInputRate::eVertex
-    };
-  }
-
-  static vk::VertexInputAttributeDescription attribute()
-  {
-    return vk::VertexInputAttributeDescription{
-      .location = 0,
-      .binding  = 0,
-      .format   = vk::Format::eR32G32B32A32Sfloat,
-      .offset   = __offsetof(VertexData, v_position)
-    };
-  }
-
-  glm::vec3 v_position;
-};
-
-struct Camera
-{
-  glm::mat4 view = glm::mat4(1.0f);
-  glm::mat4 projection = glm::mat4(1.0f);
+  ComputeShader
 };
 
 class Settings
@@ -103,8 +68,6 @@ class Settings
   public:
     Settings(const Settings&) = delete;
     Settings(Settings&&) = delete;
-
-    ~Settings();
     
     Settings& operator = (const Settings&) = delete;
     Settings& operator = (Settings&&) = delete;
@@ -147,6 +110,7 @@ class Settings
 
   private:
     Settings() = default;
+    ~Settings() = default;
   
   private:
     static Settings * p_settings;
@@ -178,52 +142,6 @@ class Settings
     vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 };
 
-class Entity
-{
-  public:
-    Entity() = default;
-    Entity(unsigned int);
-    Entity(const Entity&) = default;
-    Entity(Entity&&) = default;
-
-    ~Entity() = default;
-
-    Entity& operator = (const Entity&) = default;
-    Entity& operator = (Entity&&) = default;
-
-    unsigned int id() const;
-
-    Entity& addSystems(unsigned int);
-
-  private:
-    unsigned int e_id = 0x0u;
-};
-
-class EntityController
-{
-  public:
-    EntityController(const EntityController&) = delete;
-    EntityController(EntityController&&) = delete;
-
-    ~EntityController();
-
-    EntityController& operator = (const EntityController&) = delete;
-    EntityController& operator = (EntityController&&) = delete;
-
-    static EntityController& instance();
-    static void destroy();
-
-    const std::list<std::shared_ptr<Entity>>& entities() const;
-
-    void add_entities(std::list<std::shared_ptr<Entity>>&);
-
-  private:
-    EntityController() = default;
-  
-  private:
-    static EntityController * p_controller;
-    std::list<std::shared_ptr<Entity>> e_list;
-};
 
 class Material
 { 
@@ -265,8 +183,8 @@ class Material
     static MaterialBuilder Builder(std::string);
 
   private:
-    std::vector<Shader> shaders() const;
-    std::vector<char> binary(Shader) const;
+    std::vector<ShaderType> shaders() const;
+    std::vector<char> binary(ShaderType) const;
   
   private:
     std::string tag;
@@ -278,119 +196,6 @@ class Material
     std::optional<std::string> compute;
 
   friend class MaterialBuilder;
-  friend class Renderer;
-};
-
-class Custom
-{
-  public:
-    Custom() = default;
-    Custom(const Custom&) = default;
-    Custom(Custom&&) = default;
-
-    ~Custom() = default;
-
-    Custom& operator = (const Custom&) = default;
-    Custom& operator = (Custom&&) = default;
-  
-    virtual unsigned int size() = 0;
-    virtual void bindPushConstant(const vk::raii::CommandBuffer&, const vk::PipelineLayout&) = 0;
-  
-  protected:
-    std::string tag;
-    unsigned long index;
-
-  friend class GraphicsComponent;
-  friend class Renderer;
-};
-
-template <typename T>
-class Data : public Custom
-{
-  public:
-    Data(std::string s, T t) : data(t) { tag = s; }
-    Data(const Data&) = default;
-    Data(Data&&) = default;
-
-    ~Data() = default;
-
-    Data& operator = (const Data&) = default;
-    Data& operator = (Data&&) = default;
-
-    unsigned int size() override { return sizeof(T); };
-    void bindPushConstant(const vk::raii::CommandBuffer& buffer, const vk::PipelineLayout& layout) override
-    {
-      buffer.pushConstants<T>(
-        layout,
-        vk::ShaderStageFlagBits::eAllGraphics,
-        0,
-        data
-      );
-    }
-
-  private:
-    T data;
-
-  friend class GraphicsComponent;
-  friend class Renderer;
-};
-
-class GraphicsComponent
-{
-  friend class renderer;
-  
-  public:
-    class GraphicsBuilder
-    {
-      public: 
-        GraphicsBuilder(Material);
-        GraphicsBuilder(const GraphicsBuilder&) = delete;
-        GraphicsBuilder(GraphicsBuilder&&) = delete;
-
-        ~GraphicsBuilder();
-
-        GraphicsBuilder& operator = (const GraphicsBuilder&) = delete;
-        GraphicsBuilder& operator = (GraphicsBuilder&&) = delete;
-
-        GraphicsBuilder& add_model(std::string);
-        GraphicsBuilder& add_model(std::vector<VertexData>&, std::vector<unsigned int>&);
-        GraphicsBuilder& add_uniform_buffer(std::shared_ptr<Custom>);
-        GraphicsBuilder& add_push_constant(std::shared_ptr<Custom>);
-
-        GraphicsComponent& build() const;
-
-      private:
-        GraphicsComponent * p_component;
-    };
-  
-  public:
-    GraphicsComponent() = default;
-    GraphicsComponent(const GraphicsComponent&) = default;
-    GraphicsComponent(GraphicsComponent&&) = default;
-
-    ~GraphicsComponent() = default;
-
-    GraphicsComponent& operator = (const GraphicsComponent&) = default;
-    GraphicsComponent& operator = (GraphicsComponent&&) = default;
-
-    GraphicsComponent& translate(glm::vec3);
-    GraphicsComponent& rotate(float, glm::vec3);
-  
-  private:
-    Material material;
-
-    std::vector<VertexData> vertices;
-    std::vector<unsigned int> indices;
-    glm::mat4 model = glm::mat4(1.0f);
-
-    std::map<std::string, std::shared_ptr<Custom>> uniformMap;
-    std::map<std::string, std::shared_ptr<Custom>> pushConstantMap;
-    
-    std::vector<std::string> uniformTags;
-    std::vector<std::string> pushConstantTags;
-
-  friend class GraphicsBuilder;
-  friend class Renderer;
 };
 
 class GUI
@@ -523,8 +328,6 @@ class Synchronization
     Synchronization(const Synchronization&) = delete;
     Synchronization(Synchronization&&) = delete;
 
-    ~Synchronization();
-
     Synchronization& operator = (const Synchronization&) = delete;
     Synchronization& operator = (Synchronization&&) = delete;
     
@@ -544,70 +347,17 @@ class Synchronization
   
   private:
     Synchronization() = default;
+    ~Synchronization() = default;
 
   private:
     static Synchronization * p_sync;
     
-    std::shared_ptr<Device> vecs_device = nullptr;
+    std::shared_ptr<Device> p_device = nullptr;
     
     std::map<std::string, vk::raii::Fence> fenceMap;
     std::map<std::string, vk::raii::Semaphore> semaphoreMap;
 };
 
-class Renderer
-{
-  public:
-    Renderer() = default;
-    Renderer(const Renderer&) = delete;
-    Renderer(Renderer&&) = delete;
-
-    ~Renderer() = default;
-
-    Renderer& operator = (const Renderer&) = delete;
-    Renderer& operator = (Renderer&&) = delete;
-
-    void load(const Device&);
-    void render(const Device&, GUI&);
-
-  private:
-    unsigned int findIndex(const vk::raii::PhysicalDevice&, unsigned int, vk::MemoryPropertyFlags) const;
-    void initializeSyncObjects() const;
-    
-    void createCommands(const Device&, unsigned long);
-    void createBuffers(const Device&, const std::shared_ptr<GraphicsComponent>&);
-    void allocateMemory(const Device&);
-    void addPipeline(const Device&, const std::shared_ptr<GraphicsComponent>&);
-    void allocatePools(const Device&);
-    void allocateDescriptors(const Device&, const std::shared_ptr<GraphicsComponent>&, unsigned long);
-    void loadModels(const Device&, const std::shared_ptr<GraphicsComponent>&, unsigned long);
-    void updateBuffers(const Device&, const std::shared_ptr<GraphicsComponent>&, unsigned long);
-
-  private:
-    std::vector<std::shared_ptr<GraphicsComponent>> entities;
-    unsigned long frameIndex = 0;
-    
-    vk::raii::DeviceMemory vk_stagingMemory = nullptr;
-    vk::raii::DeviceMemory vk_deviceMemory = nullptr;
-    std::vector<std::vector<unsigned int>> stagingOffsets;
-    std::vector<unsigned int> deviceOffsets;
-
-    vk::raii::Buffer vk_cameraTransfer = nullptr;
-    vk::raii::Buffer vk_cameraDevice = nullptr;
-    std::vector<std::vector<vk::raii::Buffer>> vk_transferBuffers;
-    std::vector<std::vector<vk::raii::Buffer>> vk_deviceBuffers;
-  
-    std::map<std::string, vk::raii::PipelineLayout> pipelineLayoutMap;
-    std::map<std::string, vk::raii::Pipeline> pipelineMap;
-
-    vk::raii::DescriptorPool vk_descriptorPool = nullptr;
-    std::map<std::string, std::vector<vk::raii::DescriptorSetLayout>> descriptorLayoutMap;
-    std::vector<vk::raii::DescriptorSets> vk_descriptorSets;
-
-    vk::raii::CommandPool vk_renderPool = nullptr;
-    vk::raii::CommandPool vk_transferPool = nullptr;
-    vk::raii::CommandBuffers vk_renderCommands = nullptr;
-    vk::raii::CommandBuffers vk_transferCommands = nullptr;
-};
 
 class Engine
 {
@@ -631,7 +381,6 @@ class Engine
   private:
     GUI * gui = nullptr;
     std::shared_ptr<Device> device = nullptr;
-    Renderer * renderer = nullptr;
     
     vk::raii::Instance vk_instance = nullptr;
 };

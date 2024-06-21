@@ -5,15 +5,11 @@ namespace vecs
 
 Settings * Settings::p_settings = nullptr;
 
-Settings::~Settings()
-{
-  destroy();
-}
-
 Settings& Settings::instance()
 {
   if (p_settings == nullptr)
     p_settings = new Settings;
+    
   return *p_settings;
 }
 

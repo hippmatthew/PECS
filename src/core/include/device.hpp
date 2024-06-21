@@ -1,6 +1,7 @@
 #ifndef vecs_core_device_hpp
 #define vecs_core_device_hpp
 
+#include "src/core/include/extras.hpp"
 #include "src/core/include/gui.hpp"
 
 #ifndef vecs_include_vulkan
@@ -14,42 +15,8 @@
 #include <map>
 #include <vector>
 
-#define VECS_GRAPHICS_QUEUE_BIT       0x1000000u
-#define VECS_PRESENT_QUEUE_BIT        0x0100000u
-#define VECS_SYNC_COMPUTE_QUEUE_BIT   0x0010000u
-#define VECS_ASYNC_COMPUTE_QUEUE_BIT  0x0001000u
-#define VECS_SYNC_TRANSFER_QUEUE_BIT  0x0000100u
-#define VECS_ASYNC_TRANSFER_QUEUE_BIT 0x0000010u
-#define VECS_SPARSE_QUEUE_BIT         0x0000001u
-
-#define VECS_ALL_FAMILY       ( VECS_GRAPHICS_QUEUE_BIT | VECS_PRESENT_QUEUE_BIT | VECS_SYNC_COMPUTE_QUEUE_BIT | VECS_SYNC_TRANSFER_QUEUE_BIT )
-#define VECS_COMPUTE_FAMILY   ( VECS_ASYNC_COMPUTE_QUEUE_BIT )
-#define VECS_TRANSFER_FAMILY  ( VECS_ASYNC_TRANSFER_QUEUE_BIT )
-#define VECS_ASYNC_FAMILY     ( VECS_ASYNC_COMPUTE_QUEUE_BIT | VECS_ASYNC_TRANSFER_QUEUE_BIT )
-#define VECS_SPARSE_FAMILY    ( VECS_SPARSE_QUEUE_BIT )
-
 namespace vecs
 {
-
-enum QueueType
-{
-  Graphics,
-  Present,
-  SyncCompute,
-  SyncTransfer,
-  AsyncCompute,
-  AsyncTransfer,
-  SparseBinding
-};
-
-enum FamilyType
-{
-  All,
-  Compute,
-  Transfer,
-  Async,
-  Sparse
-};
 
 class GUI;
 

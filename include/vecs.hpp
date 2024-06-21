@@ -1,4 +1,4 @@
-// vecs_hpp version 0.0.6.5 generated on 06-21-2024 16:55:45
+// vecs_hpp version 0.0.7.0 generated on 06-21-2024 18:51:25
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -142,10 +142,9 @@ class Settings
     vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 };
 
-
 class Material
 { 
-  public:
+  private:
     class MaterialBuilder
     {
       public:
@@ -170,6 +169,8 @@ class Material
         Material * material = nullptr;
     };
 
+  friend class MaterialBuilder;
+  
   public:
     Material() = default;
     Material(const Material&) = default;
@@ -194,8 +195,6 @@ class Material
     std::optional<std::string> geometry;
     std::optional<std::string> fragment;
     std::optional<std::string> compute;
-
-  friend class MaterialBuilder;
 };
 
 class GUI
@@ -357,7 +356,6 @@ class Synchronization
     std::map<std::string, vk::raii::Fence> fenceMap;
     std::map<std::string, vk::raii::Semaphore> semaphoreMap;
 };
-
 
 class Engine
 {

@@ -3,8 +3,8 @@
 
 #include "src/core/include/extras.hpp"
 
+#include <optional>
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace vecs
@@ -12,7 +12,7 @@ namespace vecs
 
 class Material
 { 
-  public:
+  private:
     class MaterialBuilder
     {
       public:
@@ -37,6 +37,8 @@ class Material
         Material * material = nullptr;
     };
 
+  friend class MaterialBuilder;
+  
   public:
     Material() = default;
     Material(const Material&) = default;
@@ -61,8 +63,6 @@ class Material
     std::optional<std::string> geometry;
     std::optional<std::string> fragment;
     std::optional<std::string> compute;
-
-  friend class MaterialBuilder;
 };
 
 };

@@ -2,25 +2,6 @@
 
 source .helpers.zsh
 
-FILE=include/vecs.hpp
-VERSION="0.0.6.5"
-TIME=$(date "+%m-%d-%Y %H:%M:%S")
-
-EXTRAS_START=7
-EXTRAS_END=42
-SETTINGS_START=17
-SETTINGS_END=95
-MAT_START=13
-MAT_END=66
-GUI_START=20
-GUI_END=63
-DEVICE_START=23
-DEVICE_END=100
-SYNC_START=9
-SYNC_END=44
-ENGINE_START=9
-ENGINE_END=33
-
 clear
 
 input "// vecs_hpp version ${VERSION} generated on ${TIME}"
@@ -69,33 +50,15 @@ input "{"
 
 newline
 
-read_file extras $EXTRAS_START $EXTRAS_END
+read_file extras $START $END
 
 newline
 
-read_file settings $SETTINGS_START $SETTINGS_END
-
-newline
-
-read_file material $MAT_START $MAT_END
-
-newline
-
-read_file gui $GUI_START $GUI_END
-
-newline
-
-read_file device $DEVICE_START $DEVICE_END
-
-newline
-
-read_file synchronization $SYNC_START $SYNC_END
-
-newline
-
-read_file engine $ENGINE_START $ENGINE_END
-
-newline
+for ELEMENT in "${FILES[@]}"
+do
+  read_file $ELEMENT
+  newline
+done
 
 input "FamilyType to_family(unsigned int);"
 input "unsigned int to_bits(FamilyType);"
@@ -117,4 +80,4 @@ input "} // namspace std"
 
 newline
 
-input "#endif // vecs_hpp"
+end_file "#endif // vecs_hpp"

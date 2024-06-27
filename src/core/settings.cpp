@@ -91,6 +91,21 @@ vk::ClearValue Settings::background_color() const
   return s_backColor;
 }
 
+const unsigned long& Settings::max_entities() const
+{
+  return s_maxEntities;
+}
+
+const unsigned long& Settings::max_components() const
+{
+  return s_maxComponents;
+}
+
+const unsigned long& Settings::entity_delta() const
+{
+  return s_entityDelta;
+}
+
 Settings& Settings::update_name(std::string newName)
 {
   s_name = newName;
@@ -194,6 +209,24 @@ Settings& Settings::update_background_color(vk::ClearValue color)
   return *this;
 }
 
+Settings& Settings::update_max_entities(unsigned long amount)
+{
+  s_maxEntities = amount;
+  return *this;
+}
+
+Settings& Settings::update_max_components(unsigned long amount)
+{
+  s_maxComponents = amount;
+  return *this;
+}
+
+Settings& Settings::update_entity_delta(unsigned long amount)
+{
+  s_entityDelta = amount;
+  return *this;
+}
+
 void Settings::set_default()
 {
   s_name = s_title = "VECS Application";
@@ -215,6 +248,9 @@ void Settings::set_default()
   };
   s_maxFrames = 2;
   s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
+  s_maxEntities = std::numeric_limits<unsigned short>::max();
+  s_maxComponents = std::numeric_limits<unsigned short>::max();
+  s_entityDelta = 5;
 }
 
 } // namespace vecs

@@ -9,6 +9,7 @@
 
 #endif // vecs_include_vulkan
 
+#include <numeric>
 #include <string>
 
 namespace vecs
@@ -40,6 +41,9 @@ class Settings
     vk::Extent2D extent() const;
     unsigned long max_flight_frames() const;
     vk::ClearValue background_color() const;
+    const unsigned long& max_entities() const;
+    const unsigned long& max_components() const;
+    const unsigned long& entity_delta() const;
 
     Settings& update_name(std::string);
     Settings& update_version(unsigned int);
@@ -56,6 +60,9 @@ class Settings
     Settings& update_extent(unsigned int width, unsigned int height);
     Settings& update_max_flight_frames(unsigned long);
     Settings& update_background_color(vk::ClearValue);
+    Settings& update_max_entities(unsigned long);
+    Settings& update_max_components(unsigned long);
+    Settings& update_entity_delta(unsigned long);
     
     void set_default();
 
@@ -91,6 +98,10 @@ class Settings
 
     unsigned long s_maxFrames = 2;
     vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
+
+    unsigned long s_maxEntities = std::numeric_limits<unsigned short>::max();
+    unsigned long s_maxComponents = std::numeric_limits<unsigned short>::max();
+    unsigned long s_entityDelta = 5;
 };
 
 } // namespace vecs

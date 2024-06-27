@@ -1,10 +1,10 @@
 #!/bin/zsh
 
 FILE=include/vecs.hpp
-VERSION="0.0.7.0"
+VERSION="0.0.8.3"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
-FILES=(settings material gui device synchronization engine)
+FILES=(device engine gui material settings signature synchronization)
 
 clear()
 {
@@ -39,7 +39,7 @@ read_file()
   if [[ "$NAME" == "extras" ]]
   then
     START=7
-    END=42
+    END=43
   else
     while IFS= read -r LINE
     do

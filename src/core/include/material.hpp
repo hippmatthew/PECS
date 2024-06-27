@@ -51,7 +51,8 @@ class Material
 
     static MaterialBuilder Builder(std::string);
 
-  private:
+    std::string name() const;
+    std::vector<std::pair<ShaderType, std::string>> paths() const;
     std::vector<ShaderType> shaders() const;
     std::vector<char> binary(ShaderType) const;
   

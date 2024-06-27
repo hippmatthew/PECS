@@ -40,6 +40,7 @@ newline
 
 input "#include <map>"
 input "#include <memory>"
+input "#include <set>"
 input "#include <string>"
 input "#include <vector>"
 
@@ -50,7 +51,7 @@ input "{"
 
 newline
 
-read_file extras $START $END
+read_file extras
 
 newline
 

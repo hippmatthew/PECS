@@ -62,6 +62,33 @@ Material::MaterialBuilder Material::Builder(std::string materialTag)
   return MaterialBuilder(materialTag);
 }
 
+std::string Material::name() const
+{
+  return tag;
+}
+
+std::vector<std::pair<ShaderType, std::string>> Material::paths() const
+{
+  std::vector<std::pair<ShaderType, std::string>> shaderPaths;
+  
+  if (vertex.has_value())
+    shaderPaths.emplace_back(std::make_pair(ShaderType::Vertex, vertex.value()));
+
+  if (tesselation1.has_value())
+    shaderPaths.emplace_back(std::make_pair(ShaderType::Tesselation1, tesselation1.value()));
+  
+  if (tesselation2.has_value())
+    shaderPaths.emplace_back(std::make_pair(ShaderType::Tesselation2, tesselation2.value()));
+
+  if (geometry.has_value())
+    shaderPaths.emplace_back(std::make_pair(ShaderType::Geometry, geometry.value()));
+
+  if (fragment.has_value())
+    shaderPaths.emplace_back(std::make_pair(ShaderType::Fragment, fragment.value()));
+
+  return shaderPaths;
+}
+
 std::vector<ShaderType> Material::shaders() const
 {
   std::vector<ShaderType> paths;

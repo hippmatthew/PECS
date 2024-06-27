@@ -5,6 +5,7 @@ namespace vecs
 {
 
 class Settings;
+class Signature;
 class Material;
 class GUI;
 class Device;

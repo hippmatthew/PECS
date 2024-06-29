@@ -6,6 +6,7 @@ namespace vecs
 
 class Settings;
 class Signature;
+class EntityManager;
 class Material;
 class GUI;
 class Device;

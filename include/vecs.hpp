@@ -1,4 +1,4 @@
-// vecs_hpp version 0.0.8.3 generated on 06-27-2024 18:56:43
+// vecs_hpp version 0.0.9.1 generated on 06-29-2024 17:37:35
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -29,6 +29,7 @@ namespace vecs
 
 class Settings;
 class Signature;
+class EntityManager;
 class Material;
 class GUI;
 class Device;
@@ -168,6 +169,43 @@ class Engine
     std::shared_ptr<Device> device = nullptr;
     
     vk::raii::Instance vk_instance = nullptr;
+};
+
+class EntityManager
+{
+  public:
+    EntityManager();
+    EntityManager(const EntityManager&) = delete;
+    EntityManager(EntityManager&&) = delete;
+
+    ~EntityManager() = default;
+
+    EntityManager& operator = (const EntityManager&) = delete;
+    EntityManager& operator = (EntityManager&&) = delete;
+
+    unsigned long count() const;
+    bool valid(unsigned long) const;
+    
+    void newEntity();
+    void removeEntity(unsigned long);
+
+    template <typename... Tps>
+    std::set<unsigned long> retrieve() const;
+
+    template <typename... Tps>
+    void addComponents(unsigned long);
+
+    template <typename... Tps>
+    void removeComponents(unsigned long);
+
+  private:
+    void resize();
+    void sort(unsigned long);
+  
+  private:
+    std::vector<Signature> signatures;
+    std::set<unsigned long> e_ids;
+    std::stack<unsigned long> nextID;
 };
 
 class GUI

@@ -1,10 +1,10 @@
 #!/bin/zsh
 
 FILE=include/vecs.hpp
-VERSION="0.0.8.3"
+VERSION="0.0.9.1"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
-FILES=(device engine gui material settings signature synchronization)
+FILES=(device engine entities gui material settings signature synchronization)
 
 clear()
 {
@@ -39,11 +39,11 @@ read_file()
   if [[ "$NAME" == "extras" ]]
   then
     START=7
-    END=43
+    END=44
   else
     while IFS= read -r LINE
     do
-      if [[ "${LINE}" == "class ${(C)NAME}" || "${LINE}" == "class GUI" ]]
+      if [[ "${LINE}" == "class ${(C)NAME}" || "${LINE}" == "class GUI" || "${LINE}" == "class EntityManager" ]]
       then
         START=$LINE_NUM
         continue

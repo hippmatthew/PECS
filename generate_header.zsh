@@ -6,79 +6,88 @@ clear
 
 input "// vecs_hpp version ${VERSION} generated on ${TIME}"
 
-newline
+space
 
 input "#ifndef vecs_hpp"
 input "#define vecs_hpp"
 
-newline
+space
 
-input "#ifndef vecs_include_dependencies"
-input "#define vecs_include_dependencies"
+input "#ifndef vecs_no_includes"
 
-newline
+space
 
 input "#define VULKAN_HPP_NO_CONSTRUCTORS"
 input "#include <vulkan/vulkan_raii.hpp>"
 
-newline
+space
 
 input "#define GLFW_INCLUDE_NONE"
 input "#include <GLFW/glfw3.h>"
 
-newline
+space
 
 input "#define GLM_FORCE_RADIANS"
 input "#include <glm/glm.hpp>"
 input "#include <glm/gtc/matrix_transform.hpp>"
 
-newline
+space
 
-input "#endif // vecs_include_dependencies"
+input "#endif // vecs_no_includes"
 
-newline
+space
 
-input "#include <map>"
-input "#include <memory>"
-input "#include <set>"
-input "#include <string>"
-input "#include <vector>"
+for ELEMENT in "${DEPS[@]}"
+do
+  input "#include <${ELEMENT}>"
+done
 
-newline
+space
 
 input "namespace vecs"
 input "{"
 
-newline
+space
 
-read_file extras
+read_extras
 
-newline
+space
 
 for ELEMENT in "${FILES[@]}"
 do
-  read_file $ELEMENT
-  newline
+  if [[ "${ELEMENT}" == "gui" ]]
+  then
+    read_file $ELEMENT "GUI"
+  elif [[ "${ELEMENT}" == "entities" ]]
+  then
+    read_file $ELEMENT "EntityManager"
+  else
+    read_file $ELEMENT
+  fi
+
+  space
 done
 
 input "FamilyType to_family(unsigned int);"
 input "unsigned int to_bits(FamilyType);"
 
+space
+
 input "} // namespace vecs"
 
-newline
+space
 
 input "namespace std"
 input "{"
 
-newline
+space
 
 input "std::string to_string(vecs::FamilyType);"
 
-newline
+space
 
 input "} // namspace std"
 
-newline
+space
 
 end_file "#endif // vecs_hpp"

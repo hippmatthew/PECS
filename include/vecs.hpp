@@ -1,10 +1,9 @@
-// vecs_hpp version 0.0.9.1 generated on 06-29-2024 17:37:35
+// vecs_hpp version 0.0.10.0 generated on 06-29-2024 18:42:14
 
 #ifndef vecs_hpp
 #define vecs_hpp
 
-#ifndef vecs_include_dependencies
-#define vecs_include_dependencies
+#ifndef vecs_no_includes
 
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan_raii.hpp>
@@ -16,7 +15,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#endif // vecs_include_dependencies
+#endif // vecs_no_includes
 
 #include <map>
 #include <memory>
@@ -27,14 +26,14 @@
 namespace vecs
 {
 
-class Settings;
-class Signature;
+class Device;
+class Engine;
 class EntityManager;
 class Material;
 class GUI;
-class Device;
+class Settings;
+class Signature;
 class Synchronization;
-class Engine;
 
 enum QueueType
 {
@@ -473,6 +472,7 @@ class Synchronization
 
 FamilyType to_family(unsigned int);
 unsigned int to_bits(FamilyType);
+
 } // namespace vecs
 
 namespace std

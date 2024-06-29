@@ -1,9 +1,12 @@
 #!/bin/zsh
 
 FILE=include/vecs.hpp
-VERSION="0.0.9.1"
+VERSION="0.0.10.0"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
+XTR_START=7
+XTR_END=44
+DEPS=(map memory set string vector)
 FILES=(device engine entities gui material settings signature synchronization)
 
 clear()
@@ -17,7 +20,7 @@ input()
   echo $INPUT >> $FILE
 }
 
-newline()
+space()
 {
   input ""
 }
@@ -28,50 +31,50 @@ end_file()
   echo -n $INPUT >> $FILE
 }
 
-read_file()
+read_extras()
 {
-  local NAME=$1
-
   local LINE_NUM=1
-  local START=0
-  local END=0
 
-  if [[ "$NAME" == "extras" ]]
-  then
-    START=7
-    END=44
-  else
-    while IFS= read -r LINE
-    do
-      if [[ "${LINE}" == "class ${(C)NAME}" || "${LINE}" == "class GUI" || "${LINE}" == "class EntityManager" ]]
-      then
-        START=$LINE_NUM
-        continue
-      fi
-
-      if [[ "${LINE}" == "};" ]]
-      then
-        END=$((LINE_NUM + 1))
-        break
-      fi
-
-      LINE_NUM=$((LINE_NUM + 1))
-    done < src/core/include/$NAME.hpp
-  fi
-
-  LINE_NUM=1
   while IFS= read -r LINE
   do
-    if (( LINE_NUM >= START ))
+    if (( LINE_NUM >= XTR_START ))
     then
       input $LINE
     fi
 
     LINE_NUM=$((LINE_NUM + 1))
 
-    if (( LINE_NUM > END ))
+    if (( LINE_NUM > XTR_END ))
     then
       break
+    fi
+  done < src/core/include/extras.hpp
+}
+
+read_file()
+{
+  local NAME=$1
+  local CLASS=${2:-${(C)NAME}}
+
+  local READ=0
+
+  while IFS= read -r LINE
+  do
+    if [[ "${LINE}" == "};" ]]
+    then
+      input $LINE
+      break
+    fi
+    
+    if [[ "${LINE}" == "class ${CLASS}" ]]
+    then
+      READ=1
+    fi
+
+    if (( READ == 1 ))
+    then
+      input $LINE
+      continue
     fi
   done < src/core/include/$NAME.hpp
 }

@@ -4,14 +4,14 @@
 namespace vecs
 {
 
-class Settings;
-class Signature;
+class Device;
+class Engine;
 class EntityManager;
 class Material;
 class GUI;
-class Device;
+class Settings;
+class Signature;
 class Synchronization;
-class Engine;
 
 enum QueueType
 {

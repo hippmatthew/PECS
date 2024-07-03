@@ -1,13 +1,13 @@
 #!/bin/zsh
 
 FILE=include/vecs.hpp
-VERSION="0.0.10.0"
+VERSION="0.0.11.4"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
 XTR_START=7
-XTR_END=44
-DEPS=(map memory set string vector)
-FILES=(device engine entities gui material settings signature synchronization)
+XTR_END=47
+DEPS=(map memory optional set stack string vector)
+FILES=(components device engine entities gui material settings signature synchronization)
 
 clear()
 {
@@ -55,18 +55,19 @@ read_file()
 {
   local NAME=$1
   local CLASS=${2:-${(C)NAME}}
+  local TEMPLATED=${3:-0}
 
   local READ=0
 
   while IFS= read -r LINE
   do
-    if [[ "${LINE}" == "};" ]]
+    if [[ $READ == 1 && "${LINE}" == "};" ]]
     then
       input $LINE
       break
     fi
-    
-    if [[ "${LINE}" == "class ${CLASS}" ]]
+  
+    if [[ ( $TEMPLATED == 1 && "${LINE}" == "template <typename T>" ) || "${LINE}" == "class ${CLASS}" ]]
     then
       READ=1
     fi

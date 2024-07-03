@@ -4,6 +4,9 @@
 namespace vecs
 {
 
+class IComponentArray;
+template <typename T> class ComponentArray;
+class ComponentManager;
 class Device;
 class Engine;
 class EntityManager;

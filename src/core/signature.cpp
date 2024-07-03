@@ -22,14 +22,14 @@ void Signature::reset()
 template <typename... Tps>
 void Signature::set()
 {
-  (add<Tps>(), ...);
+  ( add<Tps>(), ... );
   hash();
 }
 
 template <typename... Tps>
 void Signature::unset()
 {
-  (remove<Tps>(), ...);
+  ( remove<Tps>(), ... );
   hash();
 }
 

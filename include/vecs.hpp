@@ -1,4 +1,4 @@
-// vecs_hpp version 0.0.10.0 generated on 06-29-2024 18:42:14
+// vecs_hpp version 0.0.11.4 generated on 07-02-2024 21:18:07
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -19,13 +19,18 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
+#include <stack>
 #include <string>
 #include <vector>
 
 namespace vecs
 {
 
+class IComponentArray;
+template <typename T> class ComponentArray;
+class ComponentManager;
 class Device;
 class Engine;
 class EntityManager;
@@ -63,6 +68,95 @@ enum ShaderType
   Geometry,
   Fragment,
   ComputeShader
+};
+
+class IComponentArray
+{
+  public:
+    IComponentArray() = default;
+    IComponentArray(const IComponentArray&) = default;
+    IComponentArray(IComponentArray&&) = default;
+
+    virtual ~IComponentArray() = default;
+
+    IComponentArray& operator = (const IComponentArray&) = default;
+    IComponentArray& operator = (IComponentArray&&) = default;
+};
+
+template <typename T>
+class ComponentArray
+{
+  public:
+    ComponentArray() = default;
+    ComponentArray(const ComponentArray&) = default;
+    ComponentArray(ComponentArray&&) = default;
+
+    ~ComponentArray() = default;
+
+    ComponentArray& operator = (const ComponentArray&) = default;
+    ComponentArray& operator = (ComponentArray&&) = default;
+    std::optional<T> operator [] (unsigned long);
+    
+    void emplace(unsigned long, T&);
+    void erase(unsigned long);
+
+  private:
+    bool valid(unsigned long) const;
+
+  private:
+    std::vector<T> data;
+    std::map<unsigned long, unsigned long> indexMap;
+};
+
+class ComponentManager
+{
+  public:
+    ComponentManager() = default;
+    ComponentManager(const ComponentManager&) = delete;
+    ComponentManager(ComponentManager&&) = delete;
+
+    ~ComponentManager() = default;
+
+    ComponentManager& operator = (const ComponentManager&) = delete;
+    ComponentManager& operator = (ComponentManager&&) = delete;
+    
+    template <typename... Tps>
+    void registerComponents();
+
+    template <typename... Tps>
+    void unregisterComponents();
+
+    template <typename... Tps>
+    void updateData(unsigned long, Tps&...);
+
+    template <typename... Tps>
+    void removeData(unsigned long);
+
+    template <typename T>
+    std::optional<T> retrieve(unsigned long);
+  
+  private:
+    template <typename T>
+    bool registered() const;
+
+    template <typename T>
+    std::shared_ptr<ComponentArray<T>> array() const;
+
+    template <typename T>
+    void registerComponent();
+
+    template <typename T>
+    void unregisterComponent();
+
+    template <typename T>
+    void update(unsigned long, T&);
+
+    template <typename T>
+    void remove(unsigned long);
+
+  private:
+    std::map<const char *, std::shared_ptr<IComponentArray>> componentMap;
+
 };
 
 class Device

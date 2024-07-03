@@ -61,6 +61,13 @@ do
   elif [[ "${ELEMENT}" == "entities" ]]
   then
     read_file $ELEMENT "EntityManager"
+  elif [[ "${ELEMENT}" == "components" ]]
+  then
+    read_file $ELEMENT "IComponentArray"
+    space
+    read_file $ELEMENT "ComponentArray" 1
+    space
+    read_file $ELEMENT "ComponentManager"
   else
     read_file $ELEMENT
   fi

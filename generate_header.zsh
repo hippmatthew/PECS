@@ -68,6 +68,11 @@ do
     read_file $ELEMENT "ComponentArray" 1
     space
     read_file $ELEMENT "ComponentManager"
+  elif [[ "${ELEMENT}" == "systems" ]]
+  then
+    read_file $ELEMENT "System"
+    space
+    read_file $ELEMENT "SystemManager"
   else
     read_file $ELEMENT
   fi

@@ -1,4 +1,4 @@
-// vecs_hpp version 0.0.11.4 generated on 07-02-2024 21:18:07
+// vecs_hpp version 0.0.12.0 generated on 07-02-2024 23:09:08
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -39,6 +39,8 @@ class GUI;
 class Settings;
 class Signature;
 class Synchronization;
+class System;
+class SystemManager;
 
 enum QueueType
 {
@@ -562,6 +564,73 @@ class Synchronization
     
     std::map<std::string, vk::raii::Fence> fenceMap;
     std::map<std::string, vk::raii::Semaphore> semaphoreMap;
+};
+
+class System
+{
+  public:
+    System() = default;
+    System(const System&) = default;
+    System(System&&) = default;
+
+    virtual ~System() = default;
+
+    System& operator = (const System&) = default;
+    System& operator = (System&&) = default;
+
+    virtual void update(std::set<unsigned long>) = 0;
+    
+    const Signature& signature() const;
+    
+    template <typename... Tps>
+    void addComponents();
+
+    template <typename... Tps>
+    void removeComponents();
+  
+  private:
+    Signature sys_signature;
+};
+
+class SystemManager
+{
+  public:
+    SystemManager() = default;
+    SystemManager(const SystemManager&) = default;
+    SystemManager(SystemManager&&) = default;
+
+    ~SystemManager() = default;
+
+    SystemManager& operator = (const SystemManager&) = default;
+    SystemManager& operator = (SystemManager&&) = default;
+
+    template <typename T>
+    std::optional<std::shared_ptr<T>> system() const;
+    
+    template <typename... Tps>
+    void emplace();
+
+    template <typename... Tps>
+    void erase();
+
+    template <typename T, typename... Tps>
+    void addComponents();
+
+    template <typename T, typename... Tps>
+    void removeComponents();
+
+  private:
+    template <typename T>
+    bool registered() const;
+
+    template <typename T>
+    void add();
+
+    template <typename T>
+    void remove();
+
+  private:
+    std::map<const char *, std::shared_ptr<System>> systemMap;
 };
 
 FamilyType to_family(unsigned int);

@@ -1,13 +1,13 @@
 #!/bin/zsh
 
 FILE=include/vecs.hpp
-VERSION="0.0.11.4"
+VERSION="0.0.12.0"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
 XTR_START=7
-XTR_END=47
+XTR_END=49
 DEPS=(map memory optional set stack string vector)
-FILES=(components device engine entities gui material settings signature synchronization)
+FILES=(components device engine entities gui material settings signature synchronization systems)
 
 clear()
 {

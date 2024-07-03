@@ -15,6 +15,8 @@ class GUI;
 class Settings;
 class Signature;
 class Synchronization;
+class System;
+class SystemManager;
 
 enum QueueType
 {

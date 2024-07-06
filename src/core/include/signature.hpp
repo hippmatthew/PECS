@@ -45,4 +45,6 @@ class Signature
 
 } // namespace vecs
 
+#include "src/core/include/signaturetemplates.hpp"
+
 #endif // vecs_core_signature_hpp

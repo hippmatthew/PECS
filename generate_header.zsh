@@ -4,7 +4,7 @@ source .helpers.zsh
 
 clear
 
-input "// vecs_hpp version ${VERSION} generated on ${TIME}"
+input "// vecs::vecs_hpp version ${VERSION} generated on ${TIME}"
 
 space
 
@@ -49,11 +49,11 @@ input "{"
 
 space
 
-read_extras
+read_misc extras 7 49
 
 space
 
-for ELEMENT in "${FILES[@]}"
+for ELEMENT in "${SRCS[@]}"
 do
   if [[ "${ELEMENT}" == "gui" ]]
   then
@@ -102,4 +102,46 @@ input "} // namspace std"
 
 space
 
+input "#include \"./templates.hpp\""
+
 end_file "#endif // vecs_hpp"
+
+FILE=2
+
+clear
+
+input "// vecs::templates_hpp version ${VERSION} generated on ${TIME}"
+
+space
+
+input "#ifndef templates_hpp"
+input "#define templates_hpp"
+
+space
+
+input "namespace vecs"
+input "{"
+
+space
+
+read_misc signaturetemplates 4 34
+
+space
+
+read_misc entitytemplates 4 47
+
+space
+
+read_misc componenttemplates 4 110
+
+space
+
+read_misc systemtemplates 4 74
+
+space
+
+input "} // namespace vecs"
+
+space
+
+end_file "#endif // templates_hpp"

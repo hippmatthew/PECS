@@ -1,23 +1,23 @@
 #!/bin/zsh
 
-FILE=include/vecs.hpp
-VERSION="0.0.12.0"
+FILES=(include/vecs.hpp include/templates.hpp)
+FILE=1
+VERSION="0.0.13.0"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 
-XTR_START=7
-XTR_END=49
 DEPS=(map memory optional set stack string vector)
-FILES=(components device engine entities gui material settings signature synchronization systems)
+SRCS=(components device engine entities gui material settings signature synchronization systems)
 
 clear()
-{
-  echo -n > $FILE
+{  
+  echo -n > $FILES[$FILE]
 }
 
 input()
 {
   local INPUT=$1
-  echo $INPUT >> $FILE
+  
+  echo $INPUT >> $FILES[$FILE]
 }
 
 space()
@@ -28,27 +28,7 @@ space()
 end_file()
 {
   local INPUT=$1
-  echo -n $INPUT >> $FILE
-}
-
-read_extras()
-{
-  local LINE_NUM=1
-
-  while IFS= read -r LINE
-  do
-    if (( LINE_NUM >= XTR_START ))
-    then
-      input $LINE
-    fi
-
-    LINE_NUM=$((LINE_NUM + 1))
-
-    if (( LINE_NUM > XTR_END ))
-    then
-      break
-    fi
-  done < src/core/include/extras.hpp
+  echo -n $INPUT >> $FILES[$FILE]
 }
 
 read_file()
@@ -76,6 +56,30 @@ read_file()
     then
       input $LINE
       continue
+    fi
+  done < src/core/include/$NAME.hpp
+}
+
+read_misc()
+{
+  local NAME=$1
+  local START=$2
+  local END=$3
+
+  local LINE_NUM=1
+
+  while IFS= read -r LINE
+  do
+    if (( LINE_NUM >= START ))
+    then
+      input $LINE
+    fi
+
+    LINE_NUM=$((LINE_NUM + 1))
+
+    if (( LINE_NUM > END ))
+    then
+      break
     fi
   done < src/core/include/$NAME.hpp
 }

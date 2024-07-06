@@ -22,7 +22,7 @@ class IComponentArray
 };
 
 template <typename T>
-class ComponentArray
+class ComponentArray : public IComponentArray
 {
   public:
     ComponentArray() = default;
@@ -33,7 +33,8 @@ class ComponentArray
 
     ComponentArray& operator = (const ComponentArray&) = default;
     ComponentArray& operator = (ComponentArray&&) = default;
-    std::optional<T> operator [] (unsigned long);
+    
+    std::optional<T> at(unsigned long) const;
     
     void emplace(unsigned long, T&);
     void erase(unsigned long);
@@ -72,11 +73,11 @@ class ComponentManager
 
     template <typename T>
     std::optional<T> retrieve(unsigned long);
-  
-  private:
+
     template <typename T>
     bool registered() const;
-
+  
+  private:
     template <typename T>
     std::shared_ptr<ComponentArray<T>> array() const;
 
@@ -98,5 +99,7 @@ class ComponentManager
 };
 
 } // namespace vecs
+
+#include "src/core/include/componenttemplates.hpp"
 
 #endif // vecs_core_components_hpp

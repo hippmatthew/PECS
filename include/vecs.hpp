@@ -1,4 +1,4 @@
-// vecs_hpp version 0.0.12.0 generated on 07-02-2024 23:09:08
+// vecs::vecs_hpp version 0.0.13.0 generated on 07-05-2024 12:12:18
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -70,7 +70,7 @@ enum ShaderType
   Geometry,
   Fragment,
   ComputeShader
-};
+};  
 
 class IComponentArray
 {
@@ -86,7 +86,7 @@ class IComponentArray
 };
 
 template <typename T>
-class ComponentArray
+class ComponentArray : public IComponentArray
 {
   public:
     ComponentArray() = default;
@@ -97,7 +97,8 @@ class ComponentArray
 
     ComponentArray& operator = (const ComponentArray&) = default;
     ComponentArray& operator = (ComponentArray&&) = default;
-    std::optional<T> operator [] (unsigned long);
+    
+    std::optional<T> at(unsigned long) const;
     
     void emplace(unsigned long, T&);
     void erase(unsigned long);
@@ -136,11 +137,11 @@ class ComponentManager
 
     template <typename T>
     std::optional<T> retrieve(unsigned long);
-  
-  private:
+
     template <typename T>
     bool registered() const;
-
+  
+  private:
     template <typename T>
     std::shared_ptr<ComponentArray<T>> array() const;
 
@@ -243,7 +244,7 @@ class Device
 class Engine
 {
   public:
-    Engine() = default;
+    Engine();
     Engine(const Engine&) = delete;
     Engine(Engine&&) = delete;
 
@@ -251,19 +252,31 @@ class Engine
 
     Engine& operator = (const Engine&) = delete;
     Engine& operator = (Engine&&) = delete;
-
-    void initialize();
     
+    virtual void load();
     virtual void run();
-
+  
   private:
     void createInstance();
 
+  protected:
+    virtual bool close_condition();
+    
+    bool should_close() const;
+    
+    void initialize();
+    void poll_gui();
+  
   private:
     GUI * gui = nullptr;
     std::shared_ptr<Device> device = nullptr;
-    
+
     vk::raii::Instance vk_instance = nullptr;
+
+  protected:
+    std::unique_ptr<EntityManager> entity_manager = nullptr;
+    std::shared_ptr<ComponentManager> component_manager = nullptr;
+    std::unique_ptr<SystemManager> system_manager = nullptr;
 };
 
 class EntityManager
@@ -578,7 +591,7 @@ class System
     System& operator = (const System&) = default;
     System& operator = (System&&) = default;
 
-    virtual void update(std::set<unsigned long>) = 0;
+    virtual void update(const std::shared_ptr<ComponentManager>&, std::set<unsigned long>) = 0;
     
     const Signature& signature() const;
     
@@ -645,4 +658,5 @@ std::string to_string(vecs::FamilyType);
 
 } // namspace std
 
+#include "./templates.hpp"
 #endif // vecs_hpp

@@ -1,6 +1,7 @@
 #ifndef vecs_core_systems_hpp
 #define vecs_core_systems_hpp
 
+#include "src/core/include/components.hpp"
 #include "src/core/include/signature.hpp"
 
 #include <map>
@@ -22,7 +23,7 @@ class System
     System& operator = (const System&) = default;
     System& operator = (System&&) = default;
 
-    virtual void update(std::set<unsigned long>) = 0;
+    virtual void update(const std::shared_ptr<ComponentManager>&, std::set<unsigned long>) = 0;
     
     const Signature& signature() const;
     
@@ -78,5 +79,7 @@ class SystemManager
 };
 
 } // namespace vecs
+
+#include "src/core/include/systemtemplates.hpp"
 
 #endif // vecs_core_systems_hpp

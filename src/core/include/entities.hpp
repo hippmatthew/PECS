@@ -48,4 +48,6 @@ class EntityManager
 
 } // namespace vecs
 
+#include "src/core/include/entitytemplates.hpp"
+
 #endif // vecs_core_entities_hpp

@@ -19,20 +19,6 @@ void Signature::reset()
   id = 0;
 }
 
-template <typename... Tps>
-void Signature::set()
-{
-  ( add<Tps>(), ... );
-  hash();
-}
-
-template <typename... Tps>
-void Signature::unset()
-{
-  ( remove<Tps>(), ... );
-  hash();
-}
-
 void Signature::hash()
 {
   if (types.empty())
@@ -47,24 +33,6 @@ void Signature::hash()
     str += type;
 
   id = std::hash<std::string>{}(str);
-}
-
-template <typename T>
-void Signature::add()
-{
-  auto type = std::string(typeid(T).name());
-  if (types.find(type) != types.end()) return;
-
-  types.emplace(type);
-}
-
-template <typename T>
-void Signature::remove()
-{
-  auto type = std::string(typeid(T).name());
-  if (types.find(type) == types.end()) return;
-
-  types.erase(type);
 }
 
 } // namespace vecs

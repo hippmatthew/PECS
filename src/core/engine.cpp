@@ -1,13 +1,24 @@
 #include "src/core/include/engine.hpp"
 
 #define VK_VALIDATION_LAYER_NAME "VK_LAYER_KHRONOS_validation"
-#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 0, 11, 4)
+#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 0, 13, 0)
 
 namespace vecs
 {
 
+Engine::Engine()
+{
+  entity_manager = std::make_unique<EntityManager>();
+  component_manager = std::make_shared<ComponentManager>();
+  system_manager = std::make_unique<SystemManager>();
+}
+
 Engine::~Engine()
 {
+  entity_manager.reset();
+  component_manager.reset();
+  system_manager.reset();
+  
   delete gui;
   Synchronization::destroy();
   device.reset();
@@ -15,22 +26,16 @@ Engine::~Engine()
   Settings::destroy();
 }
 
-void Engine::initialize()
+void Engine::load()
 {
-  gui = new GUI;
-  createInstance();
-  gui->createSurface(vk_instance);
-  device = std::make_shared<Device>(vk_instance, *gui);
-  gui->setupWindow(*device);
-
-  Synchronization::instance().link_device(device);
+  initialize();
 }
 
 void Engine::run()
-{  
-  while (!gui->shouldClose())
+{
+  while (!close_condition())
   {
-    gui->pollEvents();
+    poll_gui();
   }
 }
 
@@ -73,6 +78,32 @@ void Engine::createInstance()
   if (Settings::instance().portability_enabled()) ci_instance.flags |= vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
 
   vk_instance = vk_context.createInstance(ci_instance);
+}
+
+bool Engine::close_condition()
+{
+  return should_close();
+}
+
+bool Engine::should_close() const
+{
+  return gui->shouldClose();
+}
+
+void Engine::initialize()
+{
+  gui = new GUI;
+  createInstance();
+  gui->createSurface(vk_instance);
+  device = std::make_shared<Device>(vk_instance, *gui);
+  gui->setupWindow(*device);
+
+  Synchronization::instance().link_device(device);
+}
+
+void Engine::poll_gui()
+{
+  gui->pollEvents();
 }
 
 } // namespace vecs

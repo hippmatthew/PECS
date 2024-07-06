@@ -46,7 +46,7 @@ enum ShaderType
   Geometry,
   Fragment,
   ComputeShader
-};
+};  
 
 }
 

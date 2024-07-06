@@ -1,10 +1,8 @@
-#include "src/core/include/components.hpp"
-
 namespace vecs
 {
 
 template <typename T>
-std::optional<T> ComponentArray<T>::operator [] (unsigned long e_id)
+std::optional<T> ComponentArray<T>::at(unsigned long e_id) const
 {
   return valid(e_id) ? std::optional<T>(data[indexMap.at(e_id)]) : std::nullopt;
 }
@@ -64,7 +62,7 @@ void ComponentManager::removeData(unsigned long e_id)
 template <typename T>
 std::optional<T> ComponentManager::retrieve(unsigned long e_id)
 {
-  return registered<T>() ? *(array<T>())[e_id] : std::nullopt;
+  return registered<T>() ? array<T>()->at(e_id) : std::nullopt;
 }
 
 template <typename T>

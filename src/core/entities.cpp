@@ -5,62 +5,73 @@ namespace vecs
 
 EntityManager::EntityManager()
 {
-  signatures.resize(Settings::instance().entity_delta());
   nextID.push(0);
 }
 
 unsigned long EntityManager::count() const
 {
-  return e_ids.size();
+  return signatures.size();
 }
 
 bool EntityManager::valid(unsigned long e_id) const
 {
-  return e_ids.find(e_id) != e_ids.end();
+  if (indexMap.find(e_id) == indexMap.end()) return false;
+  
+  unsigned long index = indexMap.at(e_id);
+
+  if (idMap.find(index) == idMap.end()) return false;
+  
+  return idMap.at(index) == e_id;
 }
 
-void EntityManager::newEntity()
+void EntityManager::new_entity()
 {
-  if (count() == Settings::instance().max_entities()) return;
-  if (count() == signatures.size()) resize();
+  if (count() == VECS_SETTINGS.max_entities() || valid(nextID.top())) return;
+  
+  unsigned long e_id = nextID.top();
+  unsigned long index = count();
+  
+  indexMap.emplace(std::make_pair(e_id, index));
+  idMap.emplace(std::make_pair(index, e_id));
 
-  e_ids.emplace(nextID.top());
+  signatures.emplace_back(Signature{});
   
   nextID.pop();
   if (nextID.empty()) nextID.push(count());
 }
 
-void EntityManager::removeEntity(unsigned long e_id)
+void EntityManager::remove_entity(unsigned long e_id)
 {
   if (count() == 0 || !valid(e_id)) return;
 
-  e_ids.erase(e_id);
+  unsigned long index = indexMap.at(e_id);
+
+  indexMap.erase(e_id);
+  idMap.erase(index);
   
-  if (!e_ids.empty())
+  for (unsigned long i = index + 1; i < count(); ++i)
   {
-    sort(e_id);
+    unsigned long id = idMap.at(i);
+
+    idMap.erase(i);
+    indexMap.erase(id);
+
+    indexMap.emplace(std::make_pair(id, i - 1));
+    idMap.emplace(std::make_pair(i - 1, id));
+  }
+
+  signatures.erase(signatures.begin() + index);
+
+  if (count() == 0)
+  {
+    while (!nextID.empty())
+      nextID.pop();
+
+    nextID.push(0);
     return;
   }
-    
-  signatures.clear();
-  signatures.resize(Settings::instance().entity_delta());
-    
-  while (!nextID.empty())
-    nextID.pop();
-  nextID.push(0);
-}
 
-
-
-void EntityManager::resize()
-{
-  if (signatures.size() == Settings::instance().max_entities()) return;
-  
-  auto amount = signatures.size() + Settings::instance().entity_delta();
-  if (amount > Settings::instance().max_entities())
-    amount = Settings::instance().max_entities();
-
-  signatures.resize(amount);
+  sort(e_id);
 }
 
 void EntityManager::sort(unsigned long e_id)

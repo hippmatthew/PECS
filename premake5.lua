@@ -36,21 +36,21 @@ workspace "VECS-Library"
         "/usr/local/include"
       }
 
-  project "Test"
-    location "test/refactor"
-    filename "Test"
+  project "Tests"
+    location "tests"
+    filename "Tests"
 
     kind "ConsoleApp"
     language "C++"
     cppdialect "c++20"
 
-    targetdir "test/refactor/bin"
-    objdir "test/refactor/obj"
-    targetname "output"
+    targetdir "."
+    objdir "bin/tests"
+    targetname "test"
 
     files {
-      "test/refactor/src/include/*.hpp",
-      "test/refactor/src/*.cpp"
+      "tests/*.hpp",
+      "tests/*.cpp"
     }
 
     includedirs {
@@ -63,6 +63,7 @@ workspace "VECS-Library"
     links {
       "vulkan",
       "glfw",
+      "catch2",
       "vecs"
     }
 

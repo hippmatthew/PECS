@@ -202,7 +202,7 @@ void Device::getGPU(const vk::raii::Instance& vk_instance, const vk::raii::Surfa
     if (!hasAllFamily) continue;
 
     bool supportsExtensions;
-    for (const auto& extension : Settings::instance().device_extensions())
+    for (const auto& extension : VECS_SETTINGS.device_extensions())
     {
       supportsExtensions = false;
       for (const auto& property : GPU.enumerateDeviceExtensionProperties())
@@ -262,15 +262,15 @@ void Device::createDevice()
 
   vk::PhysicalDeviceFeatures features{};
 
-  if (Settings::instance().portability_enabled())
-    Settings::instance().add_device_extension(VK_PORTABILITY_SUBSET_NAME);
+  if (VECS_SETTINGS.portability_enabled())
+    VECS_SETTINGS.add_device_extension(VK_PORTABILITY_SUBSET_NAME);
     
 
   vk::PhysicalDeviceDynamicRenderingFeatures dynamicRendering{
     .dynamicRendering = true
   };
 
-  std::vector<const char *> extensions = Settings::instance().device_extensions();
+  std::vector<const char *> extensions = VECS_SETTINGS.device_extensions();
   vk::DeviceCreateInfo ci_device{
     .pNext                    = &dynamicRendering,
     .queueCreateInfoCount     = static_cast<unsigned int>(queueCreateInfos.size()),

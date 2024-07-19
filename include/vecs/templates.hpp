@@ -1,4 +1,4 @@
-// vecs::templates_hpp version 0.0.13.0 generated on 07-05-2024 12:12:18
+// vecs::templates_hpp version 0.0.14.0 generated on 07-19-2024 17:56:24
 
 #ifndef templates_hpp
 #define templates_hpp
@@ -68,7 +68,7 @@ std::set<unsigned long> EntityManager::retrieve() const
 }
 
 template <typename... Tps>
-void EntityManager::addComponents(unsigned long e_id)
+void EntityManager::add_components(unsigned long e_id)
 {
   if (!valid(e_id)) return;
 
@@ -76,7 +76,7 @@ void EntityManager::addComponents(unsigned long e_id)
 }
 
 template <typename... Tps>
-void EntityManager::removeComponents(unsigned long e_id)
+void EntityManager::remove_components(unsigned long e_id)
 {
   if (!valid(e_id)) return;
 

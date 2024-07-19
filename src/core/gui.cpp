@@ -11,9 +11,9 @@ GUI::GUI()
   glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
   gl_window = glfwCreateWindow(
-    Settings::instance().width(),
-    Settings::instance().height(),
-    Settings::instance().title().c_str(),
+    VECS_SETTINGS.width(),
+    VECS_SETTINGS.height(),
+    VECS_SETTINGS.title().c_str(),
     nullptr,
     nullptr
   );
@@ -119,11 +119,11 @@ void GUI::chooseSurfaceFormat(const vk::raii::PhysicalDevice& vk_physicalDevice)
   auto formats = vk_physicalDevice.getSurfaceFormatsKHR(*vk_surface);
   for (const auto& format : formats)
   {
-    if (format.format == Settings::instance().format() && format.colorSpace == Settings::instance().color_space())
+    if (format.format == VECS_SETTINGS.format() && format.colorSpace == VECS_SETTINGS.color_space())
       return;
   }
-  Settings::instance().update_format(formats[0].format);
-  Settings::instance().update_color_space(formats[0].colorSpace);
+  VECS_SETTINGS.update_format(formats[0].format);
+  VECS_SETTINGS.update_color_space(formats[0].colorSpace);
 }
 
 void GUI::choosePresentMode(const vk::raii::PhysicalDevice& vk_physicalDevice) const
@@ -131,10 +131,10 @@ void GUI::choosePresentMode(const vk::raii::PhysicalDevice& vk_physicalDevice) c
   auto modes = vk_physicalDevice.getSurfacePresentModesKHR(*vk_surface);
   for (const auto& mode : modes)
   {
-    if (mode == Settings::instance().present_mode())
+    if (mode == VECS_SETTINGS.present_mode())
       return;
   }
-  Settings::instance().update_present_mode(vk::PresentModeKHR::eFifo);
+  VECS_SETTINGS.update_present_mode(vk::PresentModeKHR::eFifo);
 }
 
 void GUI::chooseExtent(const vk::raii::PhysicalDevice& vk_physicalDevice) const
@@ -143,17 +143,17 @@ void GUI::chooseExtent(const vk::raii::PhysicalDevice& vk_physicalDevice) const
 
   if (surfaceCapabilities.currentExtent.width != std::numeric_limits<unsigned int>::max())
   {
-    Settings::instance().update_extent(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+    VECS_SETTINGS.update_extent(surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
     return;
   }
 
   int width, height;
   glfwGetFramebufferSize(gl_window, &width, &height);
 
-  Settings::instance().update_extent(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
-  Settings::instance().update_extent(
-    std::clamp(Settings::instance().width(), surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width),
-    std::clamp(Settings::instance().height(), surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height)
+  VECS_SETTINGS.update_extent(static_cast<unsigned int>(width), static_cast<unsigned int>(height));
+  VECS_SETTINGS.update_extent(
+    std::clamp(VECS_SETTINGS.width(), surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width),
+    std::clamp(VECS_SETTINGS.height(), surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height)
   );
 }
 
@@ -168,9 +168,9 @@ void GUI::createSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, con
   vk::SwapchainCreateInfoKHR ci_swapchain{
     .surface                = *vk_surface,
     .minImageCount          = imageCount,
-    .imageFormat            = Settings::instance().format(),
-    .imageColorSpace        = Settings::instance().color_space(),
-    .imageExtent            = Settings::instance().extent(),
+    .imageFormat            = VECS_SETTINGS.format(),
+    .imageColorSpace        = VECS_SETTINGS.color_space(),
+    .imageExtent            = VECS_SETTINGS.extent(),
     .imageArrayLayers       = 1,
     .imageUsage             = vk::ImageUsageFlagBits::eColorAttachment,
     .imageSharingMode       = vk::SharingMode::eExclusive,
@@ -178,7 +178,7 @@ void GUI::createSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, con
     .pQueueFamilyIndices    = nullptr,
     .preTransform           = surfaceCapabilities.currentTransform,
     .compositeAlpha         = vk::CompositeAlphaFlagBitsKHR::eOpaque,
-    .presentMode            = Settings::instance().present_mode(),
+    .presentMode            = VECS_SETTINGS.present_mode(),
     .clipped                = vk::True,
     .oldSwapchain           = nullptr
   };
@@ -208,7 +208,7 @@ void GUI::createImageViews(const vk::raii::Device& vk_device)
     vk::ImageViewCreateInfo ci_imageView{
       .image            = vk_image,
       .viewType         = vk::ImageViewType::e2D,
-      .format           = Settings::instance().format(),
+      .format           = VECS_SETTINGS.format(),
       .components       = components,
       .subresourceRange = subresourceRange
     };

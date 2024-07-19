@@ -12,6 +12,12 @@
 #include <numeric>
 #include <string>
 
+#define VECS_LOWER_LIMIT  std::numeric_limits<unsigned short>::max()
+#define VECS_MIDDLE_LIMIT std::numeric_limits<unsigned int>::max()
+#define VECS_UPPER_LIMIT  std::numeric_limits<unsigned long>::max()
+
+#define VECS_SETTINGS     vecs::Settings::instance()
+
 namespace vecs
 {
 
@@ -99,9 +105,8 @@ class Settings
     unsigned long s_maxFrames = 2;
     vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 
-    unsigned long s_maxEntities = std::numeric_limits<unsigned short>::max();
-    unsigned long s_maxComponents = std::numeric_limits<unsigned short>::max();
-    unsigned long s_entityDelta = 5;
+    unsigned long s_maxEntities = VECS_LOWER_LIMIT;
+    unsigned long s_maxComponents = VECS_LOWER_LIMIT;
 };
 
 } // namespace vecs

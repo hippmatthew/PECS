@@ -1,4 +1,4 @@
-// vecs::vecs_hpp version 0.0.13.0 generated on 07-05-2024 12:12:18
+// vecs::vecs_hpp version 0.0.14.0 generated on 07-19-2024 17:56:24
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -19,11 +19,18 @@
 
 #include <map>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <set>
 #include <stack>
 #include <string>
 #include <vector>
+
+#define VECS_LOWER_LIMIT  std::numeric_limits<unsigned short>::max()
+#define VECS_MIDDLE_LIMIT std::numeric_limits<unsigned int>::max()
+#define VECS_UPPER_LIMIT  std::numeric_limits<unsigned long>::max()
+
+#define VECS_SETTINGS vecs::Settings::instance()
 
 namespace vecs
 {
@@ -294,25 +301,26 @@ class EntityManager
     unsigned long count() const;
     bool valid(unsigned long) const;
     
-    void newEntity();
-    void removeEntity(unsigned long);
+    void new_entity();
+    void remove_entity(unsigned long);
 
     template <typename... Tps>
     std::set<unsigned long> retrieve() const;
 
     template <typename... Tps>
-    void addComponents(unsigned long);
+    void add_components(unsigned long);
 
     template <typename... Tps>
-    void removeComponents(unsigned long);
+    void remove_components(unsigned long);
 
-  private:
+  protected:
     void resize();
     void sort(unsigned long);
   
-  private:
+  protected:
     std::vector<Signature> signatures;
-    std::set<unsigned long> e_ids;
+    std::map<unsigned long, unsigned long> indexMap;
+    std::map<unsigned long, unsigned long> idMap;
     std::stack<unsigned long> nextID;
 };
 
@@ -501,9 +509,8 @@ class Settings
     unsigned long s_maxFrames = 2;
     vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 
-    unsigned long s_maxEntities = std::numeric_limits<unsigned short>::max();
-    unsigned long s_maxComponents = std::numeric_limits<unsigned short>::max();
-    unsigned long s_entityDelta = 5;
+    unsigned long s_maxEntities = VECS_LOWER_LIMIT;
+    unsigned long s_maxComponents = VECS_LOWER_LIMIT;
 };
 
 class Signature

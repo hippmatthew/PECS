@@ -4,6 +4,7 @@
 #include "src/core/include/settings.hpp"
 #include "src/core/include/signature.hpp"
 
+#include <map>
 #include <stack>
 
 namespace vecs
@@ -24,25 +25,26 @@ class EntityManager
     unsigned long count() const;
     bool valid(unsigned long) const;
     
-    void newEntity();
-    void removeEntity(unsigned long);
+    void new_entity();
+    void remove_entity(unsigned long);
 
     template <typename... Tps>
     std::set<unsigned long> retrieve() const;
 
     template <typename... Tps>
-    void addComponents(unsigned long);
+    void add_components(unsigned long);
 
     template <typename... Tps>
-    void removeComponents(unsigned long);
+    void remove_components(unsigned long);
 
-  private:
+  protected:
     void resize();
     void sort(unsigned long);
   
-  private:
+  protected:
     std::vector<Signature> signatures;
-    std::set<unsigned long> e_ids;
+    std::map<unsigned long, unsigned long> indexMap;
+    std::map<unsigned long, unsigned long> idMap;
     std::stack<unsigned long> nextID;
 };
 

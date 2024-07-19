@@ -44,6 +44,16 @@ done
 
 space
 
+input "#define VECS_LOWER_LIMIT  std::numeric_limits<unsigned short>::max()"
+input "#define VECS_MIDDLE_LIMIT std::numeric_limits<unsigned int>::max()"
+input "#define VECS_UPPER_LIMIT  std::numeric_limits<unsigned long>::max()"
+
+space
+
+input "#define VECS_SETTINGS vecs::Settings::instance()"
+
+space
+
 input "namespace vecs"
 input "{"
 

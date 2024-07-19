@@ -1,87 +1,10 @@
-// vecs::templates_hpp version 0.0.14.0 generated on 07-19-2024 17:56:24
+// vecs::templates_hpp version 0.0.15.0 generated on 07-19-2024 19:30:31
 
 #ifndef templates_hpp
 #define templates_hpp
 
 namespace vecs
 {
-
-template <typename... Tps>
-void Signature::set()
-{
-  ( add<Tps>(), ... );
-  hash();
-}
-
-template <typename... Tps>
-void Signature::unset()
-{
-  ( remove<Tps>(), ... );
-  hash();
-}
-
-template <typename T>
-void Signature::add()
-{
-  auto type = std::string(typeid(T).name());
-  if (types.find(type) != types.end()) return;
-
-  types.emplace(type);
-}
-
-template <typename T>
-void Signature::remove()
-{
-  auto type = std::string(typeid(T).name());
-  if (types.find(type) == types.end()) return;
-
-  types.erase(type);
-}
-
-template <typename... Tps>
-std::set<unsigned long> EntityManager::retrieve() const
-{
-  Signature signature;
-  signature.set<Tps...>();
-
-  std::set<unsigned long> entities;
-  
-  unsigned long e_id = 0, entityCount = 0;
-  for (const auto& s : signatures)
-  {
-    if (!valid(e_id))
-    {
-      ++e_id;
-      continue;
-    }
-    
-    if (s == signature)
-      entities.emplace(e_id);
-
-    ++e_id;
-    ++entityCount;
-
-    if (entityCount > count()) break;
-  }
-
-  return entities;
-}
-
-template <typename... Tps>
-void EntityManager::add_components(unsigned long e_id)
-{
-  if (!valid(e_id)) return;
-
-  signatures[e_id].set<Tps...>();
-}
-
-template <typename... Tps>
-void EntityManager::remove_components(unsigned long e_id)
-{
-  if (!valid(e_id)) return;
-
-  signatures[e_id].unset<Tps...>();
-}
 
 template <typename T>
 std::optional<T> ComponentArray<T>::at(unsigned long e_id) const
@@ -190,6 +113,77 @@ void ComponentManager::remove(unsigned long e_id)
   
   array<T>()->erase(e_id);
 }
+
+template <typename... Tps>
+std::set<unsigned long> EntityManager::retrieve(bool exactMatch) const
+{
+  Signature signature;
+  signature.set<Tps...>();
+
+  std::set<unsigned long> entities;
+  
+  unsigned long index = 0;
+  for (const auto& s : signatures)
+  {
+    if (exactMatch ? signature & s : s & signature)
+      entities.emplace(idMap.at(index++));
+  }
+
+  return entities;
+}
+
+template <typename... Tps>
+void EntityManager::add_components(unsigned long e_id)
+{
+  if (!valid(e_id)) return;
+
+  signatures[indexMap.at(e_id)].set<Tps...>();
+}
+
+template <typename... Tps>
+void EntityManager::remove_components(unsigned long e_id)
+{
+  if (!valid(e_id)) return;
+
+  signatures[indexMap.at(e_id)].unset<Tps...>();
+}
+
+
+template <typename T>
+unsigned short Settings::component_id()
+{
+  const char * typeName = typeid(T).name();
+  
+  if (s_idMap.find(typeName) == s_idMap.end() && nextID != s_maxComponents)
+    s_idMap.emplace(std::make_pair(typeName, nextID++));
+
+  return s_idMap.at(typeName);
+}
+
+template <typename... Tps>
+void Signature::set()
+{
+  ( add<Tps>(), ... );
+}
+
+template <typename... Tps>
+void Signature::unset()
+{
+  ( remove<Tps>(), ... );
+}
+
+template <typename T>
+void Signature::add()
+{
+  bits.set(VECS_SETTINGS.component_id<T>());
+}
+
+template <typename T>
+void Signature::remove()
+{
+  bits.set(VECS_SETTINGS.component_id<T>(), false);
+}
+
 
 template <typename... Tps>
 void System::addComponents()

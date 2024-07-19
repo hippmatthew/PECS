@@ -80,6 +80,6 @@ class SystemManager
 
 } // namespace vecs
 
-#include "src/core/include/systemtemplates.hpp"
+#include "src/core/include/systems_templates.hpp"
 
 #endif // vecs_core_systems_hpp

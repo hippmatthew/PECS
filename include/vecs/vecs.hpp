@@ -1,4 +1,4 @@
-// vecs::vecs_hpp version 0.0.14.0 generated on 07-19-2024 17:56:24
+// vecs::vecs_hpp version 0.0.15.0 generated on 07-19-2024 19:30:31
 
 #ifndef vecs_hpp
 #define vecs_hpp
@@ -26,11 +26,8 @@
 #include <string>
 #include <vector>
 
-#define VECS_LOWER_LIMIT  std::numeric_limits<unsigned short>::max()
-#define VECS_MIDDLE_LIMIT std::numeric_limits<unsigned int>::max()
-#define VECS_UPPER_LIMIT  std::numeric_limits<unsigned long>::max()
-
-#define VECS_SETTINGS vecs::Settings::instance()
+#define VECS_LIMIT     std::numeric_limits<unsigned short>::max()
+#define VECS_SETTINGS  vecs::Settings::instance()
 
 namespace vecs
 {
@@ -305,7 +302,7 @@ class EntityManager
     void remove_entity(unsigned long);
 
     template <typename... Tps>
-    std::set<unsigned long> retrieve() const;
+    std::set<unsigned long> retrieve(bool extactMatch = false) const;
 
     template <typename... Tps>
     void add_components(unsigned long);
@@ -314,7 +311,6 @@ class EntityManager
     void remove_components(unsigned long);
 
   protected:
-    void resize();
     void sort(unsigned long);
   
   protected:
@@ -451,9 +447,11 @@ class Settings
     vk::Extent2D extent() const;
     unsigned long max_flight_frames() const;
     vk::ClearValue background_color() const;
-    const unsigned long& max_entities() const;
-    const unsigned long& max_components() const;
-    const unsigned long& entity_delta() const;
+    const unsigned short& max_entities() const;
+    const unsigned short& max_components() const;
+
+    template <typename T>
+    unsigned short component_id();
 
     Settings& update_name(std::string);
     Settings& update_version(unsigned int);
@@ -470,9 +468,8 @@ class Settings
     Settings& update_extent(unsigned int width, unsigned int height);
     Settings& update_max_flight_frames(unsigned long);
     Settings& update_background_color(vk::ClearValue);
-    Settings& update_max_entities(unsigned long);
-    Settings& update_max_components(unsigned long);
-    Settings& update_entity_delta(unsigned long);
+    Settings& update_max_entities(unsigned short);
+    Settings& update_max_components(unsigned short);
     
     void set_default();
 
@@ -482,6 +479,9 @@ class Settings
   
   private:
     static Settings * p_settings;
+
+    std::map<const char *, unsigned long> s_idMap;
+    unsigned int nextID = 0;
     
     std::string s_name = "VECS Application";
     unsigned int s_version = VK_MAKE_API_VERSION(0, 1, 0, 0);
@@ -509,8 +509,8 @@ class Settings
     unsigned long s_maxFrames = 2;
     vk::ClearValue s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
 
-    unsigned long s_maxEntities = VECS_LOWER_LIMIT;
-    unsigned long s_maxComponents = VECS_LOWER_LIMIT;
+    unsigned short s_maxEntities = 20000;
+    unsigned short s_maxComponents = 100;
 };
 
 class Signature
@@ -524,10 +524,8 @@ class Signature
 
     Signature& operator = (const Signature&) = default;
     Signature& operator = (Signature&&) = default;
-    bool operator == (const Signature&);
-    
-    const unsigned long& value() const;
-    
+    bool operator & (const Signature&) const;
+
     void reset();
 
     template <typename... Tps>
@@ -537,17 +535,14 @@ class Signature
     void unset();
   
   private:
-    void hash();
-    
     template <typename T>
     void add();
 
     template <typename T>
     void remove();
 
-  private:
-    std::set<std::string> types;
-    unsigned long id = 0;
+  protected:
+    std::bitset<VECS_LIMIT> bits;
 };
 
 class Synchronization

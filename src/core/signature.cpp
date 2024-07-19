@@ -3,36 +3,14 @@
 namespace vecs
 {
 
-bool Signature::operator == (const Signature& sig)
+bool Signature::operator & (const Signature& rhs) const
 {
-  return id == sig.id;
-}
-
-const unsigned long& Signature::value() const
-{
-  return id;
+  return (bits & rhs.bits) == rhs.bits;
 }
 
 void Signature::reset()
 {
-  types.clear();
-  id = 0;
-}
-
-void Signature::hash()
-{
-  if (types.empty())
-  {
-    id = 0;
-    return;
-  }
-  
-  std::string str = "";
-
-  for (const auto& type : types)
-    str += type;
-
-  id = std::hash<std::string>{}(str);
+  bits.reset();
 }
 
 } // namespace vecs

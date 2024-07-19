@@ -91,12 +91,12 @@ vk::ClearValue Settings::background_color() const
   return s_backColor;
 }
 
-const unsigned long& Settings::max_entities() const
+const unsigned short& Settings::max_entities() const
 {
   return s_maxEntities;
 }
 
-const unsigned long& Settings::max_components() const
+const unsigned short& Settings::max_components() const
 {
   return s_maxComponents;
 }
@@ -204,13 +204,13 @@ Settings& Settings::update_background_color(vk::ClearValue color)
   return *this;
 }
 
-Settings& Settings::update_max_entities(unsigned long amount)
+Settings& Settings::update_max_entities(unsigned short amount)
 {
   s_maxEntities = amount;
   return *this;
 }
 
-Settings& Settings::update_max_components(unsigned long amount)
+Settings& Settings::update_max_components(unsigned short amount)
 {
   s_maxComponents = amount;
   return *this;
@@ -237,8 +237,8 @@ void Settings::set_default()
   };
   s_maxFrames = 2;
   s_backColor = vk::ClearValue{vk::ClearColorValue{std::array<float, 4>{ 0.0025f, 0.01f, 0.005f, 1.0f }}};
-  s_maxEntities = VECS_LOWER_LIMIT;
-  s_maxComponents = VECS_LOWER_LIMIT;
+  s_maxEntities = 20000;
+  s_maxComponents = 100;
 }
 
 } // namespace vecs

@@ -5,6 +5,7 @@
 #include "src/core/include/signature.hpp"
 
 #include <map>
+#include <set>
 #include <stack>
 
 namespace vecs
@@ -29,7 +30,7 @@ class EntityManager
     void remove_entity(unsigned long);
 
     template <typename... Tps>
-    std::set<unsigned long> retrieve() const;
+    std::set<unsigned long> retrieve(bool extactMatch = false) const;
 
     template <typename... Tps>
     void add_components(unsigned long);
@@ -38,7 +39,6 @@ class EntityManager
     void remove_components(unsigned long);
 
   protected:
-    void resize();
     void sort(unsigned long);
   
   protected:
@@ -50,6 +50,6 @@ class EntityManager
 
 } // namespace vecs
 
-#include "src/core/include/entitytemplates.hpp"
+#include "src/core/include/entities_templates.hpp"
 
 #endif // vecs_core_entities_hpp

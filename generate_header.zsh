@@ -44,13 +44,8 @@ done
 
 space
 
-input "#define VECS_LOWER_LIMIT  std::numeric_limits<unsigned short>::max()"
-input "#define VECS_MIDDLE_LIMIT std::numeric_limits<unsigned int>::max()"
-input "#define VECS_UPPER_LIMIT  std::numeric_limits<unsigned long>::max()"
-
-space
-
-input "#define VECS_SETTINGS vecs::Settings::instance()"
+input "#define VECS_LIMIT     std::numeric_limits<unsigned short>::max()"
+input "#define VECS_SETTINGS  vecs::Settings::instance()"
 
 space
 
@@ -134,19 +129,23 @@ input "{"
 
 space
 
-read_misc signaturetemplates 4 34
+read_misc components_templates 4 110
 
 space
 
-read_misc entitytemplates 4 47
+read_misc entities_templates 4 47
 
 space
 
-read_misc componenttemplates 4 110
+read_misc settings_templates 4 13
 
 space
 
-read_misc systemtemplates 4 74
+read_misc signature_templates 4 34
+
+space
+
+read_misc systems_templates 4 74
 
 space
 

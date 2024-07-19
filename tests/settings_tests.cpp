@@ -190,6 +190,6 @@ TEST_CASE( "defaults", "[settings][defaults]" )
   CHECK( VECS_SETTINGS.extent() == testExtent );
   CHECK( VECS_SETTINGS.max_flight_frames() == 2 );
   CHECK( VECS_SETTINGS.background_color().color.float32 == testColor.float32 );
-  CHECK( VECS_SETTINGS.max_entities() == std::numeric_limits<unsigned short>::max() );
-  CHECK( VECS_SETTINGS.max_components() == std::numeric_limits<unsigned short>::max() );
+  CHECK( VECS_SETTINGS.max_entities() == 20000 );
+  CHECK( VECS_SETTINGS.max_components() == 100 );
 }

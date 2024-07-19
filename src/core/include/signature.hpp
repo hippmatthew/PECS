@@ -1,6 +1,10 @@
 #ifndef vecs_core_signature_hpp
 #define vecs_core_signature_hpp
 
+#include "src/core/include/settings.hpp"
+
+#include <bitset>
+#include <numeric>
 #include <set>
 
 namespace vecs
@@ -17,10 +21,8 @@ class Signature
 
     Signature& operator = (const Signature&) = default;
     Signature& operator = (Signature&&) = default;
-    bool operator == (const Signature&);
-    
-    const unsigned long& value() const;
-    
+    bool operator & (const Signature&) const;
+
     void reset();
 
     template <typename... Tps>
@@ -30,21 +32,18 @@ class Signature
     void unset();
   
   private:
-    void hash();
-    
     template <typename T>
     void add();
 
     template <typename T>
     void remove();
 
-  private:
-    std::set<std::string> types;
-    unsigned long id = 0;
+  protected:
+    std::bitset<VECS_LIMIT> bits;
 };
 
 } // namespace vecs
 
-#include "src/core/include/signaturetemplates.hpp"
+#include "src/core/include/signature_templates.hpp"
 
 #endif // vecs_core_signature_hpp

@@ -100,6 +100,6 @@ class ComponentManager
 
 } // namespace vecs
 
-#include "src/core/include/componenttemplates.hpp"
+#include "src/core/include/components_templates.hpp"
 
 #endif // vecs_core_components_hpp

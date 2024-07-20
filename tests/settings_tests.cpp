@@ -65,32 +65,35 @@ TEST_CASE( "extensions", "[settings][extensions]" )
 {
   SECTION( "retrieve_extensions" )
   {
-    std::vector<const char *> testExtensions = {
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-    };
-
-    CHECK( TEST::compare(VECS_SETTINGS.device_extensions(), testExtensions) );
+    CHECK( TEST::compare(VECS_SETTINGS.device_extensions(), { VK_KHR_SWAPCHAIN_EXTENSION_NAME }) );
   }
   
-  SECTION( "add_extension" )
+  SECTION( "add_valid_extension" )
   {
-    std::string testExtension = "test_extension";
-    unsigned long prevSize = VECS_SETTINGS.device_extensions().size();
-    
-    VECS_SETTINGS.add_device_extension(testExtension.c_str());
+    VECS_SETTINGS.add_device_extension("test_extension");
 
-    CHECK( VECS_SETTINGS.device_extensions().size() == prevSize + 1 );
+    CHECK( VECS_SETTINGS.device_extensions().size() == 2 );
   }
 
-  SECTION( "remove_extension" )
+  SECTION( "add_invalid_extension" )
   {
-    std::string testExtension = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-    unsigned long prevSize = VECS_SETTINGS.device_extensions().size();
+    VECS_SETTINGS.add_device_extension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+    
+    CHECK( VECS_SETTINGS.device_extensions().size() == 2 );
+  }
 
-    VECS_SETTINGS.remove_device_extension(testExtension.c_str());
+  SECTION( "remove_valid_extension" )
+  {
+    VECS_SETTINGS.remove_device_extension("test_extension");
 
-    CHECK( VECS_SETTINGS.device_extensions().size() == prevSize - 1 );
+    CHECK( VECS_SETTINGS.device_extensions().size() == 1 );
+  }
+  
+  SECTION( "remove_invalid_extension" )
+  {
+    VECS_SETTINGS.remove_device_extension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+    CHECK( VECS_SETTINGS.device_extensions().size() == 1 );
   }
 }
 
@@ -164,11 +167,6 @@ TEST_CASE( "update_components", "[settings][components]" )
 
 TEST_CASE( "defaults", "[settings][defaults]" )
 {
-  std::vector<const char *> testExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-  };
-
   vk::Extent2D testExtent{
     .width  = 1280,
     .height = 720
@@ -185,7 +183,7 @@ TEST_CASE( "defaults", "[settings][defaults]" )
   CHECK( VECS_SETTINGS.width() == 1280 );
   CHECK( VECS_SETTINGS.height() == 720 );
   CHECK( VECS_SETTINGS.portability_enabled() == false );
-  CHECK( TEST::compare(VECS_SETTINGS.device_extensions(), testExtensions) );
+  CHECK( TEST::compare(VECS_SETTINGS.device_extensions(), { VK_KHR_SWAPCHAIN_EXTENSION_NAME }) );
   CHECK( VECS_SETTINGS.format() == vk::Format::eB8G8R8A8Srgb );
   CHECK( VECS_SETTINGS.color_space() == vk::ColorSpaceKHR::eSrgbNonlinear );
   CHECK( VECS_SETTINGS.present_mode() == vk::PresentModeKHR::eMailbox );

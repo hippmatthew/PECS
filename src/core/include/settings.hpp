@@ -91,10 +91,7 @@ class Settings
 
     bool s_portabilityEnabled = false;
 
-    std::vector<const char *> s_gpuExtensions{
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-    };
+    std::vector<const char *> s_gpuExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
     vk::Format s_format = vk::Format::eB8G8R8A8Srgb;
     vk::ColorSpaceKHR s_colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;

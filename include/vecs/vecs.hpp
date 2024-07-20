@@ -1,4 +1,4 @@
-// vecs::vecs_master_hpp version 0.0.15.3 generated on 07-20-2024 17:20:51 with system Linux
+// vecs::vecs_master_hpp version 0.0.16.0 generated on 07-20-2024 19:09:59 with system Linux
 
 #ifndef vecs_master_hpp
 #define vecs_master_hpp
@@ -215,7 +215,7 @@ class Device
     };
   
   public:
-    Device(const vk::raii::Instance&, const vecs::GUI&);
+    Device(const vk::raii::Instance&, const vecs::GUI&, const void * p_next = nullptr);
     Device(const Device&) = delete;
     Device(Device&&) = delete;
 
@@ -232,7 +232,7 @@ class Device
 
   private:
     void getGPU(const vk::raii::Instance&, const vk::raii::SurfaceKHR&);
-    void createDevice();
+    void createDevice(const void *);
 
   private:
     std::unique_ptr<QueueFamilies> queueFamilies = nullptr;
@@ -264,11 +264,11 @@ class Engine
     
     bool should_close() const;
     
-    void initialize();
+    void initialize(void * p_next = nullptr);
     void poll_gui();
   
   private:
-    GUI * gui = nullptr;
+    std::unique_ptr<GUI> gui = nullptr;
     std::shared_ptr<Device> device = nullptr;
 
     vk::raii::Instance vk_instance = nullptr;
@@ -489,10 +489,7 @@ class Settings
 
     bool s_portabilityEnabled = false;
 
-    std::vector<const char *> s_gpuExtensions{
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-    };
+    std::vector<const char *> s_gpuExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
     vk::Format s_format = vk::Format::eB8G8R8A8Srgb;
     vk::ColorSpaceKHR s_colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;

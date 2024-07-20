@@ -145,21 +145,26 @@ Settings& Settings::toggle_portability()
 
 Settings& Settings::add_device_extension(const char * ext)
 {
+  for (auto * extension : s_gpuExtensions)
+  {
+    if (std::string(extension) == ext)
+      return *this;
+  }
+  
   s_gpuExtensions.emplace_back(ext);
   return *this;
 }
 
 Settings& Settings::remove_device_extension(const char * ext)
 {
-  unsigned long index = 0;
-  for (const auto * extension : s_gpuExtensions)
+  if (std::string(ext) == VK_KHR_SWAPCHAIN_EXTENSION_NAME) return *this;
+  
+  for (auto itr = s_gpuExtensions.begin(); itr != s_gpuExtensions.end(); ++itr)
   {
-    if (std::string(extension) == std::string(ext))
-    {
-      s_gpuExtensions.erase(s_gpuExtensions.begin() + index);
-      break;
-    }
-    ++index;
+    if (std::string(*itr) != ext) continue;
+    
+    s_gpuExtensions.erase(itr);
+    break;
   }
 
   return *this;
@@ -224,10 +229,7 @@ void Settings::set_default()
   s_width = 1280;
   s_height = 720;
   s_portabilityEnabled = false;
-  s_gpuExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-  };
+  s_gpuExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
   s_format = vk::Format::eB8G8R8A8Srgb;
   s_colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
   s_presentMode = vk::PresentModeKHR::eMailbox;

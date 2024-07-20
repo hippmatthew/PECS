@@ -32,11 +32,11 @@ class Engine
     
     bool should_close() const;
     
-    void initialize();
+    void initialize(void * p_next = nullptr);
     void poll_gui();
   
   private:
-    GUI * gui = nullptr;
+    std::unique_ptr<GUI> gui = nullptr;
     std::shared_ptr<Device> device = nullptr;
 
     vk::raii::Instance vk_instance = nullptr;

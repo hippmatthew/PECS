@@ -69,7 +69,7 @@ class Device
     };
   
   public:
-    Device(const vk::raii::Instance&, const vecs::GUI&);
+    Device(const vk::raii::Instance&, const vecs::GUI&, const void * p_next = nullptr);
     Device(const Device&) = delete;
     Device(Device&&) = delete;
 
@@ -86,7 +86,7 @@ class Device
 
   private:
     void getGPU(const vk::raii::Instance&, const vk::raii::SurfaceKHR&);
-    void createDevice();
+    void createDevice(const void *);
 
   private:
     std::unique_ptr<QueueFamilies> queueFamilies = nullptr;

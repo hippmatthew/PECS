@@ -126,10 +126,10 @@ void Device::QueueFamilies::setQueues(const vk::raii::Device& vk_device)
   }
 }
 
-Device::Device(const vk::raii::Instance& vk_instance, const vecs::GUI& gui)
+Device::Device(const vk::raii::Instance& vk_instance, const vecs::GUI& gui, const void * p_next)
 {
   getGPU(vk_instance, gui.surface());
-  createDevice();
+  createDevice(p_next);
   
   queueFamilies->setQueues(vk_device);
 }
@@ -239,7 +239,7 @@ void Device::getGPU(const vk::raii::Instance& vk_instance, const vk::raii::Surfa
     VECS_SETTINGS.toggle_portability();
 }
 
-void Device::createDevice()
+void Device::createDevice(const void * p_next)
 {  
   float queuePriority = 1.0f;
   std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
@@ -262,13 +262,9 @@ void Device::createDevice()
   if (VECS_SETTINGS.portability_enabled())
     VECS_SETTINGS.add_device_extension(VK_PORTABILITY_SUBSET_NAME);
 
-  vk::PhysicalDeviceDynamicRenderingFeatures dynamicRendering{
-    .dynamicRendering = true
-  };
-
   std::vector<const char *> extensions = VECS_SETTINGS.device_extensions();
   vk::DeviceCreateInfo ci_device{
-    .pNext                    = &dynamicRendering,
+    .pNext                    = p_next,
     .queueCreateInfoCount     = static_cast<unsigned int>(queueCreateInfos.size()),
     .pQueueCreateInfos        = queueCreateInfos.data(),
     .enabledExtensionCount    = static_cast<unsigned int>(extensions.size()),

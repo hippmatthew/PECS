@@ -48,9 +48,9 @@ void ComponentManager::unregisterComponents()
 }
 
 template <typename... Tps>
-void ComponentManager::updateData(unsigned long e_id, Tps&... Args)
+void ComponentManager::updateData(unsigned long e_id, Tps&... args)
 {
-  ( update<Tps>(e_id, Args), ... );
+  ( update<Tps>(e_id, args), ... );
 }
 
 template <typename... Tps>

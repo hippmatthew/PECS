@@ -1,4 +1,4 @@
-// vecs::vecs_templates_hpp version 0.0.15.3 generated on 07-20-2024 17:20:51 with system Linux
+// vecs::vecs_templates_hpp version 0.0.16.0 generated on 07-20-2024 19:09:59 with system Linux
 
 #ifndef vecs_templates_hpp
 #define vecs_templates_hpp
@@ -53,9 +53,9 @@ void ComponentManager::unregisterComponents()
 }
 
 template <typename... Tps>
-void ComponentManager::updateData(unsigned long e_id, Tps&... Args)
+void ComponentManager::updateData(unsigned long e_id, Tps&... args)
 {
-  ( update<Tps>(e_id, Args), ... );
+  ( update<Tps>(e_id, args), ... );
 }
 
 template <typename... Tps>

@@ -4,6 +4,8 @@
 #include "src/core/include/entities.hpp"
 #include "src/core/include/signature.hpp"
 
+#include <bitset>
+
 namespace TEST
 {
 

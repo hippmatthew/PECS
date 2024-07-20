@@ -2,14 +2,31 @@
 
 source .helpers.zsh
 
+log "VECS headers version ${VERSION} started at ${TIME} on system ${SYS}"
+
+
+while getopts ":s" opt
+do
+  case $opt in
+    s)
+      set_alias
+      ;;
+    \?)
+      ;;
+  esac
+done
+
+
+log "generating ${FILES[$FILE]}"
+
 clear
 
-input "// vecs::vecs_hpp version ${VERSION} generated on ${TIME}"
+input "// vecs::vecs_master_hpp version ${VERSION} generated on ${TIME} with system ${SYS}"
 
 space
 
-input "#ifndef vecs_hpp"
-input "#define vecs_hpp"
+input "#ifndef vecs_master_hpp"
+input "#define vecs_master_hpp"
 
 space
 
@@ -109,18 +126,19 @@ space
 
 input "#include \"./templates.hpp\""
 
-end_file "#endif // vecs_hpp"
+end_file "#endif // vecs_master_hpp"
 
 FILE=2
+log "generating ${FILES[$FILE]}"
 
 clear
 
-input "// vecs::templates_hpp version ${VERSION} generated on ${TIME}"
+input "// vecs::vecs_templates_hpp version ${VERSION} generated on ${TIME} with system ${SYS}"
 
 space
 
-input "#ifndef templates_hpp"
-input "#define templates_hpp"
+input "#ifndef vecs_templates_hpp"
+input "#define vecs_templates_hpp"
 
 space
 
@@ -153,4 +171,6 @@ input "} // namespace vecs"
 
 space
 
-end_file "#endif // templates_hpp"
+end_file "#endif // vecs_templates_hpp"
+
+log "done."

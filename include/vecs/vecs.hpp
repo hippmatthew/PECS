@@ -1,7 +1,7 @@
-// vecs::vecs_hpp version 0.0.15.0 generated on 07-19-2024 19:30:31
+// vecs::vecs_master_hpp version 0.0.15.3 generated on 07-20-2024 17:20:51 with system Linux
 
-#ifndef vecs_hpp
-#define vecs_hpp
+#ifndef vecs_master_hpp
+#define vecs_master_hpp
 
 #ifndef vecs_no_includes
 
@@ -17,6 +17,7 @@
 
 #endif // vecs_no_includes
 
+#include <bitset>
 #include <map>
 #include <memory>
 #include <numeric>
@@ -199,7 +200,7 @@ class Device
         QueueFamilies(const QueueFamilies&) = delete;
         QueueFamilies(QueueFamilies&&) = delete;
 
-        ~QueueFamilies();
+        ~QueueFamilies() = default;
 
         QueueFamilies& operator = (const QueueFamilies&) = delete;
         QueueFamilies& operator = (QueueFamilies&&) = delete;
@@ -209,7 +210,7 @@ class Device
         void setQueues(const vk::raii::Device&);
 
       private:
-        std::map<std::string, QueueFamily *> familyMap;
+        std::map<std::string, std::shared_ptr<QueueFamily>> familyMap;
         std::vector<FamilyType> supportedFamilies;
     };
   
@@ -218,7 +219,7 @@ class Device
     Device(const Device&) = delete;
     Device(Device&&) = delete;
 
-    ~Device();
+    ~Device() = default;
 
     Device& operator = (const Device&) = delete;
     Device& operator = (Device&&) = delete;
@@ -234,12 +235,7 @@ class Device
     void createDevice();
 
   private:
-    std::vector<const char *> extensions{
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-    };
-
-    QueueFamilies * queueFamilies = nullptr;
+    std::unique_ptr<QueueFamilies> queueFamilies = nullptr;
 
     vk::raii::PhysicalDevice vk_physicalDevice = nullptr;
     vk::raii::Device vk_device = nullptr;
@@ -661,4 +657,4 @@ std::string to_string(vecs::FamilyType);
 } // namspace std
 
 #include "./templates.hpp"
-#endif // vecs_hpp
+#endif // vecs_master_hpp

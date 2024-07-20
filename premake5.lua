@@ -63,7 +63,6 @@ workspace "VECS-Library"
     links {
       "vulkan",
       "glfw",
-      "catch2",
       "vecs"
     }
 
@@ -78,4 +77,9 @@ workspace "VECS-Library"
         "/usr/local/lib"
       }
 
+      links { "catch2" }
+
       linkoptions { "-rpath /usr/local/lib" }
+
+    filter { "platforms:Linux-x86_64" }
+      links { "Catch2" }

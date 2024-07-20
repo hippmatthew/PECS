@@ -1,14 +1,16 @@
 #include "src/core/include/settings.hpp"
+#include "tests/utils.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
+
 TEST_CASE( "update_name", "[settings][name]" )
 {
   std::string testName = "test_name";
   VECS_SETTINGS.update_name(testName);
 
-  REQUIRE( VECS_SETTINGS.name() == testName );
+  CHECK( VECS_SETTINGS.name() == testName );
 }
 
 TEST_CASE( "update_version", "[settings][version]" )
@@ -16,7 +18,7 @@ TEST_CASE( "update_version", "[settings][version]" )
   unsigned int testVersion = VK_MAKE_API_VERSION(1, 0, 1, 0);
   VECS_SETTINGS.update_version(testVersion);
 
-  REQUIRE( VECS_SETTINGS.version() == testVersion );
+  CHECK( VECS_SETTINGS.version() == testVersion );
 }
 
 TEST_CASE( "toggle_validation", "[settings][validation]" )
@@ -24,7 +26,7 @@ TEST_CASE( "toggle_validation", "[settings][validation]" )
   bool previous = VECS_SETTINGS.validation_enabled();
   VECS_SETTINGS.toggle_validation();
 
-  REQUIRE( VECS_SETTINGS.validation_enabled() != previous );
+  CHECK( VECS_SETTINGS.validation_enabled() != previous );
 }
 
 TEST_CASE( "update_title", "[settings][title]" )
@@ -32,7 +34,7 @@ TEST_CASE( "update_title", "[settings][title]" )
   std::string testTitle = "test_title";
   VECS_SETTINGS.update_title(testTitle);
 
-  REQUIRE( VECS_SETTINGS.title() == testTitle );
+  CHECK( VECS_SETTINGS.title() == testTitle );
 }
 
 TEST_CASE( "update_width", "[settings][width]" )
@@ -40,7 +42,7 @@ TEST_CASE( "update_width", "[settings][width]" )
   unsigned int testWidth = 100;
   VECS_SETTINGS.update_width(testWidth);
 
-  REQUIRE( VECS_SETTINGS.width() == testWidth );
+  CHECK( VECS_SETTINGS.width() == testWidth );
 }
 
 TEST_CASE( "update_height", "[settings][height]" )
@@ -48,7 +50,7 @@ TEST_CASE( "update_height", "[settings][height]" )
   unsigned int testHeight = 100;
   VECS_SETTINGS.update_height(testHeight);
 
-  REQUIRE( VECS_SETTINGS.height() == testHeight );
+  CHECK( VECS_SETTINGS.height() == testHeight );
 }
 
 TEST_CASE( "toggle_portability", "[settings][portability]" )
@@ -56,19 +58,19 @@ TEST_CASE( "toggle_portability", "[settings][portability]" )
   bool previous = VECS_SETTINGS.portability_enabled();
   VECS_SETTINGS.toggle_portability();
 
-  REQUIRE( VECS_SETTINGS.portability_enabled() != previous );
+  CHECK( VECS_SETTINGS.portability_enabled() != previous );
 }
 
 TEST_CASE( "extensions", "[settings][extensions]" )
 {
-  SECTION( "retreive_extensions" )
+  SECTION( "retrieve_extensions" )
   {
     std::vector<const char *> testExtensions = {
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
     };
 
-    REQUIRE( VECS_SETTINGS.device_extensions() == testExtensions );
+    CHECK( TEST::compare(VECS_SETTINGS.device_extensions(), testExtensions) );
   }
   
   SECTION( "add_extension" )
@@ -78,7 +80,7 @@ TEST_CASE( "extensions", "[settings][extensions]" )
     
     VECS_SETTINGS.add_device_extension(testExtension.c_str());
 
-    REQUIRE( VECS_SETTINGS.device_extensions().size() == prevSize + 1 );
+    CHECK( VECS_SETTINGS.device_extensions().size() == prevSize + 1 );
   }
 
   SECTION( "remove_extension" )
@@ -88,7 +90,7 @@ TEST_CASE( "extensions", "[settings][extensions]" )
 
     VECS_SETTINGS.remove_device_extension(testExtension.c_str());
 
-    REQUIRE( VECS_SETTINGS.device_extensions().size() == prevSize - 1 );
+    CHECK( VECS_SETTINGS.device_extensions().size() == prevSize - 1 );
   }
 }
 
@@ -97,7 +99,7 @@ TEST_CASE( "update_format", "[settings][format]" )
   vk::Format testFormat = vk::Format::eA1B5G5R5UnormPack16KHR;
   VECS_SETTINGS.update_format(testFormat);
 
-  REQUIRE( VECS_SETTINGS.format() == testFormat);
+  CHECK( VECS_SETTINGS.format() == testFormat);
 }
 
 TEST_CASE( "update_color_space", "[settings][colorspace]" )
@@ -105,7 +107,7 @@ TEST_CASE( "update_color_space", "[settings][colorspace]" )
   vk::ColorSpaceKHR testSpace = vk::ColorSpaceKHR::eAdobergbLinearEXT;
   VECS_SETTINGS.update_color_space(testSpace);
 
-  REQUIRE( VECS_SETTINGS.color_space() == testSpace );
+  CHECK( VECS_SETTINGS.color_space() == testSpace );
 }
 
 TEST_CASE( "update_present_mode", "[settings][presentmode]" )
@@ -113,7 +115,7 @@ TEST_CASE( "update_present_mode", "[settings][presentmode]" )
   vk::PresentModeKHR testMode = vk::PresentModeKHR::eFifo;
   VECS_SETTINGS.update_present_mode(testMode);
 
-  REQUIRE( VECS_SETTINGS.present_mode() == testMode );
+  CHECK( VECS_SETTINGS.present_mode() == testMode );
 }
 
 TEST_CASE( "update_extent", "[settings][extent]" )
@@ -125,7 +127,7 @@ TEST_CASE( "update_extent", "[settings][extent]" )
 
   VECS_SETTINGS.update_extent(100, 100);
 
-  REQUIRE( VECS_SETTINGS.extent() == testExtent );
+  CHECK( VECS_SETTINGS.extent() == testExtent );
 }
 
 TEST_CASE( "update_flight_frames", "[settings][flightframes]" )
@@ -133,7 +135,7 @@ TEST_CASE( "update_flight_frames", "[settings][flightframes]" )
   unsigned int testFrames = 3;
   VECS_SETTINGS.update_max_flight_frames(testFrames);
 
-  REQUIRE( VECS_SETTINGS.max_flight_frames() == testFrames );
+  CHECK( VECS_SETTINGS.max_flight_frames() == testFrames );
 }
 
 TEST_CASE( "update_background", "[settings][background]" )
@@ -141,7 +143,7 @@ TEST_CASE( "update_background", "[settings][background]" )
   vk::ClearColorValue testColor{std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f}};
   VECS_SETTINGS.update_background_color(vk::ClearValue{testColor});
 
-  REQUIRE( VECS_SETTINGS.background_color().color.float32 == testColor.float32 );
+  CHECK( VECS_SETTINGS.background_color().color.float32 == testColor.float32 );
 }
 
 TEST_CASE( "update_entities", "[settings][entities]" )
@@ -149,7 +151,7 @@ TEST_CASE( "update_entities", "[settings][entities]" )
   unsigned long testEntities = 10;
   VECS_SETTINGS.update_max_entities(testEntities);
 
-  REQUIRE( VECS_SETTINGS.max_entities() == testEntities );
+  CHECK( VECS_SETTINGS.max_entities() == testEntities );
 }
 
 TEST_CASE( "update_components", "[settings][components]" )
@@ -157,7 +159,7 @@ TEST_CASE( "update_components", "[settings][components]" )
   unsigned long testComponents = 10;
   VECS_SETTINGS.update_max_components(testComponents);
 
-  REQUIRE( VECS_SETTINGS.max_components() == testComponents );
+  CHECK( VECS_SETTINGS.max_components() == testComponents );
 }
 
 TEST_CASE( "defaults", "[settings][defaults]" )
@@ -183,7 +185,7 @@ TEST_CASE( "defaults", "[settings][defaults]" )
   CHECK( VECS_SETTINGS.width() == 1280 );
   CHECK( VECS_SETTINGS.height() == 720 );
   CHECK( VECS_SETTINGS.portability_enabled() == false );
-  CHECK( VECS_SETTINGS.device_extensions() == testExtensions );
+  CHECK( TEST::compare(VECS_SETTINGS.device_extensions(), testExtensions) );
   CHECK( VECS_SETTINGS.format() == vk::Format::eB8G8R8A8Srgb );
   CHECK( VECS_SETTINGS.color_space() == vk::ColorSpaceKHR::eSrgbNonlinear );
   CHECK( VECS_SETTINGS.present_mode() == vk::PresentModeKHR::eMailbox );

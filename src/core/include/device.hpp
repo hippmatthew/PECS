@@ -13,6 +13,7 @@
 #endif // vecs_include_vulkan
 
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace vecs
@@ -53,7 +54,7 @@ class Device
         QueueFamilies(const QueueFamilies&) = delete;
         QueueFamilies(QueueFamilies&&) = delete;
 
-        ~QueueFamilies();
+        ~QueueFamilies() = default;
 
         QueueFamilies& operator = (const QueueFamilies&) = delete;
         QueueFamilies& operator = (QueueFamilies&&) = delete;
@@ -63,7 +64,7 @@ class Device
         void setQueues(const vk::raii::Device&);
 
       private:
-        std::map<std::string, QueueFamily *> familyMap;
+        std::map<std::string, std::shared_ptr<QueueFamily>> familyMap;
         std::vector<FamilyType> supportedFamilies;
     };
   
@@ -72,7 +73,7 @@ class Device
     Device(const Device&) = delete;
     Device(Device&&) = delete;
 
-    ~Device();
+    ~Device() = default;
 
     Device& operator = (const Device&) = delete;
     Device& operator = (Device&&) = delete;
@@ -88,12 +89,7 @@ class Device
     void createDevice();
 
   private:
-    std::vector<const char *> extensions{
-      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-      VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME
-    };
-
-    QueueFamilies * queueFamilies = nullptr;
+    std::unique_ptr<QueueFamilies> queueFamilies = nullptr;
 
     vk::raii::PhysicalDevice vk_physicalDevice = nullptr;
     vk::raii::Device vk_device = nullptr;

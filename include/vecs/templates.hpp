@@ -1,7 +1,7 @@
-// vecs::templates_hpp version 0.0.15.0 generated on 07-19-2024 19:30:31
+// vecs::vecs_templates_hpp version 0.0.15.3 generated on 07-20-2024 17:20:51 with system Linux
 
-#ifndef templates_hpp
-#define templates_hpp
+#ifndef vecs_templates_hpp
+#define vecs_templates_hpp
 
 namespace vecs
 {
@@ -259,4 +259,4 @@ void SystemManager::remove()
 
 } // namespace vecs
 
-#endif // templates_hpp
+#endif // vecs_templates_hpp

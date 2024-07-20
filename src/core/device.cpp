@@ -1,6 +1,5 @@
 #include "src/core/include/device.hpp"
 
-#include <iostream>
 #include <queue>
 
 #define VK_PORTABILITY_SUBSET_NAME "VK_KHR_portability_subset"
@@ -112,18 +111,9 @@ Device::QueueFamilies::QueueFamilies(const vk::raii::PhysicalDevice& vk_physical
 
 }
 
-Device::QueueFamilies::~QueueFamilies()
-{
-  for (const auto& type : supportedFamilies)
-    delete familyMap[std::to_string(type)];
-}
-
 void Device::QueueFamilies::addFamily(unsigned long index, FamilyType type)
 {
-  familyMap.emplace(std::pair<std::string, QueueFamily *>(
-    std::to_string(type),
-    new QueueFamily(index, to_bits(type))
-  ));
+  familyMap.emplace(std::make_pair(std::to_string(type), std::make_shared<QueueFamily>(index, to_bits(type))));
   supportedFamilies.emplace_back(type);
 }
 
@@ -131,7 +121,7 @@ void Device::QueueFamilies::setQueues(const vk::raii::Device& vk_device)
 {
   for (const auto& type : supportedFamilies)
   {
-    auto * family = familyMap[std::to_string(type)];
+    auto family = familyMap[std::to_string(type)];
     family->qf_queue = vk_device.getQueue(family->qf_index, 0);
   }
 }
@@ -142,11 +132,6 @@ Device::Device(const vk::raii::Instance& vk_instance, const vecs::GUI& gui)
   createDevice();
   
   queueFamilies->setQueues(vk_device);
-}
-
-Device::~Device()
-{
-  delete queueFamilies;
 }
 
 const vk::raii::PhysicalDevice& Device::physical() const
@@ -239,7 +224,19 @@ void Device::getGPU(const vk::raii::Instance& vk_instance, const vk::raii::Surfa
   else if (!virtualGPUs.empty()) vk_physicalDevice = virtualGPUs.front();
   else throw std::runtime_error("error @ vecs::Device::getGPU() : no suitable gpu found");
 
-  queueFamilies = new QueueFamilies(vk_physicalDevice, vk_surface);
+  queueFamilies = std::make_unique<QueueFamilies>(vk_physicalDevice, vk_surface);
+
+  bool portability = false;
+  for (const auto& extension : vk_physicalDevice.enumerateDeviceExtensionProperties())
+  {
+    if (std::string(extension.extensionName) == VK_PORTABILITY_SUBSET_NAME)
+    {
+      portability = true;
+      break;
+    }
+  }
+  if (portability ^ VECS_SETTINGS.portability_enabled())
+    VECS_SETTINGS.toggle_portability();
 }
 
 void Device::createDevice()
@@ -249,7 +246,7 @@ void Device::createDevice()
 
   for (const auto& type : queueFamilies->supportedFamilies)
   {
-    auto * family = queueFamilies->familyMap[std::to_string(type)];
+    auto family = queueFamilies->familyMap[std::to_string(type)];
 
     vk::DeviceQueueCreateInfo createInfo{
       .queueFamilyIndex = static_cast<unsigned int>(family->qf_index),
@@ -264,7 +261,6 @@ void Device::createDevice()
 
   if (VECS_SETTINGS.portability_enabled())
     VECS_SETTINGS.add_device_extension(VK_PORTABILITY_SUBSET_NAME);
-    
 
   vk::PhysicalDeviceDynamicRenderingFeatures dynamicRendering{
     .dynamicRendering = true
@@ -298,6 +294,8 @@ unsigned int to_bits(FamilyType type)
     case Sparse:
       return VECS_SPARSE_FAMILY;
   }
+  
+  throw std::runtime_error("error @ vecs::to_bits() : unknown vecs::FamilyType");
 }
 
 FamilyType to_family(unsigned int bits)
@@ -314,9 +312,9 @@ FamilyType to_family(unsigned int bits)
       return FamilyType::Async;
     case VECS_SPARSE_FAMILY:
       return FamilyType::Sparse;
-    default:
-      throw std::runtime_error("error @ vecs::to_family() : bits did not correspond to a family type");
   }
+
+  throw std::runtime_error("error @ vecs::to_family() : uint has no corresponding vecs::FamilyType");
 }
 
 } // namespace vecs
@@ -339,6 +337,8 @@ std::string to_string(vecs::FamilyType type)
     case vecs::FamilyType::Sparse:
       return "Sparse";
   }
+
+  throw runtime_error("error @ std::to_string() : unknown vecs::FamilyType");
 }
 
 } // namespace std

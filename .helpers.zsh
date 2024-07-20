@@ -3,11 +3,36 @@
 DIR=include/vecs
 FILES=($DIR/vecs.hpp $DIR/templates.hpp)
 FILE=1
-VERSION="0.0.15.0"
+VERSION="0.0.15.3"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
+SYS="$(uname -s)"
+STAMP="version ${VERSION} generated on ${TIME} with system $(uname -s)"
+ALIAS="* generate_header:"
 
-DEPS=(map memory numeric optional set stack string vector)
+DEPS=(bitset map memory numeric optional set stack string vector)
 SRCS=(components device engine entities gui material settings signature synchronization systems)
+
+log()
+{
+  local INPUT=$1
+
+  echo "${ALIAS} ${INPUT}"
+}
+
+set_alias()
+{
+  local OS=$(uname -s)
+
+  if [[ "${OS}" == "Linux" ]]
+  then
+    alias make='make config=default_linux-x86_64'
+    log "make alias set to 'make config=default_linux-x86_64'"
+  elif [[ "${OS}" == "Darwin" ]]
+  then
+    alias make='make config=default_macos-arm'
+    log "make alias set to 'make config=default_macos-arm'"
+  fi
+}
 
 clear()
 {  

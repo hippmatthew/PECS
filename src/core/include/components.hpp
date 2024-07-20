@@ -2,6 +2,7 @@
 #define vecs_core_components_hpp
 
 #include <map>
+#include <memory>
 #include <optional>
 #include <vector>
 

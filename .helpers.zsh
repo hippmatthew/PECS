@@ -3,7 +3,7 @@
 DIR=include/vecs
 FILES=($DIR/vecs.hpp $DIR/templates.hpp)
 FILE=1
-VERSION="0.0.16.0"
+VERSION="0.0.17.0"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 SYS="$(uname -s)"
 STAMP="version ${VERSION} generated on ${TIME} with system $(uname -s)"

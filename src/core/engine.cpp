@@ -1,7 +1,7 @@
 #include "src/core/include/engine.hpp"
 
 #define VK_VALIDATION_LAYER_NAME "VK_LAYER_KHRONOS_validation"
-#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 0, 16, 0)
+#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 0, 17, 0)
 
 namespace vecs
 {

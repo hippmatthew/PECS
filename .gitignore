@@ -2,10 +2,12 @@
 .vscode
 bin
 obj
-test
 shaders
+include
+lib
 
 # Files
 .DS_STORE
 Makefile
 .cache
+test

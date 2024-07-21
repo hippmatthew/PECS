@@ -10,7 +10,6 @@ class ComponentManager;
 class Device;
 class Engine;
 class EntityManager;
-class Material;
 class GUI;
 class Settings;
 class Signature;
@@ -37,16 +36,6 @@ enum FamilyType
   Async,
   Sparse
 };
-
-enum ShaderType
-{
-  Vertex,
-  Tesselation1,
-  Tesselation2,
-  Geometry,
-  Fragment,
-  ComputeShader
-};  
 
 }
 

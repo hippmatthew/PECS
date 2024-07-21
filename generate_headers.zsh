@@ -84,7 +84,7 @@ input "{"
 
 space
 
-read_misc extras 7 49
+read_misc extras 7 38
 
 space
 

@@ -36,7 +36,7 @@ void SystemManager::erase()
 }
 
 template <typename T, typename... Tps>
-void SystemManager::addComponents()
+void SystemManager::add_components()
 {
   if (!registered<T>()) return;
 
@@ -44,7 +44,7 @@ void SystemManager::addComponents()
 }
 
 template <typename T, typename... Tps>
-void SystemManager::removeComponents()
+void SystemManager::remove_components()
 {
   if (!registered<T>()) return;
 

@@ -63,6 +63,24 @@ class ComponentManager : public vecs::ComponentManager
     { return array<T>(); }
 };
 
+class System : public vecs::System
+{
+  public:
+    void update(const std::shared_ptr<vecs::ComponentManager>&, std::set<unsigned long>)
+    { updated = true; }
+
+  public:
+    bool updated = false;
+};
+
+class SystemManager : public vecs::SystemManager
+{
+  public:
+    template <typename T>
+    bool has_system() const
+    { return registered<T>(); }
+};
+
 } // namespace TEST
 
 #endif // vecs_tests_test_classes_hpp

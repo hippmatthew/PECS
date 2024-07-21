@@ -59,12 +59,12 @@ class SystemManager
     void erase();
 
     template <typename T, typename... Tps>
-    void addComponents();
+    void add_components();
 
     template <typename T, typename... Tps>
-    void removeComponents();
+    void remove_components();
 
-  private:
+  protected:
     template <typename T>
     bool registered() const;
 
@@ -74,7 +74,7 @@ class SystemManager
     template <typename T>
     void remove();
 
-  private:
+  protected:
     std::map<const char *, std::shared_ptr<System>> systemMap;
 };
 

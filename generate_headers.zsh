@@ -4,7 +4,6 @@ source .helpers.zsh
 
 log "VECS headers version ${VERSION} started at ${TIME} on system ${SYS}"
 
-
 while getopts ":s" opt
 do
   case $opt in
@@ -16,6 +15,20 @@ do
   esac
 done
 
+if [[ ! -d "./include/vecs" ]]
+then
+	mkdir include
+	cd include
+	mkdir vecs
+	cd ..
+	log "made directory include/vecs"
+fi
+
+if [[ ! -d "./lib" ]]
+then
+	mkdir lib
+	log "made directory lib"
+fi
 
 log "generating ${FILES[$FILE]}"
 

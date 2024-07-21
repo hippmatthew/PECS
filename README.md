@@ -12,7 +12,7 @@
 ### Installation
 
 1. Make sure that the dependencies are installed on your machine. For Linux, install using your package manager. For MacOS, install with homebrew
-2. Run `zsh generate_header.zsh` script to generate the master header files located in `/include`
+2. Run `zsh generate_headers.zsh` script to generate the master header files located in `/include`
 3. Run premake with `premake5 <build-style>`
   - To generate makefiles, replace `<build-style>` with `gmake2`
   - To generate an XCode project, replace `<build-style>` with `xcode4`

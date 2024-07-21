@@ -5,6 +5,38 @@
 
 #include <string>
 
+TEST_CASE( "component_id", "[settings][name]" )
+{
+  struct TestType1
+  {
+    int a = 0;
+  };
+
+  struct TestType2
+  {
+    int b = 0;
+  };
+
+  vecs::Settings::destroy();
+
+  SECTION( "unique" )
+  {
+    auto id1 = VECS_SETTINGS.component_id<TestType1>();
+    auto id2 = VECS_SETTINGS.component_id<TestType2>();
+
+    CHECK( id1 == 0 );
+    CHECK( id2 == 1 );
+  }
+
+  SECTION( "shared" )
+  {
+    auto id1 = VECS_SETTINGS.component_id<TestType1>();
+    auto id2 = VECS_SETTINGS.component_id<TestType1>();
+
+    CHECK( id1 == id2 );
+  }
+}
+
 TEST_CASE( "update_name", "[settings][name]" )
 {
   std::string testName = "test_name";

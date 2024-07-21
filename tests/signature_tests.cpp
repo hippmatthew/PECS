@@ -107,6 +107,21 @@ TEST_CASE( "operator&", "[signatures][operator&]" )
   signature1.set<TestType1, TestType2>();
   signature2.set<TestType1, TestType2, TestType3>();
 
-  CHECK( !(signature1 & signature2) );
-  CHECK( signature2 & signature1 );
+  CHECK( !((signature1.bitset() & signature2.bitset()) == signature2.bitset()) );
+  CHECK( (signature2.bitset() & signature1.bitset()) == signature1.bitset() );
+}
+
+TEST_CASE( "operator==", "[signatures][operator==]" )
+{
+  struct TestType
+  {
+    int a = 1;
+  };
+
+  TEST::Signature signature1, signature2;
+  
+  signature1.set<TestType>();
+  signature2.set<TestType>();
+
+  CHECK( signature1 == signature2 );
 }

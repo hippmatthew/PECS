@@ -12,8 +12,9 @@ std::set<unsigned long> EntityManager::retrieve(bool exactMatch) const
   unsigned long index = 0;
   for (const auto& s : signatures)
   {
-    if (exactMatch ? signature & s : s & signature)
-      entities.emplace(idMap.at(index++));
+    if (exactMatch ? s == signature : (s & signature) == signature)
+      entities.emplace(idMap.at(index));
+    ++index;
   }
 
   return entities;

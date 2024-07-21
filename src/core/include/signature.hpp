@@ -21,7 +21,8 @@ class Signature
 
     Signature& operator = (const Signature&) = default;
     Signature& operator = (Signature&&) = default;
-    bool operator & (const Signature&) const;
+    Signature operator & (const Signature&) const;
+    bool operator == (const Signature&) const;
 
     void reset();
 

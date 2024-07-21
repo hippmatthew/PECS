@@ -12,6 +12,6 @@ int main()
   vecs::Engine engine;
   engine.load();
   engine.run();
-  
+
   return result;
 }

@@ -1,11 +1,1 @@
-# Directories
 .vscode
-bin
-obj
-test
-shaders
-
-# Files
-.DS_STORE
-Makefile
-.cache

@@ -35,15 +35,15 @@ class ComponentArray : public IComponentArray
     ComponentArray& operator = (const ComponentArray&) = default;
     ComponentArray& operator = (ComponentArray&&) = default;
     
-    std::optional<T> at(unsigned long) const;
+    const T& at(unsigned long) const;
     
-    void emplace(unsigned long, T&);
+    void emplace(unsigned long, T);
     void erase(unsigned long);
 
-  private:
+  protected:
     bool valid(unsigned long) const;
 
-  private:
+  protected:
     std::vector<T> data;
     std::map<unsigned long, unsigned long> indexMap;
 };
@@ -61,16 +61,16 @@ class ComponentManager
     ComponentManager& operator = (ComponentManager&&) = delete;
     
     template <typename... Tps>
-    void registerComponents();
+    void register_components();
 
     template <typename... Tps>
-    void unregisterComponents();
+    void unregister_components();
 
     template <typename... Tps>
-    void updateData(unsigned long, Tps&...);
+    void update_data(unsigned long, Tps...);
 
     template <typename... Tps>
-    void removeData(unsigned long);
+    void remove_data(unsigned long);
 
     template <typename T>
     std::optional<T> retrieve(unsigned long);
@@ -78,10 +78,7 @@ class ComponentManager
     template <typename T>
     bool registered() const;
   
-  private:
-    template <typename T>
-    std::shared_ptr<ComponentArray<T>> array() const;
-
+  protected:
     template <typename T>
     void registerComponent();
 
@@ -94,7 +91,10 @@ class ComponentManager
     template <typename T>
     void remove(unsigned long);
 
-  private:
+    template <typename T>
+    std::shared_ptr<ComponentArray<T>> array() const;
+
+  protected:
     std::map<const char *, std::shared_ptr<IComponentArray>> componentMap;
 
 };

@@ -84,7 +84,7 @@ input "{"
 
 space
 
-read_misc extras 7 38
+read_misc extras 7 37
 
 space
 
@@ -160,7 +160,7 @@ input "{"
 
 space
 
-read_misc components_templates 4 110
+read_misc components_templates 4 113
 
 space
 

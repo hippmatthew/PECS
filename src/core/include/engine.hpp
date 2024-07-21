@@ -3,8 +3,8 @@
 
 #include "src/core/include/entities.hpp"
 #include "src/core/include/components.hpp"
-#include "src/core/include/synchronization.hpp"
 #include "src/core/include/systems.hpp"
+#include "src/core/include/device.hpp"
 
 namespace vecs
 {

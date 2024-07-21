@@ -2,13 +2,16 @@ namespace vecs
 {
 
 template <typename T>
-std::optional<T> ComponentArray<T>::at(unsigned long e_id) const
+const T& ComponentArray<T>::at(unsigned long e_id) const
 {
-  return valid(e_id) ? std::optional<T>(data[indexMap.at(e_id)]) : std::nullopt;
+  if (!valid(e_id))
+    throw std::runtime_error("error @ ComponentArray<" + std::string(typeid(T).name()) + ">::at() : invalid e_id");
+  
+  return data[indexMap.at(e_id)];
 }
 
 template <typename T>
-void ComponentArray<T>::emplace(unsigned long e_id, T& e_data)
+void ComponentArray<T>::emplace(unsigned long e_id, T e_data)
 {
   if (valid(e_id))
   {
@@ -36,25 +39,25 @@ bool ComponentArray<T>::valid(unsigned long e_id) const
 }
 
 template <typename... Tps>
-void ComponentManager::registerComponents()
+void ComponentManager::register_components()
 {
   ( registerComponent<Tps>(), ... );
 }
 
 template <typename... Tps>
-void ComponentManager::unregisterComponents()
+void ComponentManager::unregister_components()
 {
-  ( unregisterComponent<Tps>, ... );
+  ( unregisterComponent<Tps>(), ... );
 }
 
 template <typename... Tps>
-void ComponentManager::updateData(unsigned long e_id, Tps&... args)
+void ComponentManager::update_data(unsigned long e_id, Tps... args)
 {
   ( update<Tps>(e_id, args), ... );
 }
 
 template <typename... Tps>
-void ComponentManager::removeData(unsigned long e_id)
+void ComponentManager::remove_data(unsigned long e_id)
 {
   ( remove<Tps>(e_id), ... );
 }
@@ -62,19 +65,13 @@ void ComponentManager::removeData(unsigned long e_id)
 template <typename T>
 std::optional<T> ComponentManager::retrieve(unsigned long e_id)
 {
-  return registered<T>() ? array<T>()->at(e_id) : std::nullopt;
+  return registered<T>() ? std::optional<T>(array<T>()->at(e_id)) : std::nullopt;
 }
 
 template <typename T>
 bool ComponentManager::registered() const
 {
   return componentMap.find(typeid(T).name()) != componentMap.end();
-}
-
-template <typename T>
-std::shared_ptr<ComponentArray<T>> ComponentManager::array() const
-{
-  return std::static_pointer_cast<ComponentArray<T>>(componentMap.at(typeid(T).name()));
 }
 
 template <typename T>
@@ -107,6 +104,12 @@ void ComponentManager::remove(unsigned long e_id)
   if (!registered<T>()) return;
   
   array<T>()->erase(e_id);
+}
+
+template <typename T>
+std::shared_ptr<ComponentArray<T>> ComponentManager::array() const
+{
+  return std::static_pointer_cast<ComponentArray<T>>(componentMap.at(typeid(T).name()));
 }
 
 } // namespace vecs

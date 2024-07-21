@@ -1,7 +1,7 @@
 #include "src/core/include/engine.hpp"
 
 #define VK_VALIDATION_LAYER_NAME "VK_LAYER_KHRONOS_validation"
-#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 0, 19, 0)
+#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 0, 20, 0)
 
 namespace vecs
 {
@@ -20,7 +20,6 @@ Engine::~Engine()
   system_manager.reset();
   
   gui.reset();
-  Synchronization::destroy();
   device.reset();
 
   Settings::destroy();
@@ -97,8 +96,6 @@ void Engine::initialize(void * p_next)
   gui->createSurface(vk_instance);
   device = std::make_shared<Device>(vk_instance, *gui, p_next);
   gui->setupWindow(*device);
-
-  Synchronization::instance().link_device(device);
 }
 
 void Engine::poll_gui()

@@ -3,14 +3,14 @@
 DIR=include/vecs
 FILES=($DIR/vecs.hpp $DIR/templates.hpp)
 FILE=1
-VERSION="0.0.19.0"
+VERSION="0.0.20.0"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 SYS="$(uname -s)"
 STAMP="version ${VERSION} generated on ${TIME} with system $(uname -s)"
 ALIAS="* generate_headers:"
 
 DEPS=(bitset map memory numeric optional set stack string vector)
-SRCS=(components device engine entities gui settings signature synchronization systems)
+SRCS=(components device engine entities gui settings signature systems)
 
 log()
 {

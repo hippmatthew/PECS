@@ -1,17 +1,22 @@
-#include "vecs/vecs.hpp"
+#include "tests/test_ecs.hpp"
 
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch_all.hpp>
 
-#include <iostream>
-
-int main()
+TEST_CASE( "engine", "[engine]" )
 {
-  int result = Catch::Session().run();
-
-  vecs::Engine engine;
+  TEST::Engine engine;
+  
   engine.load();
   engine.run();
 
-  return result;
+  auto values = engine.final_values();
+
+  CHECK( values.first == 11 );
+  CHECK( values.second == 3070 );
+}
+
+int main()
+{
+  return Catch::Session().run();
 }

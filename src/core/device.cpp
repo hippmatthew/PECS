@@ -126,9 +126,9 @@ void Device::QueueFamilies::setQueues(const vk::raii::Device& vk_device)
   }
 }
 
-Device::Device(const vk::raii::Instance& vk_instance, const vecs::GUI& gui, const void * p_next)
+Device::Device(const vk::raii::Instance& vk_instance, const vecs::GUI& vecs_gui, const void * p_next)
 {
-  getGPU(vk_instance, gui.surface());
+  getGPU(vk_instance, vecs_gui.surface());
   createDevice(p_next);
   
   queueFamilies->setQueues(vk_device);

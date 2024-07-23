@@ -74,19 +74,19 @@ void GUI::createSurface(const vk::raii::Instance& vk_instance)
   vk_surface = vk::raii::SurfaceKHR(vk_instance, surface);
 }
 
-void GUI::setupWindow(const vecs::Device& device)
+void GUI::setupWindow(const vecs::Device& vecs_device)
 {
-  chooseSurfaceFormat(device.physical());
-  choosePresentMode(device.physical());
-  chooseExtent(device.physical());
+  chooseSurfaceFormat(vecs_device.physical());
+  choosePresentMode(vecs_device.physical());
+  chooseExtent(vecs_device.physical());
 
-  createSwapchain(device.physical(), device.logical());
+  createSwapchain(vecs_device.physical(), vecs_device.logical());
 
   vk_images = vk_swapchain.getImages();
-  createImageViews(device.logical());
+  createImageViews(vecs_device.logical());
 }
 
-void GUI::recreateSwapchain(const vecs::Device& device)
+void GUI::recreateSwapchain(const vecs::Device& vecs_device)
 {
   int width = 0; int height = 0;
   glfwGetFramebufferSize(gl_window, &width, &height);
@@ -97,15 +97,15 @@ void GUI::recreateSwapchain(const vecs::Device& device)
     glfwWaitEvents();
   }
 
-  device.logical().waitIdle();
+  vecs_device.logical().waitIdle();
 
   vk_swapchain.clear();
   vk_images.clear();
   vk_imageViews.clear();
 
-  createSwapchain(device.physical(), device.logical());
+  createSwapchain(vecs_device.physical(), vecs_device.logical());
   vk_images = vk_swapchain.getImages();
-  createImageViews(device.logical());
+  createImageViews(vecs_device.logical());
 }
 
 void GUI::resizeFramebuffer(GLFWwindow * window, int width, int height)

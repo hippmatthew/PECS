@@ -25,6 +25,13 @@
 
 ### Using VECS
 
+##### Linking to VECS
+
+When compiling, make sure to link to:
+- vecs
+- vulkan
+- glfw
+
 ##### Making an Engine
 
 The `vecs::Engine` object is meant to be inherited. There are three functions that can be overridden by the child class to turn the default engine into one that has functionality.

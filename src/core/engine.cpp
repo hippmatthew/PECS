@@ -1,7 +1,7 @@
 #include "src/core/include/engine.hpp"
 
 #define VK_VALIDATION_LAYER_NAME "VK_LAYER_KHRONOS_validation"
-#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 1, 1, 0)
+#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 1, 2, 0)
 
 namespace vecs
 {
@@ -89,14 +89,9 @@ bool Engine::should_close() const
   return vecs_gui->shouldClose();
 }
 
-const Device& Engine::device() const
-{
-  return *vecs_device;
-}
-
 void Engine::initialize(void * p_next)
 {
-  vecs_gui = std::make_unique<GUI>();
+  vecs_gui = std::make_shared<GUI>();
   createInstance();
   vecs_gui->createSurface(vk_instance);
   vecs_device = std::make_shared<Device>(vk_instance, *vecs_gui, p_next);

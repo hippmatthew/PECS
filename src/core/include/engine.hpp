@@ -31,18 +31,17 @@ class Engine
     virtual bool close_condition();
     
     bool should_close() const;
-    const Device& device() const;
     
     void initialize(void * p_next = nullptr);
     void poll_gui();
   
   private:
-    std::unique_ptr<GUI> vecs_gui = nullptr;
-    std::shared_ptr<Device> vecs_device = nullptr;
-
     vk::raii::Instance vk_instance = nullptr;
 
   protected:
+    std::shared_ptr<GUI> vecs_gui = nullptr;
+    std::shared_ptr<Device> vecs_device = nullptr;
+
     std::unique_ptr<EntityManager> entity_manager = nullptr;
     std::shared_ptr<ComponentManager> component_manager = nullptr;
     std::unique_ptr<SystemManager> system_manager = nullptr;

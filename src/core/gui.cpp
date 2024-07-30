@@ -1,10 +1,12 @@
 #include "src/core/include/gui.hpp"
+#include "src/core/include/settings.hpp"
+#include "vulkan/vulkan_raii.hpp"
 
 namespace vecs
 {
 
 GUI::GUI()
-{  
+{
   glfwInit();
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -17,6 +19,10 @@ GUI::GUI()
     nullptr,
     nullptr
   );
+
+  float sx, sy;
+  glfwGetWindowContentScale(gl_window, &sx, &sy);
+  VECS_SETTINGS.update_scale(sx, sy);
 
   glfwSetWindowUserPointer(gl_window, this);
   glfwSetFramebufferSizeCallback(gl_window, resizeFramebuffer);
@@ -66,11 +72,16 @@ const vk::raii::ImageView& GUI::imageView(unsigned long index) const
   return vk_imageViews[index];
 }
 
+const vk::raii::ImageView& GUI::depthView() const
+{
+  return vk_depthView;
+}
+
 void GUI::createSurface(const vk::raii::Instance& vk_instance)
 {
   vk::raii::SurfaceKHR::CType surface;
   glfwCreateWindowSurface(*vk_instance, gl_window, nullptr, &surface);
-  
+
   vk_surface = vk::raii::SurfaceKHR(vk_instance, surface);
 }
 
@@ -84,6 +95,8 @@ void GUI::setupWindow(const vecs::Device& vecs_device)
 
   vk_images = vk_swapchain.getImages();
   createImageViews(vecs_device.logical());
+
+  createDepthResources(vecs_device.physical(), vecs_device.logical());
 }
 
 void GUI::recreateSwapchain(const vecs::Device& vecs_device)
@@ -99,6 +112,10 @@ void GUI::recreateSwapchain(const vecs::Device& vecs_device)
 
   vecs_device.logical().waitIdle();
 
+  float sx, sy;
+  glfwGetWindowContentScale(gl_window, &sx, &sy);
+  VECS_SETTINGS.update_scale(sx, sy);
+
   vk_swapchain.clear();
   vk_images.clear();
   vk_imageViews.clear();
@@ -106,6 +123,8 @@ void GUI::recreateSwapchain(const vecs::Device& vecs_device)
   createSwapchain(vecs_device.physical(), vecs_device.logical());
   vk_images = vk_swapchain.getImages();
   createImageViews(vecs_device.logical());
+
+  createDepthResources(vecs_device.physical(), vecs_device.logical());
 }
 
 void GUI::resizeFramebuffer(GLFWwindow * window, int width, int height)
@@ -155,6 +174,26 @@ void GUI::chooseExtent(const vk::raii::PhysicalDevice& vk_physicalDevice) const
     std::clamp(VECS_SETTINGS.width(), surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width),
     std::clamp(VECS_SETTINGS.height(), surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height)
   );
+}
+
+unsigned int GUI::findIndex(
+  const vk::raii::PhysicalDevice& vk_physicalDevice,
+  unsigned int filter,
+  vk::MemoryPropertyFlags flags
+) const
+{
+  auto properties = vk_physicalDevice.getMemoryProperties();
+
+  for (unsigned long i = 0; i < properties.memoryTypeCount; ++i)
+  {
+    if ((filter & (1 << i)) &&
+        (properties.memoryTypes[i].propertyFlags & flags) == flags)
+    {
+      return i;
+    }
+  }
+
+  throw std::runtime_error("error @ vecs::GUI::findIndex() : could not find suitable memory index");
 }
 
 void GUI::createSwapchain(const vk::raii::PhysicalDevice& vk_physicalDevice, const vk::raii::Device& vk_device)
@@ -215,6 +254,58 @@ void GUI::createImageViews(const vk::raii::Device& vk_device)
 
     vk_imageViews.emplace_back(vk_device.createImageView(ci_imageView));
   }
+}
+
+void GUI::createDepthResources(const vk::raii::PhysicalDevice& vk_physicalDevice, const vk::raii::Device& vk_device)
+{
+  auto extent = VECS_SETTINGS.extent();
+  auto format = VECS_SETTINGS.depth_format();
+
+  vk::ImageCreateInfo ci_image{
+    .imageType      = vk::ImageType::e2D,
+    .format         = format,
+    .extent         = {
+      .width  = extent.width,
+      .height = extent.height,
+      .depth  = 1
+    },
+    .mipLevels      = 1,
+    .arrayLayers    = 1,
+    .samples        = vk::SampleCountFlagBits::e1,
+    .tiling         = vk::ImageTiling::eOptimal,
+    .usage          = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+    .sharingMode    = vk::SharingMode::eExclusive,
+    .initialLayout  = vk::ImageLayout::eUndefined
+  };
+  vk_depthImage = vk_device.createImage(ci_image);
+
+  auto requirements = vk_depthImage.getMemoryRequirements();
+
+  vk::MemoryAllocateInfo ai_memory{
+    .allocationSize = requirements.size,
+    .memoryTypeIndex  = findIndex(
+      vk_physicalDevice,
+      requirements.memoryTypeBits,
+      vk::MemoryPropertyFlagBits::eDeviceLocal
+    )
+  };
+  vk_depthMemory = vk_device.allocateMemory(ai_memory);
+
+  vk_depthImage.bindMemory(*vk_depthMemory, 0);
+
+  vk::ImageViewCreateInfo ci_view{
+    .image            = *vk_depthImage,
+    .viewType         = vk::ImageViewType::e2D,
+    .format           = format,
+    .subresourceRange = {
+      .aspectMask     = vk::ImageAspectFlagBits::eDepth,
+      .baseMipLevel   = 0,
+      .levelCount     = 1,
+      .baseArrayLayer = 0,
+      .layerCount     = 1
+    }
+  };
+  vk_depthView = vk_device.createImageView(ci_view);
 }
 
 } // namespace vecs

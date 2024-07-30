@@ -1,7 +1,7 @@
 #include "src/core/include/engine.hpp"
 
 #define VK_VALIDATION_LAYER_NAME "VK_LAYER_KHRONOS_validation"
-#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 1, 2, 0)
+#define VECS_ENGINE_VERSION       VK_MAKE_API_VERSION(0, 1, 4, 0)
 
 namespace vecs
 {
@@ -18,7 +18,7 @@ Engine::~Engine()
   entity_manager.reset();
   component_manager.reset();
   system_manager.reset();
-  
+
   vecs_gui.reset();
   vecs_device.reset();
 
@@ -53,20 +53,20 @@ void Engine::createInstance()
 
   std::vector<const char *> layers;
   if (VECS_SETTINGS.validation_enabled()) layers.emplace_back(VK_VALIDATION_LAYER_NAME);
-  
+
   auto extensions = vecs_gui->extensions();
   for (const auto& extension : vk_context.enumerateInstanceExtensionProperties())
   {
     if (std::string(extension.extensionName) == VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME)
     {
       extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-      
+
       VECS_SETTINGS.toggle_portability();
       break;
     }
   }
   extensions.emplace_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-  
+
   vk::InstanceCreateInfo ci_instance{
     .pApplicationInfo         = &i_application,
     .enabledLayerCount        = static_cast<unsigned int>(layers.size()),

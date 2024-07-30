@@ -9,14 +9,14 @@ Settings& Settings::instance()
 {
   if (p_settings == nullptr)
     p_settings = new Settings;
-    
+
   return *p_settings;
 }
 
 void Settings::destroy()
 {
   if (p_settings == nullptr) return;
-  
+
   delete p_settings;
   p_settings = nullptr;
 }
@@ -51,6 +51,21 @@ unsigned int Settings::height() const
   return s_height;
 }
 
+float Settings::scale_x() const
+{
+  return s_scalex;
+}
+
+float Settings::scale_y() const
+{
+  return s_scaley;
+}
+
+float Settings::aspect_ratio() const
+{
+  return (s_width * s_scalex) / (s_height * s_scaley);
+}
+
 bool Settings::portability_enabled() const
 {
   return s_portabilityEnabled;
@@ -58,7 +73,7 @@ bool Settings::portability_enabled() const
 
 std::vector<const char *> Settings::device_extensions() const
 {
-  return s_gpuExtensions; 
+  return s_gpuExtensions;
 }
 
 vk::Format Settings::format() const
@@ -79,6 +94,11 @@ vk::PresentModeKHR Settings::present_mode() const
 vk::Extent2D Settings::extent() const
 {
   return s_extent;
+}
+
+vk::Format Settings::depth_format() const
+{
+  return s_dFormat;
 }
 
 unsigned long Settings::max_flight_frames() const
@@ -137,6 +157,13 @@ Settings& Settings::update_height(unsigned int newHeight)
   return *this;
 }
 
+Settings& Settings::update_scale(float x, float y)
+{
+  s_scalex = x;
+  s_scaley = y;
+  return *this;
+}
+
 Settings& Settings::toggle_portability()
 {
   s_portabilityEnabled = !s_portabilityEnabled;
@@ -150,7 +177,7 @@ Settings& Settings::add_device_extension(const char * ext)
     if (std::string(extension) == ext)
       return *this;
   }
-  
+
   s_gpuExtensions.emplace_back(ext);
   return *this;
 }
@@ -158,11 +185,11 @@ Settings& Settings::add_device_extension(const char * ext)
 Settings& Settings::remove_device_extension(const char * ext)
 {
   if (std::string(ext) == VK_KHR_SWAPCHAIN_EXTENSION_NAME) return *this;
-  
+
   for (auto itr = s_gpuExtensions.begin(); itr != s_gpuExtensions.end(); ++itr)
   {
     if (std::string(*itr) != ext) continue;
-    
+
     s_gpuExtensions.erase(itr);
     break;
   }

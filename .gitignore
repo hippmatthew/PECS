@@ -1,12 +1,13 @@
 # Directories
-.vscode
-bin
-obj
-include
-lib
+./.vscode
+./.cache
+./bin
+./obj
+./include
+./lib
+./build
 
 # Files
 .DS_STORE
 Makefile
-.cache
 test

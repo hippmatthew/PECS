@@ -3,7 +3,7 @@
 DIR=include/vecs
 FILES=($DIR/vecs.hpp $DIR/templates.hpp)
 FILE=1
-VERSION="0.1.2.0"
+VERSION="0.1.4.0"
 TIME=$(date "+%m-%d-%Y %H:%M:%S")
 SYS="$(uname -s)"
 STAMP="version ${VERSION} generated on ${TIME} with system $(uname -s)"
@@ -35,14 +35,14 @@ set_alias()
 }
 
 clear()
-{  
+{
   echo -n > $FILES[$FILE]
 }
 
 input()
 {
   local INPUT=$1
-  
+
   echo $INPUT >> $FILES[$FILE]
 }
 
@@ -72,7 +72,7 @@ read_file()
       input $LINE
       break
     fi
-  
+
     if [[ ( $TEMPLATED == 1 && "${LINE}" == "template <typename T>" ) || "${LINE}" == "class ${CLASS}" ]]
     then
       READ=1

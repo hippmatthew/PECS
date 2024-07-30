@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libvecs.a CMakeFiles/vecs.dir/src/core/device.cpp.o CMakeFiles/vecs.dir/src/core/engine.cpp.o CMakeFiles/vecs.dir/src/core/entities.cpp.o CMakeFiles/vecs.dir/src/core/gui.cpp.o CMakeFiles/vecs.dir/src/core/settings.cpp.o CMakeFiles/vecs.dir/src/core/signature.cpp.o CMakeFiles/vecs.dir/src/core/systems.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib libvecs.a

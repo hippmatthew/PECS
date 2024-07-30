@@ -1,11 +1,10 @@
 # Directories
-./.vscode
-./.cache
-./bin
-./obj
-./include
-./lib
-./build
+/.vscode/
+/.cache/
+/bin/
+/lib/
+/include/
+/build/
 
 # Files
 .DS_STORE
